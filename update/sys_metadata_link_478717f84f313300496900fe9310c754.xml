@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>197656b5d7231200d105ef637e6103d7</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, runtimeState, meetingAgenda, agendaNotification, agendaItemFilterFilter, CAB, $log, i18n, $uibModal) {
+	// widget controller
+	var c = this;
+	var startMeetingPopupShown = false;
+	var modalConfig = {
+		animation: true,
+		controller: 'confirmApproval'
+	};
+	
+	function runtimeStateAvailable() {
+		return $scope.rs &amp;&amp; $scope.rs.cab_meeting;
+	}
+	
+	runtimeState.get($scope.data.meetingId)
+	.then(function(rs) {
+		$scope.rs = rs;
+		return meetingAgenda.get($scope.data.meetingId);
+	})
+	.then(function(agenda) {
+		$scope.agenda = agenda;
+	});
+	
+	$scope.notifyMe = {
+		onClick: function(event, agendaItem) {
+			event.preventDefault();
+			event.stopPropagation();
+			agendaNotification.updateRecipients(agendaItem, $scope.data.userId, "add");
+		},
+		availableFor: function(agendaItem) {
+			return agendaNotification.notifyAvailable(agendaItem);
+		},
+		activeFor: function(agendaItem) {
+			return agendaNotification.alreadyBeingNotified(agendaItem, $scope.data.userId);
+		}
+	};
+	
+	$scope.promote = {
+		onClick: function(event, agendaItem) {
+			event.stopPropagation();
+			meetingAgenda.promoteItem(agendaItem);
+		},
+		availableFor: function(agendaItem) {
+			return agendaItem.state.value == CAB.PENDING &amp;&amp; $scope.meeting.host();
+		}
+	};
+	
+	$scope.CAB = CAB;
+	$scope.aria = {
+		stateDesc: function(agendaItem) {
+			if (!$scope.aItm.canReadTask(agendaItem))
+				return c.data.i18n.agenda.state.permissionDenied;
+			
+			if (agendaItem.state.value == CAB.COMPLETE)
+				return i18n.format(c.data.i18n.item.state[agendaItem.decision.value], [agendaItem.task.display_value]);
+
+			return i18n.format(c.data.i18n.item.state[agendaItem.state.value], [agendaItem.task.display_value]);
+		},
+		timerDesc: function(agendaItem) {
+			if (agendaItem.task &amp;&amp; agendaItem.task.display_value)
+				return i18n.format(c.data.i18n.item.timer, [agendaItem.task.display_value]);
+			
+			return null;
+		},
+		selectItemDesc: function(agendaItem) {
+			return i18n.format(c.data.i18n.item.select, [agendaItem.task.display_value]);
+		},
+		notifyDesc: function(agendaItem) {
+			return i18n.format(c.data.i18n.item.notify, [agendaItem.task.display_value]);
+		},
+		promoteDesc: function(agendaItem) {
+			return i18n.format(c.data.i18n.item.promote, [agendaItem.task.display_value]);
+		},
+		restoreDesc: function(agendaItem) {
+			return i18n.format(c.data.i18n.item.restore, [agendaItem.task.display_value]);
+		}
+	};
+	
+	$scope.meeting = {
+		start: function() {
+			runtimeState.startMeetingAndSelectNextAgenda();
+		},
+		showStartPopup: function(agendaItem) {
+			if (startMeetingPopupShown || !$scope.meeting.host() || !$scope.meeting.pending())
+				return false;
+			
+			startMeetingPopupShown = true;
+			modalConfig.templateUrl = "cab-start-meeting-pop";
+			var modal = $uibModal.open(modalConfig);
+			modal.result.then(function() {
+				runtimeState.startMeetingAndSelectNextAgenda();
+			}, function() {
+				runtimeState.setViewAgendaItem(agendaItem.sys_id.value);
+			});
+			return true;
+		},
+		viewing: function(agendaItem) {
+			return (agendaItem.sys_id.value === runtimeState.getViewAgendaItem());
+		},
+		viewingCurrent: function() {
+			return runtimeState.isViewingCurrent();
+		},
+		pending: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.PENDING;
+		},
+		canceled: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.CANCELED;
+		},
+		host: function() {
+			return runtimeState.isCABManager($scope.data.userId);
+		}
+	};
+	
+	$scope.aItm = {
+		getDOMId: function(agendaItem) {
+			return 'agenda_item_' + agendaItem.sys_id.value;
+		},
+		show: function(agendaItem) {
+			runtimeState.setViewAgendaItem(agendaItem.sys_id.value);
+		},
+		canReadTask: function(agendaItem) {
+			return agendaItem.task &amp;&amp; agendaItem.task.record;
+		},
+	};
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.agenda-item-halo .agenda-item-big {
+    border-color: #97b7e3;
+}
+
+body[accessibility="true"] .info-row[role="listitem"]:focus {
+  outline: 3px #97b7e3 auto;
+}
+
+.single-line-clamp {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.timer-paused-centered {
+  z-index: 20;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  text-align: center;
+}
+
+.timer-paused {
+  position: absolute;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #dcdcdc;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.paused-timer-scaled-text {
+  font-size: 12px;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data/&gt;
+        &lt;description&gt;List of pending agenda items for the CAB Workbench&lt;/description&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-pending-agenda-items&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;CAB Workbench - Pending Agenda Items&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"show_add_cart_button","label":"Show Add Cart Button","type":"boolean"},{"hint":"Define a URL Format for successful order page","name":"url","label":"Custom URL Format","type":"string"},{"displayValue":"Page","name":"page","label":"Successful Order Page","type":"reference","value":"sp_page","ed":{"reference":"sp_page"}},{"displayValue":"Table","name":"table","label":"Successful Order Table","type":"reference","value":"sys_db_object","ed":{"reference":"sys_db_object"}},{"hint":"Enable auto-redirection after ordering an item","name":"auto_redirect","label":"Auto Redirect on Successful Order","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.meetingId = $sp.getParameter("sys_id");
+	data.userId = gs.getUserID();
+	
+	data.i18n = {
+		item: {
+			state: {
+				pending: gs.getMessage('Change {0} pending'),
+				in_progress: gs.getMessage('Change {0} current active agenda'),
+				paused: gs.getMessage('Change {0} paused'),
+				approved: gs.getMessage('Change {0} approved'),
+				preapproved: gs.getMessage('Change {0} pre-approved'),
+				rejected: gs.getMessage('Change {0} rejected'),
+				no_decision: gs.getMessage('Change {0} with no decision'),
+				permissionDenied: gs.getMessage('You are not allowed to view this Agenda Item')
+			},
+			select: gs.getMessage('Select agenda item for Change {0}'),
+			notify: gs.getMessage('Notify me when Change {0} is due'),
+			timer: gs.getMessage('Agenda item {0}'),
+			promote: gs.getMessage('Promote Change {0}'),
+			restore: gs.getMessage('Restore Change {0} to Pending')
+		},
+		filter: {
+			all: gs.getMessage('All Agenda Items'),
+			approved: gs.getMessage('Approved Agenda Items'),
+			mine: gs.getMessage('My Agenda Items'),
+			pending: gs.getMessage('Pending Agenda Items')
+		}
+	};
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-05-23 12:46:56&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;197656b5d7231200d105ef637e6103d7&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;538&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Pending Agenda Items&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_197656b5d7231200d105ef637e6103d7&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2018-06-28 14:37:56&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div id="pending-agenda-item-widget" class="panel panel-default" role="region" tabindex="0" aria-label="${Agenda Items Widget}"&gt;
+    &lt;div class="panel-heading heading widget-heading" ng-class="{'heading-inactive': meeting.viewingCurrent()}"&gt;
+      	&lt;label for="cab-pending-agenda-filter" class="sr-only"&gt;${Agenda list filter}&lt;/label&gt;
+        &lt;select id="cab-pending-agenda-filter" class="sn-select-basic" ng-model="selectedItem" ng-init="selectedItem = CAB.PENDING"&gt;
+          	&lt;option value="{{::CAB.PENDING}}"&gt;{{::c.data.i18n.filter[CAB.PENDING]}}&lt;/option&gt;
+         	&lt;option value="all"&gt;{{::c.data.i18n.filter[CAB.ALL]}}&lt;/option&gt;
+          	&lt;option value="mine"&gt;{{::c.data.i18n.filter[CAB.MINE]}}&lt;/option&gt;
+          	&lt;option value="approved"&gt;{{::c.data.i18n.filter[CAB.APPROVED]}}&lt;/option&gt;
+      	&lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body" style="overflow: scroll; height: 86vh;" role="list" tabindex = "0" aria-label="${Agenda items list}"&gt;
+        &lt;div role="listitem"
+             tabindex="0"
+             ng-attr-id="{{::aItm.getDOMId(item)}}"
+             ng-click="($first &amp;&amp; meeting.showStartPopup(item)) || aItm.show(item)"
+             class="row info-row"
+             ng-repeat="item in agenda | agendaItemFilter:selectedItem:data.userId track by item.sys_id.value"
+             ng-attr-aria-label="{{aria.stateDesc(item)}}"&gt;
+            &lt;div ng-class="{'agenda-item-halo': meeting.viewing(item)}"&gt;
+                &lt;div ng-if="aItm.canReadTask(item)" class="agenda-item" ng-class="meeting.viewing(item) ? 'agenda-item-big' : 'agenda-item-small'"&gt;
+                    &lt;div class="col-xs-9 agenda-item-detail"&gt;
+                        &lt;div&gt;
+                            &lt;div class="tasknumber"&gt;{{::item.task.display_value}}&lt;/div&gt;
+                            &lt;div class="description"&gt;&lt;sn-cab-line-clamp text="{{::item.task.record.short_description.display_value}}" max-lines="2"/&gt;&lt;/div&gt;
+                            &lt;table class="agenda-task-detail"&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${Assignment group}&lt;/td&gt;
+                                    &lt;td class="single-line-clamp"&gt;{{::item.task.record.assignment_group.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${Assigned to}&lt;/td&gt;
+                                    &lt;td class="single-line-clamp"&gt;{{::item.task.record.assigned_to.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${State}&lt;/td&gt;
+                                    &lt;td&gt;{{item.task.record.state.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                            &lt;/table&gt;
+                        &lt;/div&gt;
+                        &lt;div ng-if="!meeting.canceled()" class="agenda-link-control"&gt;
+                            &lt;div&gt;
+                                &lt;div
+                                   tabindex="0"
+                                   ng-attr-aria-label="{{::aria.notifyDesc(item)}}"
+                                   class="notifyme item-action-button"
+                                   role="button"
+                                   ng-if="!meeting.host() &amp;&amp; !notifyMe.activeFor(item) &amp;&amp; notifyMe.availableFor(item)"
+                                   ng-click="notifyMe.onClick($event, item)"&gt;
+                                    &lt;i class="notifymeicon icon-notification-bell"&gt;&lt;/i&gt;${Notify me}&lt;/div&gt;
+                                &lt;div
+                                   tabindex="0"
+                                   class="item-action-button"
+                                   role="button"
+                                   ng-attr-aria-label="{{::aria.promoteDesc(item)}}"
+                                   ng-if="!$first &amp;&amp; promote.availableFor(item)"
+                                   ng-click="promote.onClick($event, item)"&gt;${Promote}&lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col-xs-3 donutprogress"&gt;
+                        &lt;div ng-if="item.state.value != CAB.PAUSED" style="width: 46px; margin: 0 auto;"&gt;
+                            &lt;sn-donut-timer x-aria-parent-label="{{::aria.timerDesc(item) || '${Unknown Agenda item}'}}" name="{{item.sys_id.value}}" duration="{{item.alotted_time.value_ms}}" elapsed="{{item.elapsed_time.value_ms}}" size="46px" show-duration-before-start="true"&gt;&lt;/sn-donut-timer&gt;
+                        &lt;/div&gt;
+                        &lt;div ng-if="item.state.value == 'paused'" style="position: relative; width: 46px; height: 46px; margin: 0 auto;"&gt;
+                            &lt;div class="timer-paused-centered"&gt;
+                                &lt;div class="paused-timer-scaled-text"&gt;${Paused}&lt;/div&gt;
+                            &lt;/div&gt;
+                            &lt;div class="timer-paused"&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+
+                        &lt;div class="agenda-change-decision" ng-if="item.decision.value == CAB.APPROVED || item.decision.value == CAB.PREAPPROVED"&gt;
+                            ${Approved}
+                        &lt;/div&gt;
+                        &lt;div class="agenda-change-decision" ng-if="item.decision.value == CAB.REJECTED"&gt;
+                            ${Rejected}
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div ng-if="!aItm.canReadTask(item)" class="agenda-item agenda-item-small"&gt;
+                    &lt;div class="col-xs-9 agenda-item-detail" style="padding-top: 6%"&gt;
+                        &lt;div&gt;
+                          &lt;div&gt;&lt;sn-cab-line-clamp text="${You are not allowed to view this Agenda Item}" max-lines="2"/&gt;&lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col-xs-3 donutprogress"&gt;
+                        &lt;div style="height: 100%; width: 46px; margin: 0 auto;"&gt;
+                          &lt;sn-donut-timer name="{{::item.sys_id.value}}" duration="{{item.alotted_time.value_ms}}" elapsed="{{item.elapsed_time.value_ms}}" size="46px" show-duration-before-start="true"&gt;&lt;/sn-donut-timer&gt;
+                      	&lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>478717f84f313300496900fe9310c754</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Pending Agenda Items</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_478717f84f313300496900fe9310c754</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

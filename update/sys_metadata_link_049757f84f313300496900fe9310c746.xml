@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>86eb2c8e9f4332002528d4b4232e708a</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sc&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $timeout, spUtil) {
+  /* widget controller */
+  var c = this;
+	$scope.animateTick = '';
+	$scope.toggle = function($event, item) {
+		item.expand = !item.expand;
+	}
+	
+	$scope.displayRequestItemTable = function () {
+		return (c.options.display_description === 'true') ||
+			(c.options.display_delivery_date === 'true') ||
+			(c.options.display_stage === 'true') ||
+			(c.options.display_price === 'true') ||
+			(c.options.display_quantity === 'true') ||
+			(c.options.display_number === 'true');
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.completed-color {
+ color: $brand-success; 
+}
+
+.progress-color {
+ color: $brand-info; 
+}
+
+.text-sm-center {
+ 	text-align: left; 
+}
+
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: $label-success-bg;
+  fill: none;
+  animation: stroke .6s cubic-bezier(0.650, 0.000, 0.450, 1.000) forwards;
+}
+
+.checkmark {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #fff;
+  stroke-miterlimit: 10;
+  margin: 2% auto;
+  box-shadow: inset 0px 0px 0px $label-success-bg;
+  animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke .3s cubic-bezier(0.650, 0.000, 0.450, 1.000) .8s forwards;
+}
+
+.status-table {
+  	th {
+      position: sticky;
+      -webkit-position: sticky;
+      top: -1px;
+      background-color: $panel-bg;
+      z-index: 10;
+      box-shadow: 0px 1px 0px $panel-inner-border;
+    }
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 60px $label-success-bg;
+  }
+}
+
+@media(max-width:992px) {
+  .text-sm-center {
+    text-align: center;
+    padding: 30px;
+  }
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;sc_order_status&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;SC Order Status&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Displays Request Number","name":"display_request_number","default_value":"true","section":"Presentation","label":"Display Request Number","type":"boolean"},{"hint":"Display Request Item column","name":"display_number","default_value":"false","section":"Presentation","label":"Display Request Item","type":"boolean"},{"hint":"Display Name column","name":"display_name","default_value":"true","section":"Presentation","label":"Display Name","type":"boolean"},{"hint":"Display Delivery Date column","name":"display_delivery_date","default_value":"true","section":"Presentation","label":"Display Delivery Date","type":"boolean"},{"hint":"Display Stage column","name":"display_stage","default_value":"true","section":"Presentation","label":"Display Stage","type":"boolean"},{"hint":"Display Price column","name":"display_price","default_value":"true","section":"Presentation","label":"Display Price","type":"boolean"},{"hint":"Display Quantity column","name":"display_quantity","default_value":"true","section":"Presentation","label":"Display Quantity","type":"boolean"},{"hint":"Display Total Price column","name":"display_total_price","default_value":"true","section":"Presentation","label":"Display Total Price","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+  /* populate the 'data' object */
+  /* e.g., data.table = $sp.getValue('table'); */
+	var request_id = $sp.getParameter('sys_id');
+	if (!request_id)
+		return;
+	var sc_request = GlideappRequestNew.get(request_id);
+	if (!sc_request || !sc_request.getRequestNumber())
+		return;
+	data.request = {};
+	data.msg = {};
+    data.is_new_order = $sp.getParameter("is_new_order");
+    if (JSUtil.nil(data.is_new_order)) {
+        data.is_new_order = false;
+    } else {
+        data.is_new_order = (($sp.getParameter("is_new_order") + '') === "true")
+    }
+	data.showPrices = $sp.showCatalogPrices();
+	data.request.id = sc_request.getID();
+	data.request.order_placed_on = sc_request.getOpenedAt();
+	data.request.number = sc_request.getRequestNumber();
+	data.request.esimated_delivery = sc_request.getLongestDueDate();
+	var reqItemGr = new GlideRecord('sc_req_item');
+	reqItemGr.addQuery('request', request_id);
+	reqItemGr.query();
+	data.request.requestItems = [];
+	var spCurrencyFormatter = new SPCurrencyFormatter();
+	data.totalPrice = 0;
+	data.frequencyMap = {};
+	var gr = new GlideRecord('sys_choice');
+	gr.addQuery('name', 'sys_frequency');
+	gr.orderBy('sequence');
+	gr.query();
+	while(gr.next()) {
+		data.frequencyMap[gr.value] = {
+			display_value: gr.label.getDisplayValue(),
+			value: 0,
+			sequence: gr.getValue('sequence')
+		};
+	}
+	var recurringPrice = {}
+	while(reqItemGr.next()) {
+		var catItem = new sn_sc.CatItem(reqItemGr.cat_item).getItemSummary();
+		var frequency = reqItemGr.recurring_frequency.getValue();
+		var frequency_dv  = reqItemGr.recurring_frequency.getDisplayValue();
+		var itemTotalPrice = reqItemGr.price * reqItemGr.quantity.getValue();
+		data.totalPrice += itemTotalPrice;
+		var itemTotalReccuringPrice = reqItemGr.recurring_price * reqItemGr.quantity.getValue();
+		if (recurringPrice[frequency])
+			recurringPrice[frequency] += itemTotalReccuringPrice;
+		else
+			recurringPrice[frequency] = itemTotalReccuringPrice;
+
+		var ritm = new SNC.RequestItem(reqItemGr);
+		
+		data.request.requestItems.push({
+			sys_id: reqItemGr.sys_id.getValue(),
+			name: catItem.name,
+			delivery_date: ritm.getDeliveryDueDate(),
+			stage: reqItemGr.stage.getValue(),
+			number: reqItemGr.number.getValue(),
+			quantity: reqItemGr.quantity.getValue(),
+			show_quantity: catItem.show_quantity,
+			price: parseFloat(reqItemGr.price.getValue()),
+			price_dv: reqItemGr.price.getDisplayValue(),
+			recurring_price: parseFloat(reqItemGr.recurring_price.getValue()),
+			recurring_price_dv: reqItemGr.recurring_price.getDisplayValue() + ' ' + frequency_dv,
+			total_price: itemTotalPrice,
+			total_price_dv: spCurrencyFormatter.format(itemTotalPrice),
+			total_reccuring_price: itemTotalReccuringPrice,
+			total_reccuring_price_dv: spCurrencyFormatter.format(itemTotalReccuringPrice)  + ' ' + frequency_dv,
+			stageWidget : $sp.getWidget("cb6631d39f2003002899d4b4232e7030", {req_item_id: reqItemGr.sys_id.getValue(), onload_expand_request_item_stages: false})
+		});
+	}
+	data.totalPrice = spCurrencyFormatter.format(data.totalPrice);
+	data.request.recurringPrice = [];
+	for (var property in recurringPrice) {
+    if (recurringPrice.hasOwnProperty(property) &amp;&amp; data.frequencyMap[property]) {
+			var val = recurringPrice[property];
+			if (val &gt; 0) {
+				data.request.recurringPrice.push({
+						sequence: parseInt(data.frequencyMap[property].sequence),
+						val: spCurrencyFormatter.format(val),
+						val_dv: data.frequencyMap[property].display_value
+					});
+      }
+    }
+	}
+	data.request.recurringPrice.sort(function(a, b){return a.sequence - b.sequence;});
+	
+	$sp.logStat('Order Status View', 'sc_request', request_id);
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2017-05-31 17:30:44&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;86eb2c8e9f4332002528d4b4232e708a&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;36&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;SC Order Status&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Catalog (do not activate...see plugin description)" source="com.glide.service-portal.service-catalog"&gt;5e687cb9118033006517bd11ae6a4c4a&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_86eb2c8e9f4332002528d4b4232e708a&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-27 09:20:13&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+  &lt;div class="panel panel-default" ng-if="::!data.request"&gt;
+    &lt;div class="wrapper-md b-b"&gt;
+      &lt;h4&gt;${Request not found}&lt;/h4&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="panel panel-default" ng-if="::data.request"&gt;
+  &lt;div class="wrapper-md b-b visible-xs visible-sm text-center" ng-if="::data.is_new_order"&gt;
+    &lt;svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"&gt;
+      &lt;circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/&gt;
+      &lt;path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/&gt;
+    &lt;/svg&gt; 
+    &lt;div class="text-center text-success"&gt;
+      ${Thank you}!&lt;br&gt;
+      ${Your request has been submitted}.
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="wrapper-md b-b text-sm-center"&gt;
+    &lt;div class="text-left inline"&gt;
+      &lt;div class="text-muted"&gt;
+        ${Order Placed} : {{::data.request.order_placed_on}}
+      &lt;/div&gt;
+      &lt;div class="text-muted" ng-if="::options.display_request_number === 'true'"&gt;
+        ${Request Number} : &lt;b&gt;{{::data.request.number}}&lt;/b&gt;
+      &lt;/div&gt;
+      &lt;div class="text-muted"&gt;
+        ${Estimated Delivery} : {{::data.request.esimated_delivery}}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;table class="table table-striped status-table" style="table-layout:fixed;" ng-if="::data.request.requestItems.length &amp;&amp; displayRequestItemTable()"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th class="wrapper-md col-md-2" ng-if="::options.display_number === 'true'"&gt;${Request Item}&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-2" ng-if="::options.display_name === 'true'"&gt;${Order Item}&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-2 hidden-sm hidden-xs" ng-if="::options.display_delivery_date === 'true'"&gt;${Delivery Date}&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-3 hidden-sm hidden-xs" ng-if="::options.display_stage === 'true'"&gt;${Stage}&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-2 hidden-sm hidden-xs" ng-if="::options.display_price === 'true' &amp;&amp; data.showPrices"&gt;${Price} (${ea.})&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-1" ng-if="::options.display_quantity === 'true'"&gt;${Quantity}&lt;/th&gt;
+        &lt;th class="wrapper-md col-md-2" ng-if="::options.display_total_price === 'true' &amp;&amp; data.showPrices"&gt;${Total}&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr ng-repeat="requestItem in ::data.request.requestItems"&gt;
+        &lt;td class="wrapper-md" ng-if="::options.display_number === 'true'"&gt;
+        	&lt;a title="{{::requestItem.number}}" href="?id=ticket&amp;table=sc_req_item&amp;sys_id={{requestItem.sys_id}}&amp;view=sp"
+            ng-if="::requestItem.number"&gt;{{::requestItem.number}}&lt;/a&gt;
+        &lt;/td&gt;
+        &lt;td class="wrapper-md text-overflow-ellipsis" ng-if="::options.display_name === 'true'"&gt;
+          &lt;a title="{{::requestItem.name}}" href="?id=ticket&amp;table=sc_req_item&amp;sys_id={{requestItem.sys_id}}&amp;view=sp"
+            ng-if="::requestItem.name"&gt;{{::requestItem.name}}&lt;/a&gt;
+        &lt;/td&gt;
+        &lt;td class="wrapper-md hidden-sm hidden-xs" ng-if="::options.display_delivery_date === 'true'"&gt;
+          &lt;span ng-if="::requestItem.delivery_date"&gt;{{::requestItem.delivery_date}}&lt;/span&gt;&lt;/td&gt;
+        &lt;td class="wrapper-md hidden-sm hidden-xs" ng-if="::options.display_stage === 'true'"&gt;
+          &lt;sp-widget widget="::requestItem.stageWidget"&gt;&lt;/sp-widget&gt;
+        &lt;/td&gt;
+        &lt;td class="wrapper-md hidden-sm hidden-xs" ng-if="::options.display_price === 'true' &amp;&amp; data.showPrices"&gt;
+          &lt;div ng-if="::requestItem.price"&gt;
+            &lt;div&gt; &amp;nbsp;&amp;nbsp;&amp;nbsp;{{::requestItem.price_dv}}&lt;/div&gt;
+            &lt;div ng-if="::requestItem.recurring_price"&gt;&lt;span&gt; + {{::requestItem.recurring_price_dv}}&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div ng-if="::!requestItem.price"&gt;
+            ---
+          &lt;/div&gt;
+        &lt;/td&gt;
+        &lt;td class="wrapper-md" ng-if="::options.display_quantity === 'true'"&gt;{{::requestItem.show_quantity ? requestItem.quantity: '-'}}&lt;/td&gt;
+        &lt;td class="wrapper-md" ng-if="::options.display_total_price === 'true' &amp;&amp; data.showPrices"&gt;
+          &lt;div ng-if="requestItem.total_price"&gt;
+            &lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;{{::requestItem.total_price_dv}}&lt;/div&gt;
+            &lt;div ng-if="::requestItem.total_reccuring_price"&gt;&lt;span&gt; + {{::requestItem.total_reccuring_price_dv}}&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div ng-if="!requestItem.total_price"&gt;
+            ---
+          &lt;/div&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+
+  &lt;div class="wrapper-md b-t hidden-sm hidden-xs" ng-if="::(options.display_price === 'true' || options.display_total_price === 'true') &amp;&amp; data.showPrices"&gt;
+    &lt;div class="text-muted text-right"&gt;
+      &lt;h4 class="text-bold"&gt;${Total}: {{::data.totalPrice}}&lt;/h4&gt;
+      &lt;div class="h5 text-bold" ng-repeat="rec in ::data.request.recurringPrice"&gt; + {{rec.val}} {{rec.val_dv}}&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>049757f84f313300496900fe9310c746</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>SC Order Status</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_049757f84f313300496900fe9310c746</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

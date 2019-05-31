@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>db657ec05b011200e39fc7ad31f91a79</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;standard&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($rootScope, $location, $scope) {
+	/**
+	*
+	* Go to the Header widget and add this to the template: 
+	* &lt;widget id="widget-site-analytics" options="{trackingid: 'UA-XXXXX-Y'}"&gt;&lt;/widget&gt;
+	* 
+	*/
+
+	var c = this;
+
+	if (c.data.options.trackingid) {
+		ga.create('create', c.data.options.trackingid, c.options.cookieDomain | 'auto');
+	}
+
+	function track() {
+		var page = '';
+		if (c.data.options.trackingid) {
+			var params = $location.search();
+
+			if (params.id) {
+				page = '/' + params.id;
+				delete params.id;
+			} else {
+				page = '/index';
+			}
+
+			var qs = $.param(params);
+			if (qs.length &gt; 0) {
+				page += '/?' + qs;
+			}
+
+			ga('send', 'pageview', page);
+		}
+	}
+
+	track();
+
+	$rootScope.$on('$locationChangeSuccess', track);
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;widget-site-analytics&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Site Analytics&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"trackingid","section":"Data","label":"Tracking ID","type":"string"},{"name":"cookiedomain","section":"Data","label":"Cookie Domain","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script/&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-01-14 19:56:22&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;db657ec05b011200e39fc7ad31f91a79&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;45&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Site Analytics&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_db657ec05b011200e39fc7ad31f91a79&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 20:39:56&lt;/sys_updated_on&gt;
+        &lt;template/&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:30</sys_created_on>
+        <sys_id>0d9757f84f313300496900fe9310c7ba</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Site Analytics</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_0d9757f84f313300496900fe9310c7ba</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:30</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

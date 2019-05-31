@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>96cf39f3d7230200a9addd173e24d412</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sc&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, spUtil) {
+  $scope.$on('record.updated', function(name, data) {
+    spUtil.update($scope);
+  }) 
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Request Fields&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"pickup_msg","section":"Presentation","label":"Pickup message","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.isValidRecord = false;
+	var gr = $sp.getRecord();
+	if (gr == null || !gr.isValid())
+		return;
+
+	data.isValidRecord = true;
+	var agent = "";
+	var a = $sp.getField(gr, 'assigned_to');
+	if (a != null)
+		agent = a.display_value;
+
+	var fields = $sp.getFields(gr, 'number,state,priority,sys_created_on,price');
+	if (gr.getValue("sys_mod_count") &gt; 0)
+		fields.push($sp.getField(gr, 'sys_updated_on'));
+
+	var n = gr.getValue('recurring_price');
+	if (n &gt; 0)
+		fields.push($sp.getField(gr, 'recurring_price'));
+
+	data.tableLabel = gr.getLabel();
+	data.fields = fields;
+	data.variables = $sp.getVariablesArray();
+	data.agent = agent;
+	data.agentPossible = gr.isValidField("assigned_to");
+	data.table = gr.getTableName();
+	data.sys_id = gr.getUniqueValue();
+	if (!gr.due_date.nil())
+		data.completion = gr.due_date.getGlideObject().getLocalDate().getDisplayValue();
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-11-12 18:04:30&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;96cf39f3d7230200a9addd173e24d412&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;41&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Request Fields&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Catalog (do not activate...see plugin description)" source="com.glide.service-portal.service-catalog"&gt;5e687cb9118033006517bd11ae6a4c4a&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_96cf39f3d7230200a9addd173e24d412&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 20:43:52&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="data.isValidRecord" class="panel b" &gt;
+  &lt;div class="panel-heading bg-primary"&gt;
+    &lt;div ng-init="spSearch.targetRequests()"&gt;
+      &lt;sp-c-link target="form" table="data.table" id="data.sys_id"/&gt;
+    &lt;/div&gt;
+    &lt;h2 ng-if="data.completion" class="panel-title h4"&gt;${Estimated completion} {{data.completion}}&lt;/h2&gt;
+    &lt;h2 ng-if="!data.completion" class="panel-title h4"&gt;${Request details}&lt;/h2&gt;
+  &lt;/div&gt;
+
+  &lt;div class="panel-body"&gt;
+    &lt;div ng-if="data.fields.length &gt; 0"&gt;
+      &lt;div class="row"&gt;
+        &lt;div class="col-md-6 col-sm-12 col-xs-6 m-b" ng-repeat="field in data.fields" 
+             ng-if="field.value &amp;&amp; (field.type != 'decimal' || field.type == 'decimal' &amp;&amp; field.value != 0)" &gt;
+          &lt;label class="m-n"&gt;{{field.label}}&lt;/label&gt;
+          &lt;span ng-switch="field.type"&gt;
+            &lt;div ng-switch-when="glide_date_time" title="{{field.display_value}}"&gt;
+              &lt;sn-time-ago timestamp="::field.value" /&gt;
+            &lt;/div&gt;
+            &lt;div ng-switch-default &gt;{{field.display_value}}&lt;/div&gt;
+          &lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div ng-if="data.variables.length &gt; 0" ng-init="variable_toggle=true"&gt;
+      &lt;h4 ng-click="variable_toggle = !variable_toggle" style="cursor: pointer;"&gt;
+        &lt;span style="font-size: 12px;" class="glyphicon" 
+              ng-class="{'glyphicon-chevron-down': !variable_toggle, 'glyphicon-chevron-up': variable_toggle}"&gt;&lt;/span&gt;
+        ${Options}
+      &lt;/h4&gt;
+      
+      &lt;div ng-if="variable_toggle"&gt;
+        &lt;hr&gt;
+        &lt;div class="m-b" ng-repeat="variable in data.variables"&gt;
+          &lt;label class="m-n"&gt;{{variable.label}}&lt;/label&gt;
+          &lt;div&gt;{{variable.display_value}}&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div ng-if="data.agentPossible &amp;&amp; !data.agent &amp;&amp; options.pickup_msg" class="panel-footer"&gt;
+    &lt;div id="ticket_fields_footer" class="text-center text-muted" ng-bind-html="options.pickup_msg" style="font-style: italic;"&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>5c9757f84f313300496900fe9310c76a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Request Fields</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_5c9757f84f313300496900fe9310c76a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>847acf75c3e312004e2af71a54d3ae64</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, runtimeState, meetingAttendees, getController, CtrlIds, snPresence, $window, $timeout, $log, $rootScope) {
+	var c = this;
+	var headerCtrl = getController(CtrlIds.MEETING_HEADER);
+	c.isOpen = false;
+	c.DELAY_BEFORE_USER_ATTENDING = 10000; // number of milliseconds before we mark a user as joining the meeting
+
+	$scope.getAttendeeById = function(userId) {
+		if (!userId)
+			return;
+		var attendee = $scope.data.attendeeData.attendees[userId];
+		return attendee;
+	};
+	
+	$scope.userJoinedMeeting = function(userId) {
+		meetingAttendees.userJoinedMeeting($scope.rs.cab_meeting.record.sys_id.value, userId);
+	};
+
+	$scope.isCABManager = function() {
+		return runtimeState.isCABManager($window.NOW.user_id);
+	};
+
+	$scope.canBecomeHost = function() {
+		return !runtimeState.isCABManager($window.NOW.user_id) &amp;&amp; runtimeState.isCABManagerDelegate($window.NOW.user_id);
+	};
+
+	$scope.hostMeeting = function() {
+		c.isHostingInProgress = true;
+		var p = runtimeState.hostMeeting(c.data.currentUserId, c.data.meetingId);
+		p.then(function(s){
+			c.isHostingInProgress = false;
+		},function(e){
+			c.isHostingInProgress = false;
+		});
+	};
+
+	runtimeState.get($scope.data.meetingId).then(function(rs) {
+		$scope.rs = rs;
+
+		if ($scope.data.meetingId) {
+			meetingAttendees.get($scope.data.meetingId).then(function(attendeeModel) {
+				$scope.data.attendeeData = attendeeModel;
+				var meetingState = rs.cab_meeting.record.state.value;
+				var attendee = $scope.getAttendeeById($scope.data.currentUserId);
+				// if this user is already an attendee and "Joined meeting at" is already set there's nothing to do
+				if (attendee &amp;&amp; attendee.joined_at.value)
+					return;
+
+				$scope.addAttendeeTimer = $timeout(function() {
+					// the meeting may have gone in progress while we were waiting to make sure
+					// this user is definitely attending so update now if necessary
+					if ($scope.rs.cab_meeting.record.state.value == "in_progress")
+						$scope.userJoinedMeeting($scope.data.currentUserId);
+					else
+						$scope.$watch('rs.cab_meeting.record.state.value', function() {
+							if ($scope.rs.cab_meeting.record.state.value == "in_progress")
+								$scope.userJoinedMeeting($scope.data.currentUserId);
+						});
+				}, c.DELAY_BEFORE_USER_ATTENDING);
+			});
+		}
+	});
+
+	headerCtrl.updateNavCount("attendees", 0);
+	var onPresence = function(event, presenceArray) {
+		if (presenceArray &amp;&amp; presenceArray.length &gt; 0) {
+			c.onlines = 0;
+			angular.forEach(presenceArray, function(item) {
+				if (item.status == 'online') {
+					if ($scope.data.attendeeData.attendees[item.user])
+							c.onlines++;
+				}
+			});
+			headerCtrl.updateNavCount("attendees", c.onlines);
+		}
+	};
+
+	c.onlines = 0;
+	var presenceListener = $rootScope.$on("sn.presence", onPresence);
+	snPresence.init();
+	
+	$scope.$on('$destroy', function () {
+		if(presenceListener)
+			presenceListener();
+		if ($scope.addAttendeeTimer)
+			$timeout.cancel($scope.addAttendeeTimer);
+	});
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.scrollpane {
+  max-height: 70vh;
+  margin: -15px;
+  overflow-y: scroll;
+}
+
+.avatar-card {
+  height: 32px;
+  position: relative;
+}
+
+.avatar-wrapper {
+  position: absolute;
+  width: 32px;
+  height: 100%;
+  padding-right: 5px;
+}
+
+.avatar-name {
+  height: 100%;
+  position: absolute;
+  left: 37px;
+  line-height: 1;
+}
+
+.user {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 8px;
+}
+
+.user-last {
+  border-bottom: none;
+}
+
+.section {
+  padding-left: 15px;
+  padding-right: 15px;
+  font-family: inherit;
+  font-size: 18px;
+  background-color: #eee;
+}
+
+#btn_meeting_host{
+	position:absolute;
+	top:-45px;
+	right:50px;
+}
+
+#btn_meeting_host &amp;gt; i{
+	display:inline-block;
+}
+
+
+&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"data": {
+		"sometext": "world"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-attendees&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;CAB Workbench - Attendees&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"max_number","section":"Presentation","label":"Max number","type":"integer"},{"displayValue":"Knowledge Category","name":"kb_category","section":"Data","label":"KB category","type":"reference","value":"kb_category","ed":{"reference":"kb_category"}}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.meetingId = $sp.getParameter("sys_id");
+	data.currentUserId = gs.getUserID();
+	data.ariaLabelForHosting = gs.getMessage("host meeting");
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-05-23 14:34:54&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;847acf75c3e312004e2af71a54d3ae64&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;493&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Attendees&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_847acf75c3e312004e2af71a54d3ae64&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2018-06-28 15:22:25&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+&lt;div&gt;
+   &lt;h4 ng-show="data.attendeeData.attendees.length == 0" class="m-n"&gt;
+      &lt;span&gt;${No attendees}&lt;/span&gt;
+   &lt;/h4&gt;
+	&lt;div id='btn_meeting_host' ng-if='canBecomeHost()'&gt;
+		&lt;i ng-show='c.isHostingInProgress' class='icon-loading'&gt;&lt;/i&gt;
+		&lt;input type='button'  class="btn btn-sm btn-primary"
+		value='${Host}' ng-click="hostMeeting()" ng-disabled='c.isHostingInProgress' ng-attr-aria-label = "{{c.data.ariaLabelForHosting}}"/&gt;
+	&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="scrollpane"&gt;
+  &lt;div role="region" ng-attr-aria-labelledby="attendeeSection{{$index}}" ng-repeat='reason in data.attendeeData.sectionOrder track by $index'&gt;
+      &lt;div ng-attr-id="attendeeSection{{$index}}" class="section" ng-if="data.attendeeData.sectionData[reason].attendeeIds.length &gt; 0"&gt;{{::data.attendeeData.sectionData[reason].name}}&lt;/div&gt;
+      &lt;div role="list"&gt;
+        &lt;div role="listitem" ng-repeat="attendeeId in data.attendeeData.sectionData[reason].attendeeIds track by attendeeId" tabindex="0"&gt;
+            &lt;div ng-class="{'user user-last':$last, 'user':!$last}"&gt;
+                &lt;div class="avatar-card"&gt;
+                    &lt;div class="avatar-wrapper" aria-hidden="true"&gt;&lt;sn-avatar primary="data.attendeeData.attendees[attendeeId].__profile" show-presence="true"&gt;&lt;/sn-avatar&gt;&lt;/div&gt;
+                    &lt;div class="avatar-name"&gt;{{::data.attendeeData.attendees[attendeeId].attendee.display_value}}&lt;br/&gt;
+                      &lt;small&gt;{{data.attendeeData.attendees[attendeeId].attendance.display_value}}&lt;/small&gt;&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+  	 &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div tabindex="0" style="font-size:5px;" aria-label="${End of list}"&gt;&amp;nbsp;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>049757f84f313300496900fe9310c741</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Attendees</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_049757f84f313300496900fe9310c741</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

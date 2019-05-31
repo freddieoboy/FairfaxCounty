@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>9c73e3fc4f913300496900fe9310c7d4</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;custom&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope,$rootScope,$timeout) {
+
+  /* widget controller */
+
+  var c = this;
+
+  $scope.showWidget = "";
+
+        //Listening for "showHideWidget" event
+
+  $rootScope.$on('showHideWidget', function(event,data) {
+
+  $timeout(function(){
+
+            $scope.showWidget = data;
+
+  });
+
+  });
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.each-incident{&amp;#13;
+&amp;#13;
+display:flex;&amp;#13;
+&amp;#13;
+  justify-content:space-between;&amp;#13;
+&amp;#13;
+  align-items:center;&amp;#13;
+&amp;#13;
+  padding:10px;&amp;#13;
+&amp;#13;
+  border-top:1px solid #ddd;&amp;#13;
+&amp;#13;
+  clear:both;&amp;#13;
+&amp;#13;
+}&amp;#13;
+&amp;#13;
+.center-div{&amp;#13;
+&amp;#13;
+  float: none;&amp;#13;
+&amp;#13;
+  margin-left: auto;&amp;#13;
+&amp;#13;
+  margin-right: auto;&amp;#13;
+&amp;#13;
+}&amp;#13;
+&amp;#13;
+&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;requests&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;All Requests Widget&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"pickup_msg","section":"Presentation","label":"Pickup message","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+
+  /* populate the 'data' object */
+
+  /* e.g., data.table = $sp.getValue('table'); */
+
+data.requestList = [];
+
+var gr = new GlideRecord('change_request');
+
+gr.addQuery('category','Hardware');
+
+gr.query();
+
+while(gr.next()){
+
+var temp = {};
+
+  temp.number = gr.number.toString();
+
+  temp.short_desc = gr.short_description.toString();
+
+  data.requestList.push(temp);
+
+}
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2019-05-06 18:35:56&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;9c73e3fc4f913300496900fe9310c7d4&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;4&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;All Requests Widget&lt;/sys_name&gt;
+        &lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_9c73e3fc4f913300496900fe9310c7d4&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2019-05-08 13:50:01&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="showWidget == 'requests'"&gt;
+
+&lt;div class="container"&gt;
+
+&lt;!-- your widget template --&gt;
+
+  &lt;div class="col-md-10 center-div"&gt;
+
+  &lt;h3 style="display:inline-block;float:left;"&gt;Requests&lt;/h3&gt;
+
+  &lt;div ng-repeat="incident in data.requestList | limitTo:5" class="each-incident"&gt;
+
+      &lt;h4&gt;{{incident}}&lt;/h4&gt;
+
+      &lt;p style="margin-bottom:0px;"&gt;&lt;/p&gt;
+
+  &lt;/div&gt;  
+
+&lt;/div&gt;
+
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>1c9757f84f313300496900fe9310c76f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>All Requests Widget</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_1c9757f84f313300496900fe9310c76f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>8f3cd2424f817300496900fe9310c79c</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;custom&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function() {	
+	var c = this;	
+	c.submit = function() {
+		c.server.update();		
+	}	
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;pre {&amp;#13;
+	line-height: .5em;&amp;#13;
+}&amp;#13;
+&amp;#13;
+form input {&amp;#13;
+	text-align: right;&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;true&lt;/has_preview&gt;
+        &lt;id&gt;real-estate-tax-calc&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Real Estate Tax Calc&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Show Instance option title instead of the table's plural label","name":"use_instance_title","default_value":"false","section":"Presentation","label":"Use Instance Title","type":"boolean"},{"hint":"If enabled, show the filter in the breadcrumb section of the table","name":"enable_filter","default_value":"false","section":"Presentation","label":"Enable Filter","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[// data variable provided by caller
+data.results = [];
+if (input) {
+  data.results = input.results;
+  data.answer = calc();
+  data.results.unshift({n0: input.n0, answer: data.answer});
+	$sp.log("calc with input as follows... ");
+	$sp.log(input);
+	$sp.log("results array...");
+	$sp.log(data.results);
+} else {
+	$sp.log("calc initializing ");
+  data.n0 = 0;}
+
+function calc() {
+  var n0 = parseInt(input.n0);
+	var taxRate = 1.15;
+	var payableTaxes = n0 / 100;
+	var taxAmount = payableTaxes * taxRate;
+	return Math.floor(taxAmount);
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2019-04-28 00:21:24&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;8f3cd2424f817300496900fe9310c79c&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;30&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Real Estate Tax Calc&lt;/sys_name&gt;
+        &lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_8f3cd2424f817300496900fe9310c79c&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2019-04-29 16:03:04&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+  &lt;form ng-submit="$event.preventDefault()" class="form-horizontal well"&gt;
+    &lt;div class="form-group"&gt;
+      &lt;label&gt;${Estimate Real Estate Tax}&lt;/label&gt;&lt;br/&gt;
+      &lt;select id='taxChoices'&gt;
+        &lt;option id='1' value="Real Estate (base rate)" &gt;Real Estate (base rate)&lt;/option&gt;
+       &lt;/select&gt;&lt;br/&gt;
+      &lt;input value="0" ng-model="c.data.n0" type="number" /&gt;&lt;br/&gt;
+      &lt;input value="0" ng-model="c.data.answer" type="currency" readonly="true" /&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+      &lt;button type="button" class="btn btn-primary" ng-click="c.submit();"&gt;Submit&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="form-group" ng-if="c.data.results"&gt;
+      &lt;label&gt;${Result: How much you owe in Taxes}&lt;/label&gt;&lt;br/&gt;
+      &lt;pre&gt;
+      &lt;!-- Displayes the Calculation of the Taxes--&gt;
+      &lt;div ng-repeat="x in c.data.results track by $index"&gt;&lt;strong&gt;${{x.answer}}&lt;/strong&gt; = ( ${{x.n0}} / 100 ) * $1.15 &lt;/div&gt;
+      &lt;/pre&gt;
+    &lt;/div&gt;
+ &lt;/form&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>149757f84f313300496900fe9310c74b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Real Estate Tax Calc</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_149757f84f313300496900fe9310c74b</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

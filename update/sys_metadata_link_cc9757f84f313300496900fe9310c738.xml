@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>7acc49924f097300496900fe9310c798</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;custom&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function (spModal) {
+//Including and injecting spModal service into widget
+//c is used to reference object and function,c will be used to reference HTML template and client scripts
+var c = this;
+var shared = {}; //This is an empty array we can add to and share with the modal and embedded widget.
+c.onBrowsePets = function(size){
+//This function is called by a button in the HTML
+
+shared.currentPet = c.data.currentPet; //We store the currentPet data as an object in 'shared' so that it is available to the embedded widget.
+
+spModal.open({
+//spModal.open will open a modal, and we'll pass it the following parameters
+size: size,
+title: 'Adopt a Portal Pet!',
+widget: '5b2d811e4f057300496900fe9310c774', //Insert sys_id of the embedded widget - "Pet Selection"
+buttons: [
+{label:'${Adopt}', primary: true}
+],
+shared: shared //We make the 'shared' array available to modal's embedded widget
+}).then(function() {
+//This function is triggered by submitting/closing the modal.
+c.data.selectedPet = shared.selectedPet; //The selected pet is shared with this widget via the 'share' object
+c.server.update(); //Send the updated data object to the server script
+});
+
+}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;img.pet-house,&amp;#13;
+div.pet,&amp;#13;
+div.pet-name,&amp;#13;
+a.settings {&amp;#13;
+position: absolute;&amp;#13;
+}&amp;#13;
+button.adopt {&amp;#13;
+position: relative;&amp;#13;
+padding: 10px 20px;&amp;#13;
+margin-bottom: 20px;&amp;#13;
+font-size: 1.5em;&amp;#13;
+width: 100%;&amp;#13;
+}&amp;#13;
+div.pet-house-outer-container {&amp;#13;
+position: relative;&amp;#13;
+height: 220px;&amp;#13;
+}&amp;#13;
+div.pet-house-container {&amp;#13;
+position: relative;&amp;#13;
+width: 200px;&amp;#13;
+text-align: center;&amp;#13;
+z-index: 9;&amp;#13;
+margin: 0 auto;&amp;#13;
+}&amp;#13;
+div.pet {&amp;#13;
+height: 100px;&amp;#13;
+width: 100px;&amp;#13;
+top: 99px;&amp;#13;
+left: 50px;&amp;#13;
+background-size: cover;&amp;#13;
+}&amp;#13;
+img.pet-house {&amp;#13;
+height: 200px;&amp;#13;
+right: 0;&amp;#13;
+z-index: 999;&amp;#13;
+}&amp;#13;
+div.pet-name {&amp;#13;
+width: 100%;&amp;#13;
+top: 65px;&amp;#13;
+color: #fff;&amp;#13;
+text-shadow: #414141 1px 1px;&amp;#13;
+-webkit-transform: rotate(355deg);&amp;#13;
+-moz-transform: rotate(355deg);&amp;#13;
+-o-transform: rotate(355deg);&amp;#13;
+-ms-transform: rotate(355deg);&amp;#13;
+transform: rotate(355deg);&amp;#13;
+z-index: 9999;&amp;#13;
+}&amp;#13;
+a.settings {&amp;#13;
+top: 10px;&amp;#13;
+right: 30px;&amp;#13;
+color: #7B542B;&amp;#13;
+font-size: 1.5em;&amp;#13;
+z-index: 99999;&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"data": {
+		"sometext": "world"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;My Pet&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"cartTemplate","section":"Behavior","default_value":"large_shopping_cart_v2.html","label":"Cart Template","type":"string"},{"hint":"This will sync cart across different sessions","name":"auto_update_cart","default_value":"false","section":"Behavior","label":"Auto update cart","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+
+//Check the Pet Adoption table to populate the currentPet object if there is an existing adopted pet
+var userPet = new GlideRecord('u_pet_adoptions');
+userPet.addQuery('u_user',gs.getUserID());
+userPet.query();
+if(userPet.next()) {
+data.currentPet = {
+//build the currentPet object
+name: userPet.u_pet.u_name.toString(),
+photo: userPet.u_pet.u_picture.getDisplayValue().toString(),
+id: userPet.sys_id.toString()
+}
+}
+//when user selects a new pet to adopt to adopt,update the Pet adoption table
+if(input &amp;&amp;input.selectedPet != data.currentPet) {
+//If we have a pet selection, and the selection is not our currently selected pet
+ if(data.currentPet) {
+        //If we have a current pet,update the entry in the u_pet_adoptions table
+        userPet.u_pet = input.selectedPet.id;
+        userPet.update();
+        data.currentPet = input.selectedPet;
+} else {
+     //If there is no current Pet,make a new entry in the u_pet_adoptions table
+     var newPet = new GlideRecord('u_pet_adoptions');
+    newPet.initialize();
+    newPet.u_user = gs.getUserID();
+    newPet.u_pet = input.selectedPet.id;
+    newPet.insert();
+    data.currentPet = input.selectedPet;
+  }
+}
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2019-04-28 13:13:32&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;7acc49924f097300496900fe9310c798&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;2&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;My Pet&lt;/sys_name&gt;
+        &lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_7acc49924f097300496900fe9310c798&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2019-04-28 13:31:05&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="!data.currentPet"&gt;
+&lt;button ng-click="c.onBrowsePets('lg')" class="adopt btnbtn-primary"&gt;
+${Need emotional support?}
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;!--Users gonna need a button to open pet selection modal ..ng-if(if there is no current pet then show the button--&gt;
+&lt;!--On click of the button I will go ahead and open the function lg--&gt;
+&lt;!--House for the adopted pet to live in--&gt;
+&lt;div class="pet-house-outer-container" ng-if="data.currentPet"&gt;
+&lt;div class="pet-house-container"&gt;
+&lt;div class="pet" style="background: url('{{data.currentPet.photo}}') center center;background-size: cover;"&gt;&lt;/div&gt;
+&lt;img class="pet-house" ng-src="pet-house.png" /&gt;
+&lt;div class="pet-name"&gt;
+{{data.currentPet.name}}
+&lt;/div&gt;
+&lt;!--Link to browse pets--&gt;
+&lt;a class="settings" href="javascript:void(0)" ng-click="c.onBrowsePets('lg')"&gt;
+&lt;i class="fa fa-cog"&gt;&lt;/i&gt;
+&lt;/a&gt;
+&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>cc9757f84f313300496900fe9310c738</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>My Pet</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_cc9757f84f313300496900fe9310c738</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>25bc8352d7330200a9addd173e24d448</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, spUtil) {
+  function get() {
+    spUtil.update($scope);
+  }
+
+  $scope.$on('sp.outage.updated', get); 
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css&gt;.bs-callout {
+  margin: 10px 0 !important;
+  padding: 20px !important;
+  border-left-style: solid;
+  border-left-width: 10px;
+}
+
+.bs-callout-outage {
+  background-color: #fdf7f7;
+  border-color: #d9534f;
+}
+
+.bs-callout-degradation {
+  background-color: #fcf8f2;
+  border-color: #f0ad4e;
+}
+
+.bs-callout-planned {
+  background-color: #f4f8fa;
+  border-color: #5bc0de;
+}
+
+.bs-callout-success {
+  background-color: #ebf1e8;
+  border-color: #5cb85c;
+}
+
+.tooltip-inner {
+    width: 150px;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "table": "incident",
+    "count": 25
+  },
+  "options": {
+		"color": "success",
+		"glyph": "cogs",
+    "title": "Incidents"
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Service History&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"typeahead_search","default_value":"{title: 'How can we help?', size: 'lg', color: 'default'}","section":"Presentation","label":"Typeahead Search","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[// populate the 'data' object
+// e.g., data.table = $sp.getValue('table');
+data.outages = [];
+data.service = (input &amp;&amp; input.service) || $sp.getParameter("service");
+if (data.service) {
+	var svc = new GlideRecord("cmdb_ci_service");
+	if (!svc.get(data.service))
+		data.service = null;
+	data.serviceName = svc.getDisplayValue();
+	var outs = new GlideRecord("cmdb_ci_outage");
+	outs.orderByDesc("begin");
+	outs.addQuery("cmdb_ci", data.service);
+	outs.addNotNullQuery("begin");
+	outs.addNotNullQuery("end");
+	outs.addQuery("end", "&lt;=", gs.nowNoTZ());
+	outs.setLimit(100);
+	outs.query();
+	while (outs.next()) {
+		var out = {};
+		out.type = outs.type.getDisplayValue();
+		out.typeValue = outs.getValue("type");
+		out.beginDisplay = outs.begin.getDisplayValue();
+		out.beginValue = outs.getValue("begin");
+		out.duration = outs.duration.getDisplayValue();
+		data.outages.push(out);
+	}
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-11-20 18:09:06&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;25bc8352d7330200a9addd173e24d448&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;95&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Service History&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Status" source="com.glide.service-portal.service-status"&gt;3468f8b9118033006517bd11ae6a4c06&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_25bc8352d7330200a9addd173e24d448&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:11:20&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="data.service" class="panel panel-{{options.color}} b"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h4 class="panel-title"&gt;${Service History} - {{::data.serviceName}}&lt;/h4&gt;
+  &lt;/div&gt;
+
+  &lt;div class="panel-body"&gt;
+    &lt;div ng-if="data.outages.length"&gt;${From most recent to oldest, this list shows all outages, degradations and planned maintenance for this service}&lt;/div&gt;
+    &lt;div ng-if="!data.outages.length"&gt;
+      ${No past issues have been recorded for this service}
+    &lt;/div&gt;
+    &lt;div ng-if="data.outages.length &gt; 0" &gt;
+      &lt;div class="timeline-item" ng-repeat="e in data.outages"&gt;
+        &lt;div class="bs-callout bs-callout-{{e.typeValue}}"&gt;
+          &lt;div class="timeline-heading"&gt;
+            &lt;h4 class="timeline-title"&gt;{{::e.type}} - {{data.serviceName}}&lt;/h4&gt;
+            &lt;small class="text-muted"&gt;
+              &lt;span class="glyphicon glyphicon-time " /&gt;
+              &lt;sn-time-ago timestamp="::e.beginValue"&gt;&lt;/sn-time-ago&gt;
+              &lt;div&gt;${Started} {{e.beginDisplay}}&lt;span ng-if="e.duration"&gt;, ${Duration} {{e.duration}}&lt;/span&gt;&lt;/div&gt;
+            &lt;/small&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>d78717f84f313300496900fe9310c76c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Service History</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_d78717f84f313300496900fe9310c76c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

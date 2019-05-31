@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>5ae88214d7111200a9addd173e24d493</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, spUtil) {
+	var c = this;
+
+	c.subscribe = function() {
+		c.data.action = "subscribe";
+		c.server.update();
+	}
+	
+	c.unsubscribe = function() {
+		c.data.action = "unsubscribe";
+		c.server.update();
+	}
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"data":
+	{
+		"table": "incident",
+		"view": "default",
+		"o": "opened_at",
+		"d": "desc",
+		"filter": "activeEQtrue",
+		"p": 1,
+		"fields": "number,short_description"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Service Status Subscription&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"pickup_msg","section":"Presentation","label":"Pickup message","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[if (typeof input != "undefined") {
+	if (input.action == "subscribe") {
+		var sub = new GlideRecord("m2m_sp_status_subscription");
+		sub.addQuery("sys_user", gs.getUserID());
+		sub.addQuery("cmdb_ci_service", input.serviceID);
+		sub.query();
+		if (!sub.next()) {
+			sub.sys_user = gs.getUserID();
+			sub.cmdb_ci_service = input.serviceID;
+			sub.insert();
+		}
+	}
+	else if (input.action == "unsubscribe") {
+		var sub = new GlideRecord("m2m_sp_status_subscription");
+		sub.addQuery("sys_user", gs.getUserID());
+		sub.addQuery("cmdb_ci_service", input.serviceID);
+		sub.query();
+		while (sub.next())
+			sub.deleteRecord();
+	}	
+}
+
+data.serviceID = (input &amp;&amp; input.serviceID) || $sp.getParameter("service");
+var service = new GlideRecord("cmdb_ci_service");
+if (service.get(data.serviceID)) {
+	var sub = new GlideRecord("m2m_sp_status_subscription");
+	sub.addQuery("sys_user", gs.getUserID());
+	sub.addQuery("cmdb_ci_service", data.serviceID);
+	sub.query();
+	data.subscriber = sub.hasNext();
+} else
+	data.serviceID = null;
+
+data.loggedIn = gs.isLoggedIn();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-01-27 21:35:31&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;5ae88214d7111200a9addd173e24d493&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;43&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Service Status Subscription&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Status" source="com.glide.service-portal.service-status"&gt;3468f8b9118033006517bd11ae6a4c06&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_5ae88214d7111200a9addd173e24d493&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:12:06&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="data.loggedIn &amp;&amp; data.serviceID" class="panel panel-{{options.color}} b"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h4 class="panel-title"&gt;${Service Status Updates}&lt;span ng-if="data.subscriber" class="fa fa-envelope" style="float:right"&gt;&lt;/span&gt;&lt;/h4&gt;
+  &lt;/div&gt;
+
+  &lt;div class="panel-body"&gt;
+    &lt;div ng-if="data.subscriber"&gt;
+      &lt;div class="m-b"&gt;${You are currently subscribed to updates on this Service's status}&lt;/div&gt;
+      &lt;button class="btn btn-primary btn-block" ng-click="c.unsubscribe()"&gt;${Unsubscribe From Updates}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div ng-if="!data.subscriber"&gt;
+      &lt;div class="m-b"&gt;${You are not subscribed to updates on this Service's status}&lt;/div&gt;
+      &lt;button class="btn btn-primary btn-block" ng-click="c.subscribe()"&gt;${Subscribe To Updates}&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:25</sys_created_on>
+        <sys_id>ff8717f84f313300496900fe9310c7b1</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Service Status Subscription</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_ff8717f84f313300496900fe9310c7b1</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:25</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

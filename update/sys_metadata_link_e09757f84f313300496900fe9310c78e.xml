@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>b8c1c333d7123100a9ad1e173e24d45e</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;standard&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function() {	
+	var c = this;
+	c.update = function() {
+		c.data.price = false;
+		c.server.get({symbol: c.data.symbol}).then(function(r) {			
+			c.data.price = r.data.price;			
+		});
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;widget-stock&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Stock&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"embeddedWidgetId","section":"Data","label":"Embedded Widget Id","type":"string"},{"name":"embeddedWidgetOptions","default_value":"","section":"Data","label":"Embedded Widget Options","type":"string"},{"name":"modalBodyClass","section":"Data","label":"Optional Class name for modal body","type":"string"},{"name":"beforeRender","section":"Data","label":"Before modal render Callback called with embedded widget data object","type":"string"},{"name":"afterClose","section":"Data","label":"After modal close Callback","type":"string"},{"name":"afterOpen","section":"Data","label":"After modal open Callback called with modal controller","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[data.typeSymbolMsg = gs.getMessage("Type stock symbol");
+if (input) {
+	var r = new RESTMessage('Yahoo Finance', 'get');
+	r.setStringParameter('symbol', input.symbol);
+	var response = r.execute();
+	data.price = response.getBody();
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-02-24 23:23:08&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;b8c1c333d7123100a9ad1e173e24d45e&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;85&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Stock&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_b8c1c333d7123100a9ad1e173e24d45e&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:15:05&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;${Symbol Lookup}: &lt;input ng-model="c.data.symbol" ng-model-options="{debounce: 750}" ng-change="c.update()" placeholder="{{::data.typeSymbolMsg}}" /&gt;
+&lt;div ng-show="c.data.symbol" style="font-size: 2em;"&gt;        
+  &lt;p&gt;${Stock Price}: &lt;span ng-if="!c.data.price"&gt;${Requesting stock price}&lt;/span&gt;&lt;span&gt;{{c.data.price | currency:"$"}}&lt;/span&gt;&lt;/p&gt;
+ &lt;img ng-src="http://chart.finance.yahoo.com/z?s={{c.data.symbol}}&amp;t=1d&amp;z=l"/&gt;
+&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:29</sys_created_on>
+        <sys_id>e09757f84f313300496900fe9310c78e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Stock</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_e09757f84f313300496900fe9310c78e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:29</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

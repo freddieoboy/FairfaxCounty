@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>3e9d0792db1022004d27b31be0b8f5af</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $timeout, $window, CAB, runtimeState, meetingAgenda, modelUtil, go) { 
+	var ctrl = this;
+	
+	var KEY = {  //Move to CAB constants.
+		LEFT_ARROW: 37,
+		RIGHT_ARROW: 39,
+	};
+	
+	var g_form;
+	var delayRefresh;
+	// Grab the g_form instance after it's initialised
+	$scope.$on('spModel.gForm.initialized', function(e, gFormInstance) {
+		g_form = gFormInstance;
+		if (delayRefresh) {
+			delayRefresh();
+			delayRefresh = null;
+		}
+	});
+	
+	function runtimeStateAvailable() {
+		return $scope.rs &amp;&amp; $scope.rs.cab_meeting;
+	}
+	var meeting = {
+		start: function() {
+			runtimeState.startMeetingAndSelectNextAgenda();
+		},
+		end: function() {
+			runtimeState.endMeeting();
+		},
+		pending: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.PENDING;
+		},
+		inProgress: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.IN_PROGRESS;
+		},
+		canceled: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.CANCELED;
+		},
+		complete: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.COMPLETE;
+		},
+		host: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return runtimeState.isCABManager($scope.data.userId);
+		},
+		agendaComplete: function() {
+			return !meetingAgenda.getNextPendingAgendaItem();
+		},
+		loading: true,
+	};
+	
+	var agendaItemCtrl = {
+		canReadTask: function() {
+			return $scope.agendaItem &amp;&amp; $scope.agendaItem.task &amp;&amp; $scope.agendaItem.task.record;
+		}
+	};
+	
+	var cabCtrl = {
+		onEdit: function() {
+			go.toChangeFormModal($scope.data.sys_id);
+		},
+		tab: {
+			onSelect: function(tabId) {
+				if (tabId &amp;&amp; cabCtrl.tab.defn[tabId])
+					cabCtrl.tab._selTabId = tabId;
+
+				if (!g_form)
+					return;
+					
+				// Reset any string values in the tab to force resize of field
+				var tabSections = cabCtrl.tab.defn[tabId].sections;
+				tabSections.forEach(function(tabSection) {
+					tabSection.columns.forEach(function(column) {
+						column.fields.forEach(function(field) {
+							if (field.type !== "field")
+								return;
+
+							var fieldDef = $scope.data.f._fields[field.name];
+							if (fieldDef &amp;&amp; fieldDef.type === "string")
+								g_form.setUserValue(field.name, fieldDef.value + "\n", fieldDef.displayValue + "\n");
+						});
+					});
+				});
+			},
+			onKeydown: function($event, tabId) {
+				if (!cabCtrl.tab.defn[tabId])
+					return;
+					
+				if ($event.which === KEY.LEFT_ARROW || $event.which === KEY.RIGHT_ARROW) {
+					var nextLoc = $event.which === KEY.RIGHT_ARROW ? 1 : -1;
+					var tabLoc = cabCtrl.tab.order.indexOf(tabId) + nextLoc;
+						
+					if (tabLoc === cabCtrl.tab.order.length)
+						tabLoc = 0;
+					else if (tabLoc &lt; 0)
+						tabLoc = cabCtrl.tab.order.length -1;
+						
+						
+					var tabElem = document.getElementById(cabCtrl.tab.order[tabLoc] + "-tab");
+					var angTabElem = angular.element(tabElem.getElementsByTagName("a")[0]);
+					$timeout(function(){
+						angTabElem.triggerHandler('click', $event);
+					}, 0);
+					tabElem.focus();
+				}
+			},
+			selected: function(tabId) {
+				return cabCtrl.tab._selTabId === tabId;
+			},
+			_selTabId: null,
+			order: [],
+			defn: {}
+		},
+	};
+	$scope.data.f.cab = cabCtrl;
+
+	function buildCABControl() {
+		if ($scope.data.f &amp;&amp; $scope.data.f._sections) {
+			$scope.data.f._sections.forEach(function(section) {
+				if (section.id &amp;&amp; !section.caption &amp;&amp; cabCtrl.tab.order.length === 0) {  //It's the first section
+					cabCtrl.tab._selTabId = section.id;
+					cabCtrl.tab.order.push(section.id);
+					cabCtrl.tab.defn[section.id] = {
+						label: $scope.data.i18n.tabLabel.change,
+						sections: [],
+					};
+				}
+				
+				var sectionId = section.id ? section.id : cabCtrl.tab.order[cabCtrl.tab.order.length - 1];
+				if (!cabCtrl.tab.defn[sectionId]) {
+					cabCtrl.tab.order.push(sectionId);
+					cabCtrl.tab.defn[sectionId] = {
+						label: section.captionDisplay,
+						sections:[],
+					};
+				}
+				
+				cabCtrl.tab.defn[sectionId].sections.push(section);
+			});
+		}
+	}
+	
+	var unwatchChange;
+	function displayChange(agendaItemSysId) {
+		function refreshDetail() {
+			var task = $scope.agendaItem.task.record;
+			$scope.data.sys_id = task.sys_id.value;
+			Object.keys($scope.data.f._fields).forEach(function(fieldName){
+				if ($scope.data.f._fields[fieldName].type == "glide_date_time") 
+					g_form.setValue(fieldName, task[fieldName].display_value, task[fieldName].display_value); 
+				else 
+					g_form.setValue(fieldName, task[fieldName].value, task[fieldName].display_value); 
+				g_form.setReadonly(fieldName, true);
+			});
+			g_form.$private.userState.clearModifiedFields();
+		}
+		
+		if (unwatchChange)
+			unwatchChange();
+		
+		// If the agenda item id is invalid, return.
+		$scope.agendaItem = agendaItemSysId ? meetingAgenda.getAgendaItem(agendaItemSysId) : null;
+		
+		if (agendaItemCtrl.canReadTask())
+			unwatchChange = $scope.$watch("agendaItem.task.record", function() {  //Watch the task record for any changes
+				if (!g_form)
+					delayRefresh = refreshDetail; // Wait for the initialise event
+				else
+					refreshDetail();
+			}, true);
+	}
+
+	// Build scope
+	angular.extend($scope, {
+		meeting: meeting,
+		agendaItemCtrl: agendaItemCtrl,
+		agendaItem: null
+	});
+	
+	// Initial setup
+	runtimeState.get($scope.data.meetingId)
+	.then(function(runtimeState) {
+		$scope.rs = runtimeState;
+		return meetingAgenda.get($scope.data.meetingId);
+	}, modelUtil.failNicely)
+	.then(function(agendaItems) {
+		buildCABControl();
+		$scope.meeting.loading = false;
+		
+		$scope.$watch(function() {
+			return runtimeState.getViewAgendaItem();
+		},
+		displayChange);
+		
+		$scope.$watch('rs.current_agenda_item.value', function(newItemId) {
+			if (!newItemId &amp;&amp; runtimeState.isViewingCurrent())
+				displayChange();
+		});
+	}, modelUtil.failNicely);
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.edit-button {
+  border: 0;
+  margin: 0;
+  padding: 5px;
+  font-size: 20px;
+  color: rgb(85,85,85);
+  height: 35px;
+  width: 35px;
+}
+
+.edit-button:hover {
+	background: none;
+  	color: #278EFC;
+}
+
+.cab-tabset-container {
+  display: -ms-flexbox;
+  display: flex;
+  align-items: top;
+}
+
+.cab-tabset-container .grow {
+  -ms-flex: 1 1 auto;
+  flex-grow: 1;
+}
+
+.uib-tab {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/*.uib-tab a {
+  user-select: none;
+}*/
+
+#vcab_bootstrap_override {
+	    .nav-tabs {
+	       	margin-bottom: 30px;
+	    }
+  		.nav-tabs &amp;gt; li {
+        	margin-left: 2px;
+        }
+	    .nav-tabs &amp;gt; li.active {
+	      	border-bottom: 4px solid #278EFC !important;
+	   	}
+	   	.nav-tabs &amp;gt; li, .nav-tabs &amp;gt; li.active {
+	      &amp;gt;a, &amp;gt;a:hover, &amp;gt;a:focus {
+	          background-color: #FFFFFF;
+	          border: 0px !important;
+	      }
+	   }
+	   	.field-set {
+	       padding-left: 10px;
+	       padding-right: 10px;
+	    }
+	}
+
+	.no-record-msg-box {
+		text-align: center;
+		height: 500px;
+		background-color: #FFFFFF;
+		padding-top: 130px;
+		.no-record-msg {
+			border: 1px solid $color-lightest;
+			padding: 75px;
+			border-radius: 5px;
+		}
+		.meeting-status {
+			cursor: pointer;
+			color: #3696F8;
+		}
+		.no-record-msg, .meeting-status {
+			font-size: 18px;
+		}
+	}
+
+	.message-icon-box  {
+		text-align: center;
+		padding-right: 70px; /* width of body - width of msg-box */
+		padding-bottom: 112px; /* 72px(message pad) + 40px(icon width) */
+		.circle {
+			width: 72px;
+			height: 72px;
+			background: $color-accent;
+			-moz-border-radius: 50%;
+			-webkit-border-radius: 50%;
+			border-radius: 50%;
+			position: absolute; /* history icon should see above the line of msg-box */
+			z-index: 2;
+			margin: auto;
+			left: 0px;
+			right: 0px;
+			.icon-history {
+				font-size: 40px;
+				color: #FFFFFF !important;
+			}
+			display: -ms-flexbox;
+			display: flex;
+			-ms-flex-align: center;
+		  align-items: center;
+			-ms-flex-pack: center;
+		  justify-content: center;
+		}
+	}
+
+	.comment {
+	    font-weight: bold;
+	    margin-top: 2px;
+	    margin-bottom: 2px;
+	}
+
+	.mce-panel, .mce-btn {
+	    background-image: none;
+	    background-color: #f0f3f4;
+	}
+
+	.action-btn {
+	    margin-right: 5px;
+	}
+
+	.timeline-container {
+	    max-height: 50vh;
+	    height: 100%;
+	    overflow-y: auto;
+	}
+
+	.panel .panel {
+	    height: auto !important;
+	}
+
+	.panel-default {
+	    border: 0px !important;
+	}
+
+	.attachment-button {
+	    .glyphicon-paperclip {
+	        font-size: 18px;
+	    }
+	}
+	/*textarea {
+		max-height: 15em;
+		overflow-y: auto !important;
+	}*/
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": 
+	{
+		"zone": "America/Los_Angeles",
+		"title": "San Diego, CA",
+		"c_color": "blue"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-form-widget&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link&gt;&lt;![CDATA[function(scope, el, attr) {
+
+}]]&gt;&lt;/link&gt;
+        &lt;name&gt;CAB Workbench-Form Widget&lt;/name&gt;
+        &lt;option_schema&gt;[{"name": "view","label":"View name"}, {"name":"disableUIActions","label":"Disable UI Actions on Form","type":"boolean"},{"name":"showFormView","label":"Display current form view","type":"boolean"},{"name":"omitHeaderOptions","label":"Omit header options icon","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles&gt;snc_external,snc_internal&lt;/roles&gt;
+        &lt;script&gt;&lt;![CDATA[(function($sp, input, data, options, gs) {
+	function extend(obj, src) {
+		Object.keys(src).forEach(function(key) {
+			obj[key] = src[key];
+		});
+		return obj;
+	}
+	
+	var CHANGE_REQUEST = "change_request";
+	var CAB_WORKBENCH = "cab_workbench";
+	
+	extend(data, {
+		userId: gs.getUserID(),
+		table: CHANGE_REQUEST,
+		sys_id: "-1",
+		isNewRecord: true,
+		isValid: false,
+		canWrite: false,
+		canAttach: false,
+		view: CAB_WORKBENCH,
+		f: $sp.getForm(CHANGE_REQUEST, "-1", "", CAB_WORKBENCH),
+		isAdmin: gs.hasRightsTo('sp/configure.all/execute', null),
+		emptyStateTemplate: options.empty_state_template,
+		disableUIActions: true,
+		hideRelatedLists: true
+	});
+	
+	data.i18n = {
+		tabLabel: {
+			change: gs.getMessage("Change")
+		}
+	};
+	
+	/*
+	 * Clear out any metadata which is not required for a read-only view.
+	 * We're not trying to enforce anything on this read-only view so remove that information.
+	 */
+	if (data.f._fields)
+		Object.keys(data.f._fields).forEach(function(fieldName) {
+			data.f._fields[fieldName].readonly = true;
+			data.f._fields[fieldName].sys_readonly = true;
+			data.f._fields[fieldName].sys_mandatory = false;
+			data.f._fields[fieldName].readonlyClickthrough = false;
+			
+			// Delete any dependent field info.
+			delete data.f._fields[fieldName].dependentField;
+			delete data.f._fields[fieldName].dependentValue;
+			delete data.f._fields[fieldName].reference_qual;
+			delete data.f._fields[fieldName].ed.dependent_field;
+			delete data.f._fields[fieldName].ed.dependent_table;
+			delete data.f._fields[fieldName].ed.dependent_value;
+			delete data.f._fields[fieldName].ed.qualifier;
+		});
+	
+	/*
+	 * We're creating a read only display without mandatory fields.  Ignore any
+	 * policies which effect these.  We'll deal with this on the client side.
+	 * Keep hide/show policy
+	 */
+	if (data.f.policy)
+		data.f.policy.forEach(function(element) {
+			element.actions.forEach(function(action){
+				action.disabled = "ignore";
+				action.mandatory = "ignore";
+			});
+		});
+	
+	// Blank out any UI actions as they're not used for this UI
+	if (data.f._ui_actions)
+		data.f._ui_actions = [];
+	
+	if (data.f.client_script)
+		data.f.client_script = {
+			messages: {},
+			onChange: [],
+			onLoad: [],
+			onSubmit: []
+		};
+	
+})($sp, input, data, options, gs);]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-07-01 10:51:52&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;3e9d0792db1022004d27b31be0b8f5af&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;516&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench-Form Widget&lt;/sys_name&gt;
+        &lt;sys_package display_value="CAB Workbench - Form Layout" source="com.snc.change_management.cab.form_layout"&gt;b019fcfd118033006517bd11ae6a4c52&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_3e9d0792db1022004d27b31be0b8f5af&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2018-11-20 12:19:54&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div id="agenda-item-form-widget" class="panel-shift"&gt;
+	&lt;div class="panel panel-default"&gt;
+		&lt;div class="panel-body"&gt;
+          	&lt;div ng-if="agendaItem"&gt;
+            	&lt;div ng-if="agendaItemCtrl.canReadTask()"&gt;
+					&lt;sp-model form_model="data.f" mandatory="mandatory"&gt;&lt;/sp-model&gt;
+				&lt;/div&gt;
+            	&lt;div ng-if="!agendaItemCtrl.canReadTask()" class="panel panel-default"&gt;
+					&lt;div class="panel-body wrapper-lg text-center"&gt;${Record not found}&lt;/div&gt;
+				&lt;/div&gt;
+          	&lt;/div&gt;
+          	&lt;div ng-if="!agendaItem" class="no-record-msg-box"&gt;
+              	&lt;div ng-if="!meeting.loading" class="message-icon-box"&gt;
+					&lt;div class="circle"&gt;&lt;span class="icon-history"&gt;&lt;/span&gt;&lt;/div&gt;
+				&lt;/div&gt;
+              	&lt;div ng-if="meeting.pending()"&gt;
+                	&lt;span class="no-record-msg"&gt;${The meeting has not started. A record will display once the meeting begins.}&lt;/span&gt;
+                    &lt;br&gt;&lt;br&gt;
+					&lt;span ng-if="meeting.host()" class="meeting-status" ng-click="meeting.start()"&gt;${Start meeting}&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div ng-if="!meeting.loading &amp;&amp; meeting.inProgress() &amp;&amp; meeting.agendaComplete()"&gt;
+					&lt;span class="no-record-msg"&gt;${The agenda has been completed.}&lt;/span&gt;
+					&lt;br&gt;&lt;br&gt;
+					&lt;span ng-if="meeting.host()" class="meeting-status" ng-click="meeting.end()"&gt;${End meeting}&lt;/span&gt;
+				&lt;/div&gt;
+                &lt;div ng-if="meeting.complete()"&gt;
+					&lt;span class="no-record-msg"&gt;${The meeting has finished.}&lt;/span&gt;
+                &lt;/div&gt;
+              	&lt;div ng-if="meeting.canceled()"&gt;
+                    &lt;span class="no-record-msg"&gt;${This meeting has been cancelled.}&lt;/span&gt;
+                &lt;/div&gt;
+          	&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:24</sys_created_on>
+        <sys_id>638717f84f313300496900fe9310c789</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench-Form Widget</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_638717f84f313300496900fe9310c789</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:24</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

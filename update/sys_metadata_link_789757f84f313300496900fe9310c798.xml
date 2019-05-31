@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>c4c6264f47211200ba13a5554ee490ca</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, glideFormFactory, $location, spUtil, $timeout) {
+	var c = this;
+
+	// save functionality
+	c.save = function() {
+		c.data.options.forEach(function (opt) {
+			if (!opt.section) {
+				opt.section = "other";
+			}
+			referenceToServer(opt);
+			// transform choices
+			choiceToServer(opt);
+			var f = opt.field;
+			if (f.value &amp;&amp; opt.type !== 'glyphicon') {
+				opt.value = f.value;
+				opt.displayValue = f.displayValue;
+			}
+			delete opt.g_form;
+			delete opt.field;
+		})
+		c.data.action = 'save';
+		c.server.update().then(function() {
+			addForms();
+			c.data.action = '';
+			$scope.saveMsg = "Saved";
+			$timeout(function() {
+				$scope.saveMsg = null;
+			}, 2000);
+
+			$scope.$emit('$sp.we20.options_saved', c.data.options);
+		})
+	}
+	c.saveButtonSuffix = spUtil.getAccelerator('s');
+	var deregister = $scope.$on('$sp.save', c.save);
+	$scope.$on('$destroy', function() {deregister()});
+
+	// add a new option
+	c.add = function() {
+		var option = {name: "", label: "", type: "string", section:""};
+		c.data.options.push(option);
+		addForms();
+	}
+
+	c.remove = function(opt, $index) {
+		c.data.options.splice($index, 1);
+	}
+
+	// Automatically provide an ID that is based on the name of the widget
+	c.updateName = function(opt, $index) {
+		if (opt.name)
+			return;
+
+		opt.name = opt.label.toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+    .replace(/^-|-$/g, '');
+	}
+
+	c.fixName = function(opt) {
+		if (!opt.name)
+			return;
+
+		opt.name = opt.name.toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+    .replace(/^-|-$/g, '');
+	}
+	
+	c.onGlyphChange = function(opt) {
+		opt.default_value = opt.field.value;
+	}
+
+	// a form for each option
+	function addForms() {
+		c.data.options.forEach(function(opt) {
+			if (opt.g_form)
+				return;
+
+			opt.g_form = glideFormFactory.create($scope, 'sys_meta', '-2', opt.fields, null, null);
+			choiceToClient(opt);
+			if (opt.field)
+				return;
+
+			var r = opt.field = {};
+			r.name = "_blank";
+			r.label = "_blank";
+			r.value = "";
+			r.ed = {}
+			r.type = opt.type;
+			r.value = opt.value;
+			r.displayValue = opt.displayValue;
+			r.defaultValue = "";
+			if (!opt.section) {
+				opt.section = "other";
+			}
+			r.section = opt.section;
+			//r.hint = opt.hint;
+		})
+	}
+
+	function referenceToServer(opt) {
+		if (opt.type != 'reference' &amp;&amp; opt.type != 'glide_list')
+			return;
+
+		opt.ed = {};
+		opt.ed.reference = opt.field.value;
+
+		if (opt.type == 'glide_list')
+			opt.display_value_list = [];
+	}
+
+	function choiceToServer(opt) {
+		if (!opt.choices)
+			return;
+
+		opt.choices = opt.choices.split('\n');
+		var c = [];
+		opt.choices.forEach(function(ch) {
+			var nc = {};
+			nc.value = ch;
+			nc.label = ch;
+			c.push(nc);
+		})
+		opt.choices = c;
+	}
+	
+	function changeSection(sectionValue, opt) {
+		option.section.value = sectionValue;
+	}
+
+	function choiceToClient(opt) {
+		if (!opt.choices)
+			return;
+
+		var t = [];
+		opt.choices.forEach(function(ch){
+			t.push(ch.value);
+		})
+		opt.choices = t.join("\n");
+	}
+
+	// field_name, field_list only available if rectangle has 'table' field
+	c.type_options = [
+		'string', 'boolean', 'integer', 'reference', 'choice', 'field_name', 'field_list', 'glide_list', 'glyphicon'
+	]
+	
+	c.server.update().then(addForms);
+	//c.SP_INSTANCE_CONFIG_VIEW_SYS = "0ce54027b33232007a6de81816a8dca1";
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.option {
+ margin-top: 5px;
+ border-radius: 4px 4px 0 0;
+ border: 1px solid #ddd;
+ padding: 5px;
+}
+
+.option-new {
+background: #f0f3f4;
+}
+
+.panel-body {
+padding: 0px 5px 5px 5px;
+}
+
+.panel-title {
+margin-top: 5px;
+}
+
+.remove-wrp {
+height: 5px;
+}
+
+.we20-choices {
+  vertical-align: top;
+}
+
+.we20-choices textarea {
+  resize: none;
+}
+
+@media  (min-width: 992px) {
+	.modal-lg {
+		width: 990px;
+	}
+}
+
+.empty-state {
+padding: 10px;
+}
+
+.options-error {
+  padding: 10px 10px 0px 10px;
+  color: $brand-danger;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs display_value=""&gt;53ea865047311200ba13a5554ee49009&lt;/docs&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;we20&lt;/id&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;WE20&lt;/name&gt;
+        &lt;option_schema&gt;[]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+
+	//if (!input) return;
+
+	data.addOptionMsg = gs.getMessage("Add option");
+	data.optionLabelMsg = gs.getMessage("Option label");
+	data.nameMsg = gs.getMessage("Name (field name syntax)");
+	data.oneLinePerChoiceMsg = gs.getMessage("One line per choice");
+	data.hintOptionalMsg = gs.getMessage("Hint");
+	data.referencedTableMsg = gs.getMessage("Referenced table");
+	data.selectTableMsg = gs.getMessage("Select table...");
+	data.labelMsg = gs.getMessage("Label");
+	data.typeMsg = gs.getMessage("Type");
+	data.removeOptionMsg = gs.getMessage("Remove option");
+  data.defaultValueMsg = gs.getMessage("Default value");
+	data.formSectionMsg = gs.getMessage("Form section")
+	data.saveMsg = gs.getMessage("Save");
+
+	var gr;
+	data.sys_id = options.sys_id || input.sys_id;
+	if (input.action == 'save') {
+		gr = new GlideRecord('sp_widget');
+		gr.get(data.sys_id);
+		gr.setValue('option_schema', JSON.stringify(input.options));
+		gr.update();
+	}
+
+	data.options = [];
+	if (!data.sys_id)
+		return;
+
+	gr = new GlideRecord('sp_widget');
+	gr.get(data.sys_id);
+	data.title = gr.getValue('name');
+	data.widgetID = gr.getValue('id');
+	var o = gr.getValue('option_schema') || '[]';
+	try {
+		data.options = JSON.parse(o);
+	} catch(e) {
+		data.options = [];
+		data.optionsError = true;
+	}
+	data.canWrite = gr.option_schema.canWrite();
+	data.data_table = gr.getValue('data_table');
+	data.section_options = [];
+	
+	var sec = new GlideRecord("sys_ui_section");
+	sec.addEncodedQuery("view=0ce54027b33232007a6de81816a8dca1^name=" + data.data_table);
+	sec.query();
+	while(sec.next()) {
+		data.section_options.push(sec.getValue('sys_name'));
+	}
+})()]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-02-17 23:04:52&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;c4c6264f47211200ba13a5554ee490ca&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;367&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;WE20&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_c4c6264f47211200ba13a5554ee490ca&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-06 17:02:52&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel-shift"&gt;
+  &lt;div class="panel panel-default"&gt;
+    &lt;div class="panel-heading clearfix"&gt;
+      &lt;span class="panel-title pull-left"&gt;
+        ${Widget Options Schema} - {{data.title}} &lt;span ng-if="data.widgetID &amp;&amp; data.widgetID != data.title"&gt;({{data.widgetID}})&lt;/span&gt;
+      &lt;/span&gt;
+      &lt;div ng-if="data.canWrite" class="btn-group pull-right"&gt;
+        &lt;button type="button" class="btn btn-default" ng-click="c.add()" title="{{::data.addOptionMsg}}"&gt;&lt;fa name="plus" /&gt;&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body"&gt;
+      &lt;div ng-show="data.sys_id"&gt;
+        &lt;div ng-if="c.data.optionsError" class="options-error"&gt;
+          ${Widget option schema cannot be parsed} - ${Clicking [+] will replace the current invalid option schema, or you can go to the sp_widget record in the Platform UI to fix the invalid JSON syntax}
+        &lt;/div&gt;
+        &lt;div ng-repeat="opt in c.data.options" class="option" ng-class="{'option-new': (opt.name.length == 0 &amp;&amp; opt.label.length == 0)}"&gt;
+          &lt;form&gt;
+            &lt;div class="form-group remove-wrp"&gt;
+              &lt;div class="pull-right"&gt;
+                &lt;button class="btn btn-default remove-btn" title="{{::data.removeOptionMsg}}" ng-click="c.remove(opt, $index)"&gt;&lt;fa name="minus" /&gt;&lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+              &lt;label for="optLabel"&gt;&lt;span class="fa fa-asterisk mandatory" ng-class="{'mandatory-filled': opt.label.length &gt; 0}"&gt;&lt;/span&gt; {{::data.labelMsg}}&lt;/label&gt;
+              &lt;input id="optLabel" ng-disabled="!data.canWrite" class="form-control" ng-model="opt.label" ng-blur="c.updateName(opt, $index)" placeholder="{{::data.optionLabelMsg}}"&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+              &lt;label for="optName"&gt;&lt;span class="fa fa-asterisk mandatory" ng-class="{'mandatory-filled': opt.name.length &gt; 0}"&gt;&lt;/span&gt; {{::data.nameMsg}}&lt;/label&gt;
+              &lt;input id="optName" ng-disabled="!data.canWrite" class="form-control" ng-model="opt.name" ng-blur="c.fixName(opt)" placeholder="{{::data.nameMsg}}"&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+              &lt;label for="optType"&gt;&lt;span class="fa fa-asterisk mandatory" ng-class="{'mandatory-filled': opt.type.length &gt; 0}"&gt;&lt;/span&gt; {{::data.typeMsg}}&lt;/label&gt;
+              &lt;select id="optType" ng-disabled="!data.canWrite" ng-model="opt.type" class="sn-select-basic"&gt;
+                  &lt;option ng-repeat="item in c.type_options" value="{{item}}"&gt;{{item}}&lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+            &lt;!-- additional controls per type --&gt;
+            &lt;div class="form-group" ng-if="opt.type == 'reference' || opt.type == 'glide_list'"&gt;
+              &lt;label for="optReference"&gt;{{::data.referencedTableMsg}}&lt;/label&gt;
+              &lt;sn-record-picker id="optReference" sn-disabled="!data.canWrite" field="opt.field" table="'sys_db_object'"
+                                display-field="'label'"
+                                value-field="'name'"
+                                display-fields="'name'"
+                                placeholder="{{::data.selectTableMsg}}"
+                                search-fields="'label,name'" page-size="100"&gt;&lt;/sn-record-picker&gt;
+            &lt;/div&gt;
+
+            &lt;div class="form-group we20-choices" ng-if="opt.type == 'choice'" title="{{::data.choicesMsg}}"&gt;
+              &lt;label for="optChoices"&gt;${Choices}&lt;/label&gt;
+              &lt;textarea id="optChoices" sn-resize-height="trim" class="form-control" rows="2" ng-disabled="!data.canWrite" ng-model="opt.choices" placeholder="{{::data.oneLinePerChoiceMsg}}"&gt;&lt;/textarea&gt;
+            &lt;/div&gt;
+
+            &lt;div class="form-group"&gt;
+              &lt;label for="optHint"&gt;{{::data.hintOptionalMsg}}&lt;/label&gt;
+              &lt;input id="optHint" ng-disabled="!data.canWrite" class="form-control" ng-model="opt.hint" placeholder="{{::data.hintOptionalMsg}}"&gt;
+            &lt;/div&gt;
+
+						&lt;div class="form-group"&gt;
+              &lt;label for="defaultValue"&gt;{{::data.defaultValueMsg}}&lt;/label&gt;
+              &lt;input id="defaultValue" ng-if="opt.type !== 'glyphicon'" ng-disabled="!data.canWrite" class="form-control" ng-model="opt.default_value" placeholder="{{::data.defaultValueMsg}}"&gt;
+              &lt;sp-glyph-picker ng-if="opt.type === 'glyphicon'" field="opt.field" sn-on-change="c.onGlyphChange(opt)" /&gt;
+            &lt;/div&gt;
+            
+            &lt;div class="form-group"&gt;
+              &lt;label for="sectionValue"&gt;&lt;span class="fa fa-asterisk mandatory" ng-class="{'mandatory-filled': opt.section.length &gt; 0}"&gt;&lt;/span&gt; {{::data.formSectionMsg}}&lt;/label&gt;
+             &lt;!-- &lt;sn-record-picker id="sectionValue" field="opt.section" sn-disabled="!data.canWrite" table="'sys_ui_section'" 
+                                display-field="'sys_name'" value-field="'caption'" display-fields="'caption'"
+                                search-fields="'sys_name, caption'" page-size="100" 
+                                default-query="'view='+c.SP_INSTANCE_CONFIG_VIEW_SYS+'^name='+c.data.data_table"
+                                placeholder="${Other options}"
+                                &gt;&lt;/sn-record-picker&gt; --&gt;
+       
+              &lt;select id="sectionValue" ng-disabled="!data.canWrite" ng-model="opt.section" class="sn-select-basic"&gt;
+                  &lt;option ng-repeat="section in data.section_options track by $index" value="{{section}}"&gt;{{section}}&lt;/option&gt;
+                	&lt;option value="other"&gt;${Other options}&lt;/option&gt;
+              &lt;/select&gt;
+            &lt;/div&gt;
+            
+            &lt;div class="form-group" ng-if="opt.type == 'field_name' || opt.type == 'field_list'"&gt;
+              {{opt.label}} ${Depends on value in field 'table' from widget instance}
+            &lt;/div&gt;
+          &lt;/form&gt;
+        &lt;/div&gt;
+        &lt;h4 ng-if="c.data.options.length == 0" class="empty-state"&gt;
+          ${Use the [+] button to add a new option}
+        &lt;/h4&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-footer clearfix"&gt;
+      &lt;div ng-if="data.canWrite"&gt;
+        &lt;button type="button" class="btn btn-primary pull-right" ng-click="c.save()" title="{{::data.saveMsg}}"&gt;{{::data.saveMsg}} &lt;span ng-if="c.saveButtonSuffix"&gt;({{c.saveButtonSuffix}})&lt;/span&gt;&lt;/button&gt;
+        &lt;span ng-if="saveMsg" style="vertical-align:middle; padding-left:8px;"&gt;{{${saveMsg}}}&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:29</sys_created_on>
+        <sys_id>789757f84f313300496900fe9310c798</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>WE20</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_789757f84f313300496900fe9310c798</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:29</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

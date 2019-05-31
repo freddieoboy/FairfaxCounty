@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>07087c30ff223100ba13ffffffffff08</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[ ]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data/&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Test Context&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"maxRecords","section":"Presentation","label":"Max Records","type":"integer"},{"name":"widgetTitle","section":"Presentation","label":"Title of the Widget","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[// populate the 'data' object
+data.time = new Date().toString();
+$sp.getValues(data, "filter,title,color");]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-02-27 15:56:30&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;07087c30ff223100ba13ffffffffff08&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;30&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Test Context&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_07087c30ff223100ba13ffffffffff08&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:19:42&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-{{data.color}}"&gt;
+  &lt;div class="panel-heading"&gt;&lt;h4&gt;${Context test} - {{data.title}}&lt;/h4&gt;&lt;/div&gt;
+  &lt;div class="panel-body"&gt;
+    &lt;p&gt;${Time}: {{data.time}}&lt;/p&gt;
+    &lt;p&gt;${Color}: {{data.color}}&lt;/p&gt;
+    &lt;p&gt;${Rectangle sys_id}: {{widget.rectangle_id}}&lt;/p&gt;
+    &lt;p&gt;${Widget sys_id}: {{widget.sys_id}}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:22</sys_created_on>
+        <sys_id>cb8717f84f313300496900fe9310c742</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Test Context</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_cb8717f84f313300496900fe9310c742</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:22</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

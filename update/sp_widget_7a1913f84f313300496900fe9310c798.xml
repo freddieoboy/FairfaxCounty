@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope, $http, $window, spScUtil, nowAttachmentHandler, spUtil, $log, spAriaUtil) {
+  var c = this;
+	c.showSpecialInstructions = false;
+	c.showDeliveryAddr = false;
+	
+	c.updateDetails = function() {
+		c.deliverTo = c.data.cart.delivery_address;
+		c.special_instructions = c.data.cart.special_instructions;
+		c.courseName = {
+			displayValue: c.data.cart.course_name_display_name,
+			value: c.data.cart.course_name,
+			name: 'course_name'
+		};
+	}
+	
+	$scope.$on('dialog.upload_too_large.show', function(e){
+		$log.error($scope.m.largeAttachmentMsg);
+		spUtil.addErrorMessage($scope.m.largeAttachmentMsg);
+	});
+
+	$scope.m = $scope.data.msgs;
+	var ah = $scope.attachmentHandler = new nowAttachmentHandler(function (attachments, action) {
+		$scope.attachments = attachments;
+		if (action === "added")
+			$scope.setFocusToAttachment();
+		if (action === "renamed")
+			spAriaUtil.sendLiveMessage($scope.m.renameSuccessMsg);
+		if (action === "deleted")
+			spAriaUtil.sendLiveMessage($scope.m.deleteSuccessMsg);
+	}, function (error) {
+		spUtil.addErrorMessage(error.msg + error.fileName);
+	});
+	
+	ah.setParams('sc_cart', c.data.cart.sys_id, 1024 * 1024 * $scope.data.maxAttachmentSize);
+	
+	$scope.attachmentHandler.getAttachmentList();
+
+	$scope.confirmDeleteAttachment = function(attachment, $event) {
+    $rootScope.$broadcast("dialog.delete_attachment.show", {
+      parms: {
+        ok: function() {
+          $scope.attachmentHandler.deleteAttachment(attachment);
+          $rootScope.$broadcast("dialog.delete_attachment.close");
+        },
+        cancel: function() {
+          $rootScope.$broadcast("dialog.delete_attachment.close");
+        },
+        details: attachment.name
+      }
+    })
+  }
+
+	c.changeShippingInfo = function() {
+		if (c.data.action !== 'order_now')
+			c.server.get({
+						action: "change_shipping_info",
+						courseName: c.courseName.value,
+						special_instructions: c.special_instructions,
+						deliverTo: c.deliverTo,
+						cart: {name: c.data.cart.name}
+					}).then(function(response) {
+						c.data.cart = response.data.cart;
+						c.updateDetails();
+					});
+	}
+	
+	c.triggerCheckout = function() {
+		c.checkoutInProgress = true;
+		var additionalParms = {'sysparm_course_name': c.courseName.value, 'special_instructions': c.special_instructions, 'delivery_address': c.deliverTo};
+		if (c.data.action == 'order_now') {
+			spScUtil.orderNow(c.data.item.sys_id, c.data.item.quantity, c.data.item.fields, c.data.item.newRecordID, additionalParms).then(function(response) {
+				var a = response.data.result;
+				$scope.$emit("$$uiNotification", a.$$uiNotification);
+				$scope.$emit("$sp.sc_cat_item.submitted", a);
+				$window.location.href = '?id=sc_request&is_new_order=true&table=sc_request&sys_id=' + a.sys_id;
+			});
+		} else if (c.data.action == 'order_now_wishlisted_item') {
+			spScUtil.orderWishlistedItem(c.data.item.sys_id, c.data.item.quantity, c.data.item.fields, c.data.item.newRecordID, additionalParms).then(function(response) {
+				var a = response.data.result;
+				$scope.$emit("$$uiNotification", a.$$uiNotification);
+				$scope.$emit("$sp.sc_cat_item.submitted", a);
+				$rootScope.$broadcast("$sp.service_catalog.wishlist.update");
+				$window.location.href = '?id=sc_request&is_new_order=true&table=sc_request&sys_id=' + a.sys_id;
+			});
+		}
+		else {
+			c.data.delivery_address = c.deliverTo;
+			c.data.special_instructions = c.special_instructions;
+			c.data.course_name = c.courseName.value;
+			var isOrderGuide = c.data.action == 'order_guide';
+			c.server.update().then(function(response) {
+				c.data.action = null;
+				$rootScope.$broadcast("$sp.service_catalog.cart.update");
+				if (isOrderGuide)
+					$scope.$emit("$sp.sc_order_guide.submitted", $scope.data.result);
+				else
+					$scope.$emit("$sp.cart.submitted", $scope.data.result);
+				$window.location.href = '?id=sc_request&is_new_order=true&table=sc_request&sys_id=' + $scope.data.result.sys_id;
+			});
+		}
+	}
+	
+	$scope.$on("field.change", function(evt, parms) {
+		if (parms.field.name == 'course_name') {
+			c.data.cart.course_name = parms.newValue;
+			var getShippingAddrURL = '/api/sn_sc/v1/servicecatalog/cart/delivery_address/' + parms.newValue;
+			$http.get(getShippingAddrURL).then(function handleSuccess(response) {
+				if (response.data.result) {
+					c.deliverTo = response.data.result.trim();
+				} else {
+					c.deliverTo = '';
+				}
+				c.changeShippingInfo();
+			});
+		}
+	});
+
+	c.cancel = function() {
+		$rootScope.$broadcast("$sp.service_catalog.cart.place_order", true);
+	}
+	c.updateDetails();
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.attachment-list {
+  	max-height: 180px;
+  	overflow-y: scroll;
+  	margin-bottom: 10px;
+}
+
+.accordion-toggle {
+  	line-height: 13px;
+}
+
+textarea {
+	resize: vertical;
+}
+
+.select2-additional-display-field {
+  	padding-right: 5px;
+}
+
+-- ICON LINK CSS BEGIN:--------------------------------------------------------
+
+.iconlink a label,h2 {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1.1;
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+
+/* TOP ICON ---------- */
+
+a.top_icon {
+  display: block;
+  padding: 20px;
+  text-align: center;
+}
+
+a.top_icon .fa {
+  display: block;
+  text-align: center;
+}
+
+/* CIRCLE ICON ---------- */
+
+a.circle_icon {
+  display: block;
+  padding: 20px 0px 20px 70px;
+  position: relative;
+}
+
+a.circle_icon .fa {
+  position:absolute;
+  left: 0px;
+  top: 10px;
+}
+
+/* COLOR BOX ---------- */
+
+a.color_box {
+  display: block;
+  position: relative;
+  padding: 20px 20px 20px 82px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+a.color_box .fa {
+  position:absolute;
+  left: 20px;
+  top: 20px;
+  width:42px;
+  text-align: center;
+}
+
+.icon-link-background-primary {
+  background-color: $brand-primary;
+}
+
+.icon-link-background-info {
+  background-color: $brand-info;
+}
+
+.icon-link-background-success {
+  background-color: $brand-success;
+}
+
+.icon-link-background-warning {
+  background-color: $brand-warning;
+}
+
+.icon-link-background-danger {
+  background-color: $brand-danger;
+}
+
+.icon-link-background-default {
+  background-color: $brand-primary;
+}
+
+.text-primary {
+  color: $brand-primary;
+  
+  &amp;:hover {
+    color: darken($brand-primary, 20%);
+  }
+}
+
+.text-info {
+  color: $brand-info;
+  
+  &amp;:hover {
+    color: darken($brand-info, 20%);
+  }
+}
+
+.text-success {
+  color: $brand-success;
+  
+  &amp;:hover {
+    color: darken($brand-success, 20%);
+  }
+}
+
+.text-warning {
+  color: $brand-warning;
+  
+  &amp;:hover {
+    color: darken($brand-warning, 20%);
+  }
+}
+
+.text-danger {
+  color: $brand-danger;
+  
+  &amp;:hover {
+    color: darken($brand-danger, 20%);
+  }
+}
+
+.text-default {
+  color: $brand-primary;
+  
+  &amp;:hover {
+    color: darken($brand-primary, 20%);
+  }
+}
+-- ICON LINK CSS END:--------------------------------------------------------</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>review_widget_by_fred</id>
+        <internal>false</internal>
+        <link><![CDATA[function(scope, elem){
+    scope.setFocusToAttachment = function () {
+		setTimeout(function () {
+			var inboxArray = elem.find("a.view-attachment");
+			inboxArray.focus();
+		}, 100);
+	}
+}
+	]]></link>
+        <name>Review Widget by Fred</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	data.action = options.action;
+	if (data.action)
+		data.item = options.item;
+	else
+		data.action = 'checkout';
+	
+	var cartName = '';
+	if (input)
+		cartName = input.cart.name;
+	else if (options.cart)
+		cartName = options.cart.name;
+		
+	var m = data.msgs = {};
+	m.dialogTitle = gs.getMessage("Delete Attachment");
+	m.dialogMessage = gs.getMessage("Are you sure?");
+	m.dialogOK = gs.getMessage("OK");
+	m.dialogCancel = gs.getMessage("Cancel");
+	m.renameSuccessMsg = gs.getMessage("Attachment renamed successfully");
+	m.deleteSuccessMsg = gs.getMessage("Attachment deleted successfully");
+	
+	data.maxAttachmentSize = parseInt(gs.getProperty("com.glide.attachment.max_size", 1024));
+	if (isNaN(data.maxAttachmentSize))
+		data.maxAttachmentSize = 24;
+	m.largeAttachmentMsg = gs.getMessage("Attached files must be smaller than {0} - please try again", "" + data.maxAttachmentSize + "MB");
+	
+	var cartJS;
+	if (data.action !== 'order_now') {
+		cartJS = new sn_sc.CartJS(cartName, '' + gs.getUser().getID());
+		
+		if (input && input.action === "change_shipping_info") {
+			cartJS.setSpecialInstructions(input.special_instructions);
+			cartJS.setcourseName(input.courseName);
+			cartJS.setDeliveryAddress(input.deliverTo);
+		}
+	}
+	
+	if (input && input.action == 'order_guide') {
+		var guideJS = new sn_sc.OrderGuide('' + cartName);
+		var cartJS = new sn_sc.CartJS('' + cartName);
+		for(var i = 0; i < input.item.length; i++)
+			guideJS.navigateFromMap(input.item[i]);
+		cartJS.activateGuide();
+		cartJS.setDeliveryAddress(input.delivery_address);
+		cartJS.setSpecialInstructions(input.special_instructions);
+		cartJS.setcourseName(input.course_name);
+		var request = cartJS.checkoutGuide();
+		data.result = {sys_id: request.request_id, number: request.request_number, table: 'sc_request'};
+		$sp.logStat('Checkout Request', 'sc_request', request.request_id);
+		return;
+	}
+	
+	if (input && input.action === 'checkout') {
+		var request = cartJS.checkoutCart(true);
+		data.result = {sys_id: request.request_id, number: request.request_number, table: 'sc_request'};
+		$sp.logStat('Checkout Request', 'sc_request', request.request_id);
+		return;
+	}
+
+	if (data.action !== 'order_now')
+		data.cart = cartJS.getCartDetails(false);
+	else
+		data.cart = {name: cartName, sys_id: gs.generateGUID(), course_name: gs.getUser().getID(), course_name_display_name: gs.getUser().getDisplayName(), delivery_address: sn_sc.CartJS.getRequestedForAddress(gs.getUser().getID())};
+
+	if (options && options.course_name && options.course_name.id) {
+			data.cart.course_name = options.course_name.id;
+			data.cart.course_name_display_name = options.course_name.displayValue;
+	}
+	data.disable_req_for = sn_sc.CartJS.canViewRF();
+	var reqForDispCols = gs.getProperty("glide.sc.request_for.columns");
+	if (reqForDispCols && reqForDispCols.length > 0) {
+		 reqForDispCols = reqForDispCols.replace(/;/g, ",")
+	}
+	data.reqForDispCols = reqForDispCols || "name";
+	data.reqForQuery = gs.getProperty("glide.sc.request_for.query");
+	
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:21:11</sys_created_on>
+        <sys_id>7a1913f84f313300496900fe9310c798</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Review Widget by Fred</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sp_widget_7a1913f84f313300496900fe9310c798</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:21:11</sys_updated_on>
+        <template><![CDATA[<div class="panel panel-default">
+	<h1 class="padder-md h3">${Review Golf Courses}
+    <span class="text-base">
+  	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
+     </span>
+  </h1>
+	<div class="wrapper-md clearfix b-t">
+		<div class="form-group">
+			<div class="row">
+				<div class="col-sm-8">
+					<label for="u_course_name">${Select a Course} <i class="fa fa-info-circle" uib-tooltip="${Please select a course, rate your experience and leave a review. Thank you.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
+					<sn-record-picker id="u_course_name" 
+                            field="c.courseName" 
+                            table="'u_golf_courses'" 
+                            display-field="'u_course_name'" 
+                            display-fields="c.data.reqForDispCols" 
+                            value-field="'sys_id'" 
+                            search-fields="c.data.reqForDispCols"
+                            default-query="c.data.reqForQuery"
+                            page-size="100" 
+                            sn-disabled="!c.data.disable_req_for">
+          </sn-record-picker>
+				</div>
+       
+      	<div class="padder-v col-sm-12">
+          
+         	 <div class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div class="m-b fa fa-star-o fa-4x  text-warning"></div>
+        	 <div class="m-b fa fa-star-o fa-4x  text-warning"></div>
+           <div class="m-b fa fa-star-o fa-4x  text-warning"></div>
+        	 <div class="m-b fa fa-star-o fa-4x  text-warning"></div>
+         
+        </div>
+           
+           
+         <!--// 5 star review begin ---------------------------------------------------------------------------------------------------------------------------------------------------- --> 
+       		
+        <div ng-repeat="row in column.rows" class="repeated-row-container ng-scope"><sp-page-row columns="row.columns" row="row" container="container" class="ng-isolate-scope"><div class="sp-row-content  row"><!-- ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --><span ng-repeat="rectangle in column.widgets" sp-context-menu="contextMenu(event)" ng-controller="spWidgetDebug" class="ng-scope"><div id="x6816448c4f913300496900fe9310c7b4" class="v3caa67afcb13020000f8d856634c9c2e ng-scope" data="data" options="options" widget="widget" server="server"><div class="iconlink"> 
+ <!--// Top Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --><a ng-href="?id=" class="top_icon " target="" role="link" href="?id="> 
+  <div class="m-b fa fa-star fa-4x  text-warning"></div> <h2 class="ng-binding"></h2> <span class="text-muted ng-binding"></span> </a><!-- end ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --> 
+ <!--// Circle Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Circle Icon') --> 
+ <!--// Color Box --> 
+ <!-- ngIf: ::(options.link_template == 'Color Box') --> 
+</div></div><!-- ngIf: rectangle.debugModal --></span><!-- end ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --><span ng-repeat="rectangle in column.widgets" sp-context-menu="contextMenu(event)" ng-controller="spWidgetDebug" class="ng-scope"><div id="xefc64ccc4f913300496900fe9310c720" class="v3caa67afcb13020000f8d856634c9c2e ng-scope" data="data" options="options" widget="widget" server="server"><div class="iconlink"> 
+ <!--// Top Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --><a ng-if="::(options.link_template == 'Top Icon' || !options.link_template)" ng-href="?id=" class="top_icon " target="" role="link" href="?id="> 
+  <div class="m-b fa fa-star-o fa-4x  text-warning"></div> <h2 class="ng-binding"></h2> <span class="text-muted ng-binding"></span> </a><!-- end ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --> 
+ <!--// Circle Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Circle Icon') --> 
+ <!--// Color Box --> 
+ <!-- ngIf: ::(options.link_template == 'Color Box') --> 
+</div></div><!-- ngIf: rectangle.debugModal --></span><!-- end ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --><span ng-repeat="rectangle in column.widgets" sp-context-menu="contextMenu(event)" ng-controller="spWidgetDebug" class="ng-scope"><div id="x1ab6c8cc4f913300496900fe9310c7f9" class="v3caa67afcb13020000f8d856634c9c2e ng-scope" data="data" options="options" widget="widget" server="server"><div class="iconlink"> 
+ <!--// Top Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --><a ng-if="::(options.link_template == 'Top Icon' || !options.link_template)" ng-href="?id=" class="top_icon " target="" role="link" href="?id="> 
+  <div class="m-b fa fa-star-o fa-4x  text-warning"></div> <h2 class="ng-binding"></h2> <span class="text-muted ng-binding"></span> </a><!-- end ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --> 
+ <!--// Circle Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Circle Icon') --> 
+ <!--// Color Box --> 
+ <!-- ngIf: ::(options.link_template == 'Color Box') --> 
+</div></div><!-- ngIf: rectangle.debugModal --></span><!-- end ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --><span ng-repeat="rectangle in column.widgets" sp-context-menu="contextMenu(event)" ng-controller="spWidgetDebug" class="ng-scope"><div id="xf0a688cc4f913300496900fe9310c73a" class="v3caa67afcb13020000f8d856634c9c2e ng-scope" data="data" options="options" widget="widget" server="server"><div class="iconlink"> 
+ <!--// Top Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --><a ng-if="::(options.link_template == 'Top Icon' || !options.link_template)" ng-href="?id=" class="top_icon " target="" role="link" href="?id="> 
+  <div class="m-b fa fa-star-o fa-4x  text-warning"></div> <h2 class="ng-binding"></h2> <span class="text-muted ng-binding"></span> </a><!-- end ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --> 
+ <!--// Circle Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Circle Icon') --> 
+ <!--// Color Box --> 
+ <!-- ngIf: ::(options.link_template == 'Color Box') --> 
+</div></div><!-- ngIf: rectangle.debugModal --></span><!-- end ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --><span ng-repeat="rectangle in column.widgets" sp-context-menu="contextMenu(event)" ng-controller="spWidgetDebug" class="ng-scope"><div id="x5e660c8c4f913300496900fe9310c74f" class="v3caa67afcb13020000f8d856634c9c2e ng-scope" data="data" options="options" widget="widget" server="server"><div class="iconlink"> 
+ <!--// Top Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --><a ng-if="::(options.link_template == 'Top Icon' || !options.link_template)" ng-href="?id=" class="top_icon " target="" role="link" href="?id="> 
+  <div class="m-b fa fa-star-o fa-4x  text-warning"></div> <h2 class="ng-binding"></h2> <span class="text-muted ng-binding"></span> </a><!-- end ngIf: ::(options.link_template == 'Top Icon' || !options.link_template) --> 
+ <!--// Circle Icon --> 
+ <!-- ngIf: ::(options.link_template == 'Circle Icon') --> 
+ <!--// Color Box --> 
+ <!-- ngIf: ::(options.link_template == 'Color Box') --> 
+</div></div><!-- ngIf: rectangle.debugModal --></span><!-- end ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --><div ng-repeat="column in columns" class=" col-md-2 "><!-- ngRepeat: row in column.rows --><!-- ngRepeat: rectangle in column.widgets --></div><!-- end ngRepeat: column in columns --></div></sp-page-row></div>
+            
+        
+        <!--// 5 star review end ---------------------------------------------------------------------------------------------------------------------------------------------------- --> 
+        </div>
+      
+        <div class="col-sm-12">
+					<label for="special-instructions" ng-click="c.showSpecialInstructions = !c.showSpecialInstructions" tabindex="0">${Description} <span class="text-muted"> ${(Optional)}</span>
+						<i ng-class="c.showSpecialInstructions ? 'fa fa-minus-square-o' : 'fa fa-plus-square-o'" aria-expanded="{{c.showSpecialInstructions}}" class="m-t-xs pull-left accordion-toggle"></i>
+					</label>
+					<textarea class="form-control" ng-if="c.showSpecialInstructions" ng-model="c.special_instructions" id="special-instructions" ng-model-options="{ updateOn: 'blur' }" ng-change="c.changeShippingInfo()" rows="3"></textarea>
+				</div>
+		</div>
+    </div>
+	</div>
+	<div class="panel-footer clearfix">
+    <div class="attachment-list" ng-if="c.data.action !== 'order_now'">
+			<now-attachments-list template="sp_attachment_single_line" class="padder-b"></now-attachments-list>
+    </div>
+		<div>
+				<label ng-if="c.data.action !== 'order_now'" style="font-weight:normal;cursor:pointer;" class="padding-top-s">
+					<sp-attachment-button></sp-attachment-button>
+					<span style="padding-left:4px;">${Add attachments}</span>
+				</label>
+				<sp-message-dialog name="delete_attachment" title="{{::m.dialogTitle}}" message="{{::m.dialogMessage}}" ok="{{::m.dialogOK}}" cancel="{{::m.dialogCancel}}" dialog-class="delete-dialog"></sp-message-dialog>
+			<button ng-disabled="c.checkoutInProgress" name="submit" ng-click="c.triggerCheckout()" class="btn sc-btn btn-primary pull-right m-l-xs">
+				<span ng-show="!c.checkoutInProgress">${Submit}</span>
+				<span ng-show="c.checkoutInProgress">${Ordering...}</span>
+			</button>
+      <button name="cancel" ng-disabled="c.checkoutInProgress" ng-click="c.cancel()" class="btn btn-default pull-right">${Cancel}</button>
+		</div>
+	</div>
+</div>
+]]></template>
+    </sp_widget>
+</record_update>

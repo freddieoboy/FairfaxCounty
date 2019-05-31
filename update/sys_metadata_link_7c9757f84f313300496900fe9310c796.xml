@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>c254be50d7201200a9addd173e24d410</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;kb&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope) {
+	var c = $scope.data.categories;
+	var d = $scope.data.documents;
+	c.forEach(function(cat) {
+		cat.documents = [];
+		d.forEach(function(doc) {
+			if (doc.topCat == cat.sys_id) 
+				cat.documents.push(doc);
+		})
+	})
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;KB View 2&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Show search result relative ranking","name":"show_score","label":"Show score","type":"boolean"},{"hint":"Maximum number of search results when not specifying a search group (default 30)","name":"max_all","label":"Max results for All search","type":"integer"},{"hint":"Maximum number of search results when specifying a search group (default 15)","name":"max_group","label":"Max results for single search group","type":"integer"},{"name":"show_did_you_mean","default_value":"false","label":"Show Did You Mean","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[var kb = $sp.getValue("kb_knowledge_base");  // portal catalog
+data.kb = kb;
+var gr = new GlideRecord('kb_knowledge_base');
+gr.get(kb);
+data.kb_title = gr.getDisplayValue();
+$sp.getRecordValues(data, gr, 'title,description');
+data.categories = getCategories(kb);
+data.documents = getDocuments(kb);
+data.filterMsg = gs.getMessage("Filter...");
+
+function getDocuments(kb) {
+	var d = [];
+	var gr = new GlideRecord('kb_knowledge');
+	gr.addQuery('kb_knowledge_base', kb);
+	gr.addQuery('workflow_state', 'published');
+	gr.addQuery('valid_to', '&gt;=', (new GlideDate()).getLocalDate().getValue());
+	gr.orderBy('short_description');
+	gr.query();
+	while (gr.next()) {
+		var n = {};
+		$sp.getRecordValues(n, gr, 'sys_id,number,short_description,kb_category');
+		n.topCat = $sp.getKBTopCategoryID(n.kb_category);
+		d.push(n);
+	}
+	return d;
+}
+
+function getCategories(id) {
+	var c = [];
+	addCategories(c, id);
+	return c;
+}
+
+function addCategories(c, id) {
+	var gr = new GlideRecord('kb_category');
+	gr.addQuery('parent_id', id);
+	gr.orderBy('label');
+	gr.query();
+	while (gr.next()) {
+		var n = {};
+		$sp.getRecordValues(n, gr, 'sys_id,label,value,parent_id');
+		c.push(n);
+		//addCategories(c, gr.getValue('sys_id'));
+	}
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-12-21 17:58:12&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;c254be50d7201200a9addd173e24d410&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;71&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;KB View 2&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Knowledge Base (do not activate...see plugin description)" source="com.glide.service-portal.knowledge-base"&gt;d2687cb9118033006517bd11ae6a4ca8&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_c254be50d7201200a9addd173e24d410&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 18:55:37&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+  &lt;div ng-show="false" class="col-md-12"&gt;&lt;input ng-model="kb_view_filter" placeholder="{{data.filterMsg}}"/&gt;&lt;/div&gt;
+  &lt;h4 class="wrapper-md text-center"&gt;{{data.kb_title}}&lt;/h4&gt;
+  &lt;div class="col-md-3 col-sm-4 col-xs-6" ng-show="filtered.length &gt; 0" ng-repeat="cat in data.categories" ng-if="cat.documents.length"&gt;
+    &lt;a href="?id=kb_category&amp;kb_category={{cat.sys_id}}"&gt;
+      &lt;div class="panel panel-default" style="height:120px;overflow:hidden"&gt;
+        &lt;h4 class="text-center"  style="vertical-align:middle"&gt;{{cat.label}}&lt;/h4&gt;
+        &lt;div ng-if="filtered.length != 1" class="small text-center"&gt;${{{filtered.length}} articles}&lt;/div&gt;
+        &lt;div ng-if="filtered.length == 1" class="small text-center"&gt;${{{filtered.length}} article}&lt;/div&gt;
+        &lt;div ng-show="false" ng-repeat="doc in filtered = (cat.documents | filter : kb_view_filter)"&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:29</sys_created_on>
+        <sys_id>7c9757f84f313300496900fe9310c796</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KB View 2</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_7c9757f84f313300496900fe9310c796</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:29</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

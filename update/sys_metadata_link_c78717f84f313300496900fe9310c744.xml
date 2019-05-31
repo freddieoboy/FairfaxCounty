@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>0890cb6147001200ba13a5554ee49014</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $location, $rootScope) {
+	function nodeSelectionChanged(node) {
+		var evt = {};
+		var d = node.data;
+		evt.sys_id = d.sys_id;
+		if (evt.sys_id == display_id)  // get called twice by gojs
+			return; 
+
+		evt.table = d.sys_class_name || d.table;
+		display_id = evt.sys_id;
+		$location.search('table', evt.table).search('sys_id', evt.sys_id).search('spa', 1);
+		$rootScope.$broadcast('$sp.list.click', evt);
+	}
+	
+  var display_id = $location.search().sys_id;
+  $scope.page = {
+		displayValue: $scope.data.title,
+		value: $scope.data.id,
+		name: 'page'
+	};
+	
+	$scope.$on("field.change", function(evt, parms) {
+		if (parms.field.name == 'page')
+			changePage(parms.newValue);
+	});
+	
+	function changePage(p){
+		var path = $location.path();
+		var searchParms = $location.search();
+		$location.search({id: searchParms.id, p: p});
+	}
+	
+	if ($scope.data.id) {
+		var $go = go.GraphObject.make;  // for conciseness in defining templates
+		var node_id = "page_map";
+		var diagram =
+				$go(go.Diagram, node_id, {
+					initialAutoScale: go.Diagram.UniformToFill,
+					// define the layout for the diagram
+					layout: $go(go.TreeLayout, { nodeSpacing: 5, layerSpacing: 30 })
+				});
+
+		diagram.model = new go.TreeModel($scope.data.map);
+		var font = "13px Helvetica, Arial, sans-serif";
+
+		// Define a simple node template consisting of text followed by an expand/collapse button
+		diagram.nodeTemplate = $go(go.Node, "Horizontal",
+				{ selectionAdorned: false, selectionChanged: nodeSelectionChanged },  // this event handler is defined below
+				$go(go.Panel, "Auto",
+					$go(go.Shape, { strokeWidth: 3 }, 
+							new go.Binding("stroke", "isSelected", function(s){
+								if (s)
+									return "#FFD247";
+								else
+									return null;
+							}).ofObject(""),
+							new go.Binding("fill", "table", function(t){ 
+						switch(t){
+							case "sp_widget":
+								return "#0A5A9C";
+							case "sp_instance":
+								return "#2376BB";
+							case "sp_page":
+								return "#222";
+							default:
+								return "#999";
+						}
+					})),
+					$go(go.TextBlock, { font: font, stroke: "white", margin: 3 },
+						new go.Binding("text", "name"))
+				 )
+				//$go("TreeExpanderButton") // this was overkill for small diagrams
+			 );
+
+		diagram.select(diagram.findNodeForKey(display_id));
+
+		// Define a trivial link template with no arrowhead
+		diagram.linkTemplate = $go(go.Link, { selectable: false }, $go(go.Shape));  // the link shape
+
+		// Resize the graph container height when the graph changes size
+		diagram.addDiagramListener('DocumentBoundsChanged', function(){
+			var diagramHeight = parseInt(diagram.documentBounds.height);
+			jQuery("#" + node_id).height(diagramHeight);
+		})
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css&gt;.page-map {
+  margin-top: .5em;
+  margin-bottom: .5em;
+  border: 1px solid #ddd;
+  width:100%;
+  height:120px;
+  background-color: white;
+}
+
+.designer-link {
+  margin-top: .5em;
+  margin-bottom: .5em;
+  padding-left: 8px;  
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data/&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;SP Page Map&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"maxRecords","section":"Presentation","label":"Max Records","type":"integer"},{"name":"widgetTitle","section":"Presentation","label":"Title of the Widget","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.placeholderMsg = gs.getMessage("Select Page...");
+  var map = data.map = [];
+  var gr = new GlideRecord('sp_page');
+  var id = $sp.getParameter('p');
+	
+	if (!id) {
+		data.id = null;
+		return;
+	}
+	
+  gr.addQuery('id', id);
+  gr.query();
+  gr.next();
+
+	data.id = gr.getValue('id');
+	data.title = gr.getValue('title');
+  var m = getO(gr);
+  m.name = gr.getValue('id');
+  map.push(m);
+  getContainers(map, gr.getValue('sys_id')); 
+  
+  function getContainers(map, sys_id) {
+    var t = getGR('sp_container', 'sp_page', sys_id);
+    while (t.next()) {
+      var c = getO(t, sys_id);
+      c.name = t.getValue('name');
+      map.push(c);
+      getRows(map, t.getValue('sys_id'));
+    }
+  }
+
+  function getRows(map, sys_id) {
+    var n = 1;
+    var t = getGR('sp_row', 'sp_container', sys_id);
+    while (t.next()) {
+      var c = getO(t, sys_id);
+      c.name = "Row " + n++;
+      map.push(c);
+      getColumns(map, t.getValue('sys_id'));
+    }
+  }
+
+  function getColumns(map, sys_id) {
+    var n = 1;
+    var t = getGR('sp_column', 'sp_row', sys_id);
+    while (t.next()) {
+      var c = getO(t, sys_id);
+      c.name = "Column " + n++;
+      map.push(c);
+      getWidgetInstances(map, t.getValue('sys_id'));
+			getNestedRows(map, t.getValue('sys_id'))
+    }
+  }
+
+	function getNestedRows(map, sys_id) {
+		var n = 1;
+		var t = getGR('sp_row', 'sp_column', sys_id);
+		while (t.next()) {
+			var c = getO(t, sys_id);
+			c.name = "Nested Row " + n++;
+			map.push(c);
+			getColumns(map, t.getValue('sys_id'));
+		}
+
+	}
+	
+  function getWidgetInstances(map, sys_id) {
+    var n = 1;
+    var t = getGR('sp_instance', 'sp_column', sys_id);
+    while (t.next()) {
+      var c = getO(t, sys_id);
+      c.sys_class_name = t.getRecordClassName();
+      c.name = t.getValue("title") || "Instance " + n;
+      n++;
+      map.push(c);
+      getWidget(map, t.getValue('sys_id'), t.getValue('sp_widget'));
+    }
+  }
+
+  function getWidget(map, parent, sys_id) {
+    var t = new GlideRecord('sp_widget');
+    t.get(sys_id);
+		if (!t.isValidRecord()) {
+			gs.log("&gt;&gt;&gt; missing widget " + sys_id);
+			return;
+		}
+    var c = getO(t, parent);
+    c.name = t.getValue('name');
+    map.push(c);
+  }
+  
+  function getGR(table, parentField, parentID) {
+    var t = new GlideRecord(table);
+    t.addQuery(parentField, parentID);
+    t.orderBy('order');
+    t.query();
+    return t;
+  }
+  
+  // object that goes in the array 
+	// common vars table, key, sys_id
+  function getO(gr, parent) {
+    var c = {};
+    c.table = gr.getTableName();
+    c.key = gr.getValue('sys_id');
+    c.sys_id = gr.getValue('sys_id');
+    if (parent)
+      c.parent = parent;
+
+    return c;
+  }
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-11-30 19:32:51&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;0890cb6147001200ba13a5554ee49014&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;207&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;SP Page Map&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal Configuration Pages" source="com.glide.service-portal.config"&gt;bc68b8b9118033006517bd11ae6a4cbd&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_0890cb6147001200ba13a5554ee49014&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:13:50&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="m-t-sm"&gt;  
+  &lt;sn-record-picker field="page" table="'sp_page'" display-field="'title'" value-field="'id'" 
+                    display-fields="'id'" search-fields="'id,title'" page-size="100" placeholder="{{data.placeholderMsg}}"&gt;&lt;/sn-record-picker&gt;
+  &lt;div ng-if="data.title" class="designer-link"&gt;&lt;a ng-href="$spd.do#/{{portal.url_suffix}}/editor/{{data.id}}/" target="_spd"&gt;${Edit &lt;b&gt;{{data.title}} ({{data.id}})&lt;/b&gt; page in Designer} ➚&lt;/a&gt;&lt;/div&gt;
+  &lt;div id="page_map" class="page-map" ng-show="data.id"&gt;&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:22</sys_created_on>
+        <sys_id>c78717f84f313300496900fe9310c744</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>SP Page Map</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_c78717f84f313300496900fe9310c744</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:22</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

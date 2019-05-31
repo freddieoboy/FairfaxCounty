@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>28d805729f74030030581471367fcf80</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category/&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $window, $http, spUtil, $rootScope, $timeout, spAriaUtil) {
+	var c = this;
+
+	c.action = function(){
+		c.resultMessage = '';
+		$.ajax({
+			url : 'xmlhttp.do',
+			data : {
+				sysparm_processor : 'PwdAjaxWFRequestProcessor',
+				sysparm_name : 'validatePassword',
+				sysparam_process_id : c.data.procId,
+				sysparam_new_password : c.new_password
+			},
+			headers : {
+				'X-UserToken' : g_ck
+			},
+			success : setPassword,
+			error: function(){ }
+		});			
+	};
+
+	c.disableUpdate = function(){
+		return !(c.current_password &amp;&amp; c.new_password &amp;&amp; c.confirm_password) || c.errorMessage();        
+	};
+
+	c.errorMessage = function(){
+		if((c.current_password &amp;&amp; c.new_password) &amp;&amp; (c.current_password == c.new_password)){
+			c.resultMessage = '';
+			return c.data.reusedPasswordMsg;
+		}
+		else if((c.new_password &amp;&amp; c.confirm_password) &amp;&amp; (c.new_password != c.confirm_password)){
+			c.resultMessage = '';
+			return c.data.notMatchMsg;
+		}
+		else return '';
+	};
+	
+	function setPassword(response) {
+		var xml = response.documentElement.outerHTML;
+		var success = /answer=['"]success['"]/.test(xml);	
+		if(success) {
+			c.data.action = 'update';
+			c.data.old_password = c.current_password;
+			c.data.new_password = c.new_password;			
+			c.server.update().then(function() {
+				c.error = false;
+				if(c.data.result == 'success'){
+					c.resultMessage = c.data.successMsg;
+					c.changeSuccess = true;
+				}
+				else {
+					c.error = true;
+					if (c.data.result == 'incorrect old password')
+						c.resultMessage = c.data.wrongPasswordMsg;
+					else if (c.data.result == 'weak password') 
+						c.resultMessage = c.data.complexityMsg;
+					else
+						c.resultMessage = c.data.result;        
+				}
+			});
+		}
+		else {
+			c.error = true;
+			c.resultMessage = c.data.complexityMsg;					
+		}		
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.panel-heading {
+    padding: 20px 30px 7px;
+}
+
+.panel-body {
+    padding: 20px 30px 10px 30px;
+}
+
+.pwd-hint p,
+.pwd-hint div {
+ 	  margin: 0;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "table": "incident",
+    "count": 25
+  },
+  "options": {
+		"color": "success",
+		"glyph": "cogs",
+    "title": "Incidents"
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;widget-change-password&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Change Password&lt;/name&gt;
+        &lt;option_schema&gt;[]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles&gt;snc_external,snc_internal&lt;/roles&gt;
+        &lt;script&gt;&lt;![CDATA[(function(data) {
+	var user_id = gs.getUser().getID();
+	data.procId = gs.getProperty('glide.service_portal.default_password_process', 'c6b0c20667100200a5a0f3b457415ad5');
+	data.password_hint = getPasswordHint(data.procId);
+	
+	if (input &amp;&amp; input.action === 'update') {
+		var enc = new GlideEncrypter();
+		var encypted_new_passwd = enc.encrypt(input.new_password);
+		var encypted_old_passwd = enc.encrypt(input.old_password);
+		var process = new SNC.PwdProcess(data.procId);
+		var processSysId = process.getId();
+		var trackingMgr = new SNC.PwdTrackingManager();
+		var requestId = trackingMgr.createRequest(processSysId, user_id, gs.getSessionID(), 3);// 3: request type for Change Password
+		trackingMgr.updateRequestActionType(requestId, 4);// 4: request action type for Change Password
+
+		var wf = new Workflow();
+		var workflowId = wf.getWorkflowFromName('Pwd Change - Master');
+
+		var gr = wf.startFlow(workflowId, null, 'update', {
+			u_request_id : requestId,
+			u_user_id : user_id,
+			u_new_password : encypted_new_passwd,
+			u_old_password : encypted_old_passwd
+		});
+		gr.next();
+		var ctxId = gr.getValue('sys_id');
+
+		// check password changed or not
+		var wf_gr = new GlideRecord('wf_context');
+		if (wf_gr.get(ctxId)) {
+			data.result = wf_gr.getValue('result');
+			data.state = wf_gr.getValue('state');
+		}
+	}
+
+	data.newPasswordMsg = gs.getMessage("New Password");
+	data.currentPasswordMsg = gs.getMessage("Current Password");
+	data.confirmPasswordMsg = gs.getMessage("Confirm Password");
+	data.complexityMsg = gs.getMessage("Invalid password: " + data.password_hint);
+	data.successMsg = gs.getMessage('Your password has been changed successfully!');
+	data.wrongPasswordMsg = gs.getMessage('The old password you provided does not match our records.');
+	data.reusedPasswordMsg = gs.getMessage('New password cannot be same as your current password.');
+	data.notMatchMsg = gs.getMessage('Passwords must match.');
+
+	function getPasswordHint(procId) {
+		var credMgr = new SNC.PwdCredentialStoreManager();
+		var credId = credMgr.getCredentialStoreIdByProcessId(procId);
+		var credGr = new GlideRecord('pwd_cred_store');
+		if (credGr.get(credId)) { 
+			return credGr.pwd_rule_hint;
+		}
+	}
+	
+})(data);]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2017-08-29 03:22:24&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;28d805729f74030030581471367fcf80&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;238&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Change Password&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_28d805729f74030030581471367fcf80&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-21 16:49:54&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-{{::options.color}} b"&gt;
+	&lt;div class="panel-heading"&gt;
+		&lt;h4 class="panel-title"&gt;
+      &lt;i ng-if="options.glyph" class="fa fa-{{options.glyph}} m-r"&gt;&lt;/i&gt;
+			${Change My Password}
+		&lt;/h4&gt;
+	&lt;/div&gt;
+	&lt;div class="panel-body"&gt;
+    &lt;div ng-hide="c.changeSuccess"&gt;
+      &lt;label class="field-label" for="current_password"&gt;{{::data.currentPasswordMsg}}&lt;/label&gt;
+      &lt;div class="m-b-sm"&gt;
+        &lt;input class="form-control" type="password" ng-model="c.current_password" 
+               ng-required="true" id="current_password" name="current_password" /&gt;
+      &lt;/div&gt;
+      &lt;label class="field-label" for="new_password"&gt;{{::data.newPasswordMsg}}&lt;/label&gt;
+      &lt;div class="m-b-sm"&gt;
+        &lt;input class="form-control" type="password" ng-model="c.new_password" 
+               ng-required="true" id="new_password" name="new_password" /&gt;
+      &lt;/div&gt;
+      &lt;label class="field-label" for="confirm_password"&gt;{{::data.confirmPasswordMsg}}&lt;/label&gt;
+      &lt;div class="m-b-sm"&gt;
+        &lt;input class="form-control" type="password" ng-model="c.confirm_password" 
+               ng-required="true" id="confirm_password" name="confirm_password" password-match /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="m-b-sm pwd-hint" role="alert" ng-show="c.errorMessage() || c.resultMessage"&gt;
+      &lt;span class="text-danger"&gt;{{c.errorMessage()}}&lt;/span&gt; 
+      &lt;span class="text-primary" ng-class="{'text-danger': c.error}" ng-bind-html="c.resultMessage"&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="m-b-xl"&gt;
+      &lt;button type="submit" ng-hide="c.changeSuccess" class="btn btn-primary pull-right m-b-lg m-t-sm" 
+              ng-disabled="c.disableUpdate()" id="update" name="update" 
+              ng-click="c.action()"&gt;${Update}&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>9f8717f84f313300496900fe9310c774</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Change Password</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_9f8717f84f313300496900fe9310c774</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

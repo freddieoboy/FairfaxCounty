@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>4c1ab0f1eb10220034d1eeea1206fed4</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, CAB, runtimeState, timerService, meetingAgenda, approval, $uibModal, $log, i18n, $timeout, $q, spAuthModal, spUtil) {
+	var c = this;
+	var AC_ID = "cab-agenda-control";
+	
+	function runtimeStateAvailable() {
+		return $scope.rs &amp;&amp; $scope.rs.cab_meeting;
+	}
+	
+	function popModal(templateUrl) {
+		var modal = $uibModal.open({
+			animation: true,
+			controller: 'confirmApproval',
+			templateUrl: templateUrl
+		});
+		return modal.result;
+	}
+
+	function changeCurrentAgendaItem(itemId) {
+		if (!itemId) {
+			clearCurrentAgendaItem();
+			return;
+		}
+		
+		if ($scope.unwatchItemState)
+			$scope.unwatchItemState();
+
+		if ($scope.timer &amp;&amp; $scope.timer.running)
+			$scope.timer.stop();
+		
+		var ai = meetingAgenda.getAgendaItem(itemId);
+		if (!ai) {
+			clearCurrentAgendaItem();
+			return;
+		}
+
+		//If following the curent agenda item, change the view to the new current.
+		if (!$scope.item || runtimeState.getViewAgendaItem() === $scope.item.sys_id.value)
+			runtimeState.setViewAgendaItem(ai.sys_id.value);
+
+		$scope.item = ai;
+		$scope.timer = timerService.getTimer(ai.sys_id.value);
+
+		//Calculate the elapsed time if the item is in progress.
+		if ($scope.item.state.value == CAB.IN_PROGRESS) {
+			// Adjust now for differences between local time and server time.
+			var now = Date.now() - $scope.rs.localState.time_offset;
+			var then = $scope.rs.current_agenda_item_start.value_ms;
+			var offset = now - then &lt; 0 ? 0 : now - then;
+
+			if (!ai.elapsed_time.value_ms)
+				ai.elapsed_time.value_ms = 0;
+
+			$scope.timer.elapsed = offset + scope.item.elapsed_time.value_ms;
+			$scope.timer.start();
+		} else {
+			$scope.timer.elapsed = $scope.item.elapsed_time.value_ms || 0;
+		}
+			
+		//Add a watch to monitor changes in pause/unpause.
+		$scope.unwatchItemState = $scope.$watch('item.state.value', function(newValue, oldValue) {
+			if (newValue == CAB.PAUSED &amp;&amp; oldValue == CAB.IN_PROGRESS &amp;&amp; $scope.timer.running)
+				$scope.timer.stop();
+			else if (newValue== CAB.IN_PROGRESS &amp;&amp; oldValue == CAB.PAUSED &amp;&amp; !$scope.timer.running)
+				$scope.timer.start();
+		});
+
+	}
+
+	function refreshItemState(aiDelta) {
+		if (!aiDelta.sys_id)
+			return;
+
+		var item = meetingAgenda.getAgendaItem(aiDelta.sys_id);
+		if (!item)
+			return;
+		item.state = aiDelta.state;
+	}
+
+	function clearCurrentAgendaItem() {
+		if ($scope.unwatchItemState)
+			$scope.unwatchItemState();
+		if ($scope.timer &amp;&amp; $scope.timer.running)
+			$scope.timer.stop();
+		delete($scope.item);
+		$scope.timer = null;
+		$scope.approval = null;
+		$scope.lastApproval = {};
+	}
+
+	/**
+	 * Checks if e-signature is required and reauthenitcates the user.
+	 */
+	function reauthenticateForApproval() {
+		var eSignature = c.data.eSignature;
+		if (!eSignature.isRequired)
+			return $q.resolve();  //Just resolve if it's not required.
+
+		return spAuthModal.prompt(eSignature, eSignature.username, eSignature.userSysId)
+			.then(null, function(reason) {
+				spUtil.addErrorMessage(c.data.i18n.eSignatureError);
+				$log.error(reason);
+			});
+	}
+	
+	function enableApprovalControls() {
+		approvalCtrl.enabled = true;
+	}
+	var approvalCtrl = {
+		approve: function() {
+			reauthenticateForApproval()
+			.then(function() {
+				return popModal("cab-approve-pop");
+			})
+			.then(function(comment) {
+				$scope.lastApproval = {
+					requiredUserApproval: true,
+					approved: true,
+				};
+				approvalCtrl.enabled = false;
+				return approval.approve($scope.item.task.value, comment);
+			})
+			.then(enableApprovalControls, enableApprovalControls); //Cannot save with 'finally'.
+		},
+		reject: function() {
+			reauthenticateForApproval()
+			.then(function() {
+				return popModal("cab-reject-pop");
+			})
+			.then(function(comment) {
+				$scope.lastApproval = {
+					requiredUserApproval: true,
+					rejected: true,
+				};
+				approvalCtrl.enabled = false;
+				return approval.reject($scope.item.task.value, comment);
+			})
+			.then(enableApprovalControls, enableApprovalControls); //Cannot save with 'finally'.
+		},
+		enabled: true,
+	};
+	
+	
+	function enableAgendaControls() {
+		agendaCtrl.enabled = true;
+	}
+	var agendaCtrl = { // Agenda navigation for the meeting
+		finish: { //Available when there is are no pending agenda items
+			available: function() {
+				return !meetingAgenda.getNextPendingAgendaItem();
+			},
+			onClick: function($event) {
+				if ($scope.approval.requiresApproval) {
+					popModal("cab-finish-agenda-pop")
+					.then(function() { // Only do something on 'OK'.
+						return runtimeState.noDecisionNextAgendaItem();
+					})
+					.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+					//Check focus for aria
+					return;
+				}
+				
+				runtimeState.nextAgendaItem()
+				.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+				//Check focus for aria
+			}
+		},
+		next: { // Available when there are pending agenda items
+			available: function() {
+				return meetingAgenda.getNextPendingAgendaItem();
+			},
+			onClick: function($event) {
+				agendaCtrl.enabled = false;
+				var nextAgendaItem = meetingAgenda.getNextPendingAgendaItem();
+				if ($scope.approval.requiresApproval) {
+					popModal("cab-skip-pop")
+					.then(function() { // Only do something on 'OK'
+						return runtimeState.noDecisionNextAgendaItem(nextAgendaItem.sys_id.value);
+					})
+					.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+					//Check focus for aria;
+					return;
+				}
+				
+				runtimeState.nextAgendaItem(nextAgendaItem.sys_id.value)
+				.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+				//Check focus for aria;
+			}
+		},
+		pause: {
+			available: function() {
+				return $scope.timer &amp;&amp; $scope.timer.running;
+			},
+			onClick: function(e) {
+				agendaCtrl.enabled = false;
+				runtimeState.pauseCurrentAgendaItem()
+				.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+				//Check focus for aria
+			}
+		},
+		resume: {
+			available: function() {
+				return $scope.timer &amp;&amp; !$scope.timer.running;
+			},
+			onClick: function($event) {
+				agendaCtrl.enabled = false;
+				runtimeState.resumeCurrentAgendaItem()
+				.then(enableAgendaControls, enableAgendaControls);  //Can't save using 'finally'
+				//Check focus for aria
+			}
+		},
+		enabled: true,  // Flag used to disable controls if an action is being performed.
+	};
+	
+	var meeting = {
+		start: function() {
+			runtimeState.startMeetingAndSelectNextAgenda();
+		},
+		confirmEnd: function() {
+			popModal("cab-end-meeting-pop")
+			.then(function(){
+				runtimeState.endMeeting();
+			}, null);
+		},
+		pending: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.PENDING;
+		},
+		inProgress: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.IN_PROGRESS;
+		},
+		canceled: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return $scope.rs.cab_meeting.record.state.value == CAB.CANCELED;
+		},
+		host: function() {
+			if (!runtimeStateAvailable())
+				return false;
+			return runtimeState.isCABManager($scope.data.userId);
+		},
+		followCurrent: function() {
+			if (!meeting.followingCurrent())
+				runtimeState.setViewAgendaItem($scope.rs.current_agenda_item.value);
+		},
+		followingCurrent: function() {
+			return runtimeState.isViewingCurrent();
+		}
+	};
+	
+	var aria = {
+		currentAgendaItem: function () {
+			if (!$scope.item || !$scope.item.task.display_value)
+				return;
+			return i18n.format(c.data.i18n.currentAgendaAriaLabel, $scope.item.task.display_value);
+		},
+		scheduledTime: function () {
+			if (!$scope.item || isNaN($scope.item.alotted_time.value_ms))
+				return;
+			return i18n.format(c.data.i18n.ariaScheduledTime, [parseInt($scope.item.alotted_time.value_ms/1000/60)]);
+		}
+	};
+	
+	
+	// Add elements to the scope
+	angular.extend($scope, {
+		aria: aria,
+		meeting: meeting,
+		agendaCtrl: agendaCtrl,
+		approvalCtrl: approvalCtrl,
+		lastApproval: {
+			requiredUserApproval: false,
+			approved: false,
+			rejected: false
+		}
+	});
+	
+	// Initial setup
+	runtimeState.get($scope.data.meeting_id)
+	.then(function(rs) {
+		$scope.rs = rs;
+		return meetingAgenda.get($scope.data.meeting_id);
+	})
+	.then(function(agenda) {
+		$scope.agenda = agenda;
+		
+		$scope.$watch('rs.cab_meeting.record.state.value', function(state, prevState) {
+			var unwatchCurrent = null;
+			if (state === CAB.IN_PROGRESS) {
+				unwatchCurrent = $scope.$watch('rs.current_agenda_item.value', function(itemId, prevItemId) {
+					var ai = meetingAgenda.getAgendaItem(itemId);
+					if (ai) {
+						approval.get(ai.task.value).then(function(approvalModel) {
+							$scope.lastApproval = {};
+							$scope.approval = approvalModel;
+						});
+					}
+					
+					if (!itemId &amp;&amp; prevItemId === runtimeState.getViewAgendaItem())
+						runtimeState.setViewAgendaItem(null);
+					
+					changeCurrentAgendaItem(itemId);
+					
+					// If the meeting has just started and you're the host, switch to the current agenda item and focus.
+					if (prevState === CAB.PENDING &amp;&amp; state === CAB.IN_PROGRESS &amp;&amp; meeting.host()) {
+						$timeout(function() {
+							meeting.followCurrent();
+							document.getElementById("current-agenda-item-widget").focus();
+						});
+					}
+				});
+			}
+			
+			if (unwatchCurrent &amp;&amp; state === CAB.COMPLETE)
+				unwatchCurrent();
+
+		});
+	});
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.flex {
+  	display: -ms-flexbox;
+    display: flex;
+}
+
+.flex.column {
+  	-ms-flex-direction: column;
+    flex-direction: column;
+}
+
+.flex .expand {
+  	-ms-flex: 1 1 auto;
+	flex-grow: 1;
+}
+
+.task-summary {
+  	height: 136px;
+}
+
+.agenda-control {
+  	margin: 0 5px 0 0;
+}
+
+.agenda-control button {
+    font-size: 13px;
+    font-weight: 400;
+	border: 0px;
+    margin: 0 4px 0 4px;
+    padding: 0px;
+  	color: #428bca;
+}
+
+.agenda-control button:hover,
+.agenda-control button:active,
+.agenda-control button:focus {
+	background: none;
+  	color: #428bca;
+}
+
+.agenda-control .btn-group button:first-child {
+  	margin-left: 0px;
+}
+
+.agenda-control .btn-group button:last-child {
+  	margin-right: 0px;
+}
+
+.panel-heading .btn {
+  line-height: 1.5;
+}
+.btn-bottom {
+  position: absolute;
+  bottom: 0px;
+  transform: translate(-50%, -10%);  
+}
+
+.current-item {
+  margin-bottom: -12px; 
+}
+
+.single-line-clamp {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.timer-paused-centered {
+  z-index: 20;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  text-align: center;
+}
+
+.timer-paused {
+  position: absolute;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #dcdcdc;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.paused-timer-scaled-text {
+  font-size: 12px;
+}
+
+.scheduled-time {
+	padding-left: 5px;
+  	padding-right: 5px;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options" :&amp;#13;
+   {&amp;#13;
+      "hide_xs" : false&amp;#13;
+   }&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-current-agenda-item&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link&gt;&lt;![CDATA[function currentAgendaItemLink(scope, element, attr) {	
+}]]&gt;&lt;/link&gt;
+        &lt;name&gt;CAB Workbench - Current Agenda Item&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"hide_xs","default_value":false,"section":"Behavior","label":"Hide at XS","type":"boolean"},{"name":"omit_badges","section":"Behavior","label":"Omit badges","type":"boolean"},{"name":"check_can_view","default_value":"true","section":"Behavior","label":"Check canView per item (may impact performance for large catalogs)","type":"boolean"},{"hint":"Choose between a flattened and a nested category structure","name":"category_layout","section":"Presentation","label":"Category Layout","type":"choice","choices":[{"label":"Flat","value":"Flat"},{"label":"Nested","value":"Nested"}]},{"displayValue":"Page","name":"page","section":"Data","label":"page","type":"reference","value":"sp_page","ed":{"reference":"sp_page"}},{"hint":"Number of categories to load on page load","name":"number_of_categories_to_load","section":"Data","default_value":"15","label":"Number of categories to load","type":"integer"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.meeting_id = $sp.getParameter('sys_id');
+	data.userId = gs.getUserID();
+	data.i18n = {
+		currentAgendaAriaLabel: gs.getMessage('Current Agenda Change {0}'),
+		ariaScheduledTime: gs.getMessage('Scheduled {0} minutes'),
+	};
+
+	data.eSignature = {
+		username:  gs.getUserName(),
+		userSysId: gs.getUserID(),
+		isRequired: checkESig("change_request")
+	};
+	
+	function checkESig(table) {
+		if(!GlidePluginManager.isActive("com.glide.e_signature_approvals"))
+			return false;
+		var esigRegistryGR = new GlideRecord("e_signature_registry");
+		if (!esigRegistryGR.isValid())
+			return false;
+		
+		data.i18n.eSignatureError = gs.getMessage('An error occurred during authentication. Please contact your system administrator.');
+		
+		esigRegistryGR.addQuery("enabled", "true");
+		esigRegistryGR.addQuery("table_name", table);
+		esigRegistryGR.query();
+		return esigRegistryGR.hasNext();
+	}
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-06-29 10:53:28&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;4c1ab0f1eb10220034d1eeea1206fed4&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;628&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Current Agenda Item&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_4c1ab0f1eb10220034d1eeea1206fed4&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2018-06-28 14:40:53&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div tabindex="0" ng-if="item" id="current-agenda-item-widget" class="panel panel-default" role="region" aria-label="${Current Agenda Item Widget}"&gt;
+    &lt;div class="panel-heading heading widget-heading" ng-class="{'heading-inactive': !meeting.followingCurrent()}"&gt;
+        &lt;span aria-hidden="true"&gt;${Current Agenda Item}&lt;/span&gt;
+        &lt;button ng-if="meeting.host() &amp;&amp; meeting.inProgress()" ng-click="meeting.confirmEnd()" class="pull-right btn btn-sm btn-primary"&gt;${End meeting}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body current-item"&gt;
+        &lt;div class="row info-row"&gt;
+            &lt;div ng-class="{'agenda-item-halo': meeting.followingCurrent()}"&gt;
+                &lt;div id="current_agenda_item"
+                     role="group"
+                     tabindex="0"
+                     ng-attr-aria-label="{{aria.currentAgendaItem()}}"
+                     ng-if="item.task.record"
+                     class="agenda-item agenda-item-big"
+                     ng-click="meeting.followCurrent()"&gt;
+                    &lt;div ng-if="item.task.record" class="col-xs-9 agenda-item-detail flex column"&gt;
+                        &lt;div class="task-summary"&gt;
+                            &lt;div class="tasknumber"&gt;{{item.task.display_value}}&lt;/div&gt;
+                            &lt;div class="description"&gt;&lt;sn-cab-line-clamp text="{{item.task.record.short_description.display_value}}" max-lines="2" /&gt;&lt;/div&gt;
+                            &lt;table class="agenda-task-detail"&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${Assignment group}&lt;/td&gt;
+                                    &lt;td class="single-line-clamp"&gt;{{item.task.record.assignment_group.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${Assigned to}&lt;/td&gt;
+                                    &lt;td class="single-line-clamp"&gt;{{item.task.record.assigned_to.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                                &lt;tr&gt;
+                                    &lt;td&gt;${State}&lt;/td&gt;
+                                    &lt;td&gt;{{item.task.record.state.display_value}}&lt;/td&gt;
+                                &lt;/tr&gt;
+                            &lt;/table&gt;
+                        &lt;/div&gt;
+                        &lt;div id="cab-agenda-control" class="agenda-control flex" ng-if="meeting.host()" role="navigation" tabindex="0" aria-label="${Agenda control}"&gt;
+							&lt;div class="btn-group expand"&gt;
+                            &lt;button id="current_agenda_action_pause"
+                               		class="btn-default btn-sm"
+                               		tabindex="0"
+                               		ng-if="agendaCtrl.pause.available()"
+                               		ng-click="agendaCtrl.pause.onClick($event)"
+                               		ng-disabled="!agendaCtrl.enabled"&gt;${Pause}&lt;/button&gt;
+                            &lt;button id="current_agenda_action_resume"
+                               		class="btn-default btn-sm"
+                               		tabindex="0"
+                               		ng-if="agendaCtrl.resume.available()"
+                               		ng-click="agendaCtrl.resume.onClick($event)"
+                               		ng-disabled="!agendaCtrl.enabled"&gt;${Resume}&lt;/button&gt;
+                            &lt;button id="current_agenda_action_next"
+                               		class="btn-default btn-sm"
+                              		tabindex="0"
+                               		ng-if="agendaCtrl.next.available()"
+                               		ng-click="agendaCtrl.next.onClick($event)"
+                               		ng-disabled="!agendaCtrl.enabled"&gt;${Next}&lt;/button&gt;
+                            &lt;button id="current_agenda_action_finish"
+                               		class="btn-default btn-sm"
+                               		tabindex="0"
+                               		ng-if="agendaCtrl.finish.available()"
+                               		ng-click="agendaCtrl.finish.onClick($event)"
+                               		ng-disabled="!agendaCtrl.enabled"&gt;${Finish}&lt;/button&gt;
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col-xs-3 donutprogress"&gt;
+                        &lt;div ng-if="item.state.value != 'paused'" class="agenda-item-current-timer"&gt;
+                            &lt;div style="width: 46px; margin: 0 auto;"&gt;
+                                &lt;sn-donut-timer x-aria-parent-label="${Current Agenda item}" name="{{item.sys_id.value}}" duration="{{item.alotted_time.value_ms}}" elapsed="{{item.elapsed_time.value_ms}}" size="46px"&gt;&lt;/sn-donut-timer&gt;
+                            &lt;/div&gt;
+                            &lt;div class="scheduled-time" role="group" ng-attr-aria-label="{{aria.scheduledTime()}}"&gt;{{aria.scheduledTime()}}&lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div ng-if="item.state.value == 'paused'" class="agenda-item-current-timer"&gt;
+                            &lt;div style="position: relative; width: 46px; height: 46px; margin: 0 auto;"&gt;
+                                &lt;div class="timer-paused-centered"&gt;
+                                	&lt;div class="paused-timer-scaled-text"&gt;${Paused}&lt;/div&gt;
+                                &lt;/div&gt;
+                                &lt;div class="timer-paused"&gt;
+                                &lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div class="agenda-approval-control"&gt;
+                            &lt;div ng-if="approval.requiresUserApproval || lastApproval.requiredUserApproval"&gt;
+                                &lt;button id = 'current_agenda_action_approve' ng-class="['btn', 'btn-sm', 'btn-agenda', {
+                                                  'btn-primary': approval.requiresUserApproval,
+                                                  'agenda-btn-previous-click': (!approval.requiresUserApproval &amp;&amp; lastApproval.approved)
+                                                  }]"
+                                    	ng-disabled="!approval.requiresUserApproval || !approvalCtrl.enabled" style="display: block;"
+                                    	ng-click="approvalCtrl.approve()"&gt;${Approve}&lt;/button&gt;
+                              
+                                &lt;button id = 'current_agenda_action_reject' ng-class="['btn', 'btn-sm', 'btn-agenda', {
+                                                  'btn-default': approval.requiresUserApproval,
+                                                  'agenda-btn-previous-click': (!approval.requiresUserApproval &amp;&amp; lastApproval.rejected)
+                                                  }]"
+                                    	ng-disabled="!approval.requiresUserApproval || !approvalCtrl.enabled" style="display: block; margin-top: 5px;"
+                                        ng-click="approvalCtrl.reject()"&gt;${Reject}&lt;/button&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div ng-if="!item.task.record"
+                     id="current_agenda_item"
+                     role="group"
+                     aria-label="${Current Agenda Change not accessible}"
+                     class="agenda-item agenda-item-small"&gt;
+                    &lt;div class="col-xs-9 agenda-task-detail"&gt;
+                        &lt;span&gt;
+                            &lt;div style="padding-top: 22px;"&gt;${You do not have permission to view}&lt;/div&gt;
+                        &lt;/span&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col-xs-3"  class="mindonutprogress"&gt;
+                        &lt;div style="height: 100%; width: 46px; margin: 0 auto;"&gt;
+                            &lt;sn-donut-timer name="{{item.sys_id.value}}" duration="{{item.alotted_time.value_ms}}" size="46px"&gt;&lt;/sn-donut-timer&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:24</sys_created_on>
+        <sys_id>2f8717f84f313300496900fe9310c7a2</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Current Agenda Item</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_2f8717f84f313300496900fe9310c7a2</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:24</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>961100b89f131200b18a7feea57fcf52</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, dataUtil, getController, CtrlIds, meetingUtil, i18n, $timeout, $filter, runtimeState, timerService, meetingAgenda, $window, CAB, TIME, $log, $element, isAccessibilityEnabled, spUtil) {
+    var c = this;
+	var RIGHT = 39, LEFT = 37, ESC = 27, ENTER = 13, SPACE = 32;
+	getController.register(CtrlIds.MEETING_HEADER, c);
+	c.timerEnabled = false;
+
+	function updateDuration() {
+		var actualStart = $scope.rs.cab_meeting.record.actual_start.value_ms;
+		var meetingStart = $scope.rs.cab_meeting.record.start.value_ms;
+		var meetingEnd = $scope.rs.cab_meeting.record.end.value_ms;
+		
+		if (actualStart &amp;&amp; actualStart &lt; meetingStart)
+			$scope.timer.duration = meetingEnd - actualStart;
+		else
+			$scope.timer.duration = meetingEnd - meetingStart;
+		
+		if (!$scope.display)
+			$scope.display={};
+		
+		$scope.display.scheduled_for = i18n.format(i18n.getMessage("Scheduled {0} minutes"), Math.ceil((meetingEnd - meetingStart)/TIME.MINUTE));
+	}
+	
+	function updateElapsed() {
+		if ($scope.timer.running)
+			return;
+		
+		// Copmensate for differences between local time and server time.
+		var now = $window.Date.now() - $scope.rs.localState.time_offset;
+		var actualStart = $scope.rs.cab_meeting.record.actual_start.value_ms;
+		var actualEnd = $scope.rs.cab_meeting.record.actual_end.value_ms;
+		var meetingStart = $scope.rs.cab_meeting.record.start.value_ms;
+		var meetingEnd = $scope.rs.cab_meeting.record.end.value_ms;
+		
+		var checkpoint = actualEnd ? actualEnd : now; 
+		
+		if (actualStart &amp;&amp; actualStart &lt; meetingStart &amp;&amp; actualStart &lt; checkpoint) {
+			$scope.timer.elapsed = checkpoint - actualStart;
+			return;
+		}
+		
+		if (meetingStart &lt; checkpoint)
+			$scope.timer.elapsed = checkpoint - meetingStart;
+		
+	}
+	
+	function updateConferenceDetails() {
+		
+	}
+	
+	runtimeState.get($scope.data.meetingId)
+		.then(function(rs) {
+			$scope.rs = rs;
+			$scope.timer = timerService.getTimer($scope.data.meetingId);
+			updateDuration();
+
+			//If the meeting has started
+			if ($scope.rs.cab_meeting.record.state.value == CAB.IN_PROGRESS) {
+				updateElapsed();
+				$scope.timer.start();
+			} else if ($scope.rs.cab_meeting.record.state.value == CAB.COMPLETE) {
+				updateElapsed();
+			}
+
+			//Register watch on the meeting state
+			$scope.$watch("rs.cab_meeting.record.state.value", function(newValue, oldValue){
+				if (newValue == CAB.IN_PROGRESS) {
+					updateDuration();
+					updateElapsed();
+					$scope.timer.start();
+				}
+				else if (newValue == CAB.COMPLETE) {
+					$scope.timer.stop();
+				}
+			});
+		},
+		null
+	);
+
+	// Convenience method to update count badge.
+	c.updateNavCount = function (navId, newCount) {
+		var navItem = $filter('filter')(c.data.navs, {id: navId})[0];
+		if (!navItem) {
+			$log.warn('Cannot update count of nav_item with id "' + navId + '" as it doesn\'t exist ' +
+					  '(possibly because user does not have access)');
+			return;
+		}
+
+		navItem.count = newCount;
+	};
+
+	if (c.data.sys_id) {
+		var mtgUtil = new meetingUtil(c.data.sys_id);
+		var dereg1 = mtgUtil.registerMeetingChangeWatcher(function (meeting) {
+			if(!meeting.conference_details.display_value)
+				meeting.conference_details.display_value = '';
+			meeting.conference_details.html =
+				"&lt;div class='conf-details-head'&gt;${Conference details}&lt;/div&gt;&lt;div class='conf-details-body'&gt;" +
+				meeting.conference_details.display_value + "&lt;/div&gt;";
+			meeting.start = dataUtil.wsToJsDate(meeting.start).getTime();
+			meeting.end = dataUtil.wsToJsDate(meeting.end).getTime();
+			c.timerEnabled = false;
+			c.data.meeting = meeting;
+			c.meetingDuration = meeting.end - meeting.start;
+		});
+	}
+
+	c.toggle = function (nav, idx) {
+		if (!nav.widget_data) {
+			alert('Widget not yet available'); // Translation not needed
+			return;
+		}
+		nav.show = !nav.show;
+		var isShow = nav.show;
+		if (isShow) {
+			c.data.navs.forEach(function (nav, i) {
+				if (i != idx)
+					nav.show = false;
+			});
+			if ($scope.isAccessibilityEnabled)
+				spUtil.addInfoMessage(i18n.format(c.data.msg.dialog_shown, nav.title));
+		} else if ($scope.isAccessibilityEnabled)
+			spUtil.addInfoMessage(i18n.format(c.data.msg.dialog_hidden, nav.title));
+	};
+
+	$scope.isMeetingPending = function(){
+		if (!$scope.rs || !$scope.rs.cab_meeting)
+			return;
+
+		return $scope.rs.cab_meeting.record.state.value == CAB.PENDING;
+	};
+
+	$scope.isMeetingCancelled = function(){
+		if (!$scope.rs || !$scope.rs.cab_meeting)
+			return false;
+
+		return $scope.rs.cab_meeting.record.state.value == CAB.CANCELED;
+	};
+
+	$scope.isCABManager = function() {
+		return runtimeState.isCABManager($window.NOW.user_id);
+	};
+	
+	$scope.startMeeting = function() {
+		runtimeState.startMeetingAndSelectNextAgenda();
+	};
+	
+	$scope.getMeetingTitle = function() {
+		if (!$scope.rs || !$scope.rs.cab_meeting)
+			return;
+		
+		var meeting = $scope.rs.cab_meeting.record;
+		return meeting.name.display_value + ': ' + meeting.start.display_value;
+	};
+
+	function onConfInfoPopoverOpen() {
+		if (!$scope.isPopoverOpen)
+			return;
+
+		$timeout(function() {
+			var $confBody = $element.find('.conf-details-body');
+			if ($confBody.length == 0) {
+				onConfInfoPopoverOpen();
+				return;
+			}
+
+			var lineHeight = (parseInt($confBody.css('line-height')) || 0) + 5;
+			$confBody.css({'line-height' : (lineHeight + 'px')});
+			
+			$confBody.parent().attr({
+				'id': 'conf_details_tooltip',
+				'role': 'tooltip',
+				'tabindex': 0
+			}).focus();
+		}, 30, false);
+	}
+	
+	$(document).on('keydown.cab_meeting_header', '#conf_details_tooltip', function (event) {
+		if (event.keyCode == ESC) {
+			$scope.$apply(function () {
+				$scope.isPopoverOpen = false;
+			});
+		}
+	});
+	$(document).on('blur.cab_meeting_header', '#conf_details_tooltip', function () {
+		$scope.$apply(function () {
+			$scope.isPopoverOpen = false;
+		});
+	});
+
+	$scope.focus = function (id) {
+		angular.element('#'+id).focus();
+	};
+
+	$scope.isAccessibilityEnabled = isAccessibilityEnabled();
+	$scope.navigateToolbar = function ($event, $index) {
+		var valid = false;
+		if ($event.keyCode == RIGHT) {
+			$index++;
+			valid = true;
+		} else if ($event.keyCode == LEFT) {
+			$index--;
+			valid = true;
+		}
+		if (valid) {
+			if ($index &lt; 0)
+				$index = c.data.navs.length; // Actual length is this +1 since Conf info is not in navs list.
+			else if ($index &gt; c.data.navs.length)
+				$index = 0;
+			$scope.focus('header_nav_item_' + $index);
+			$event.preventDefault();
+			return true;
+		}
+		return false;
+	};
+
+	$scope.toggleConfInfoPopover = function ($event) {
+		if ($event.keyCode == ENTER || $event.keyCode == SPACE) {
+			$event.stopPropagation();
+			$scope.isPopoverOpen = !$scope.isPopoverOpen;
+		}
+	};
+
+	$scope.$watch('isPopoverOpen', onConfInfoPopoverOpen);
+
+	$scope.$on('$destroy', function () {
+		getController.deregister(CtrlIds.MEETING_HEADER);
+		$(document).off('.cab_meeting_header');
+		if (dereg1)
+			dereg1();
+	});
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;$col-left-margin: 8px;&amp;#13;
+$col-right-margin: 7px;&amp;#13;
+&amp;#13;
+.header {&amp;#13;
+  background-color: $color-lighter;&amp;#13;
+  color: $color-darker;&amp;#13;
+  padding: 3px 15px;&amp;#13;
+  margin-left: -15px;&amp;#13;
+  margin-right: -15px;&amp;#13;
+  margin-bottom: 15px;&amp;#13;
+  border: 1px solid $color-light;&amp;#13;
+  min-width: 1200px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cab-start-meeting {&amp;#13;
+  width: 190px;&amp;#13;
+  height: 30px;&amp;#13;
+  background-color: #00b300;&amp;#13;
+  color: white;&amp;#13;
+  float: left;&amp;#13;
+  margin-left: 50px;&amp;#13;
+  margin-top: 18px;&amp;#13;
+  font-size: 16px;&amp;#13;
+  border-radius: 5px;&amp;#13;
+  padding: 0 !important;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.header-timer {&amp;#13;
+  float: left;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.title {&amp;#13;
+  h4 {&amp;#13;
+    font-size: 20px;&amp;#13;
+  }&amp;#13;
+  float: left;&amp;#13;
+  margin-left: 5px;&amp;#13;
+  small {&amp;#13;
+    color: $color-dark;&amp;#13;
+  }&amp;#13;
+}&amp;#13;
+&amp;#13;
+.nav-section {&amp;#13;
+  float: right;&amp;#13;
+  padding-top: 20px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.conf-details-head {&amp;#13;
+  text-transform: uppercase;&amp;#13;
+  text-align: center;&amp;#13;
+  background-color: $color-lighter;&amp;#13;
+  color: $color-dark;&amp;#13;
+  border-top-left-radius: 5px;&amp;#13;
+  border-top-right-radius: 5px;&amp;#13;
+  padding: 3px;&amp;#13;
+  + p {&amp;#13;
+    padding: 5px;&amp;#13;
+  }&amp;#13;
+}&amp;#13;
+&amp;#13;
+.popover {&amp;#13;
+  padding: 0;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.popover-content {&amp;#13;
+  padding: 0;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.popover.bottom &amp;gt; .arrow:after {&amp;#13;
+  border-bottom-color: $color-lighter;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.popover .conf-details-body {&amp;#13;
+  padding: 10px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.accessibility_live_region {&amp;#13;
+	position: absolute;&amp;#13;
+  	top: -5px;&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-meeting-header&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;CAB Workbench - Header&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"nav_items","label":"Navigation Items","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function () {
+    var sys_id = $sp.getParameter('sys_id');
+	data.meetingId = sys_id;
+    data.sys_id = sys_id;
+    data.msg = {};
+    data.msg.conf_info = '${Conference Information}';
+    data.msg.agenda_progress = gs.getMessage('{0} of {1} agendas done');// SPTranslate messes up messages with tokens!
+	data.msg.dialog_shown = gs.getMessage('{0} dialog shown. Use F6 to switch to it.');
+	data.msg.dialog_hidden = gs.getMessage('{0} dialog hidden');
+    var navs = JSON.parse(options.nav_items);
+    var userOb = gs.getUser();
+
+    for (var i = navs.length - 1; i &gt;= 0; i--) {
+			var discardThisItem = false;
+			var navItem = navs[i];
+
+			if (navItem.roles) {
+				for (var j = 0; !discardThisItem &amp;&amp; j &lt; navItem.roles.length; j++) {
+					if (!userOb.hasRole(navItem.roles[j]))
+						discardThisItem = true;
+				}
+			}
+
+			if (discardThisItem) {
+				navs.splice(i, 1);
+				continue;
+			}
+
+			if (!navItem.widget_opt)
+				navItem.widget_opt = {};
+
+			if (navItem.show_in_modal)
+				navItem.id = navItem.widget_opt.modal_id = Math.floor(Math.random() * 100);
+
+			if (navItem.widget_id)
+				navItem.widget_data = $sp.getWidget(navItem.widget_id, navItem.widget_opt);
+    }
+
+    data.navs = navs;
+})();
+]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-05-07 11:04:41&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;961100b89f131200b18a7feea57fcf52&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;479&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Header&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_961100b89f131200b18a7feea57fcf52&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-06-26 12:11:41&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="header"&gt;
+	&lt;div class="container" role="region" aria-label="${CAB Header Widget}" tabindex="0"&gt;
+		&lt;div class="header-timer"&gt;
+			&lt;sn-donut-timer x-aria-parent-label="${CAB Meeting}" name="{{data.meetingId}}" size="66px" minutes-label="true" show-before-start="false" max-display-value="9999" /&gt;
+		&lt;/div&gt;
+		&lt;div class="title" role="group" aria-labelledby="cab_header_title" tabindex="0"&gt;
+			&lt;h4 id="cab_header_title" class="ng-cloak"&gt;{{::getMeetingTitle()}}&lt;br/&gt;
+				&lt;small ng-if="!isMeetingCancelled()"&gt;{{display.scheduled_for}}&lt;/small&gt;
+				&lt;small ng-if="isMeetingCancelled()"&gt;${This meeting has been cancelled.}&lt;/small&gt;
+          	&lt;/h4&gt;
+		&lt;/div&gt;
+		&lt;div ng-if="isCABManager() &amp;&amp; isMeetingPending()"&gt;
+			&lt;button ng-click="startMeeting()" class="btn cab-start-meeting"&gt;${Start meeting}&lt;/button&gt;
+		&lt;/div&gt;
+		&lt;div class="nav-section"&gt;
+			&lt;ul class="nav nav-pills" role="toolbar" aria-label="${Meeting toolbar}"&gt;
+				&lt;li ng-repeat="nav in c.data.navs"
+                    ng-click="c.toggle(nav, $index);"
+                    ng-attr-tabindex="{{$first?0:-1}}"
+                    ng-keydown="navigateToolbar($event, $index)"
+                    ng-attr-id="header_nav_item_{{$index}}"
+                    ng-attr-aria-label="{{::nav.title}} {{nav.count}}"&gt;
+					&lt;a tabindex="-1" aria-hidden="true" href="javascript:void(0);"&gt;{{::nav.title}}&lt;span ng-if="!isMeetingCancelled()" class="badge"&gt;{{nav.count}}&lt;/span&gt;&lt;/a&gt;
+					&lt;div ng-if="!nav.show_in_modal &amp;&amp; nav.widget_data" style="position:relative;"&gt;
+						&lt;sn-float-box
+							show="nav.show"
+							count="{{nav.count}}"
+                            on-focus-outside="focus('header_nav_item_' + $index)"
+							title="{{::nav.title}}"
+							width="{{::nav.width}}"&gt;
+							&lt;sp-widget widget="nav.widget_data"&gt;&lt;/sp-widget&gt;
+						&lt;/sn-float-box&gt;
+					&lt;/div&gt;
+					&lt;div ng-if="nav.show_in_modal &amp;&amp; nav.widget_data"&gt;
+						&lt;sn-vcab-modal id="{{nav.id}}"
+							open="nav.show"
+                        	ng-attr-aria-hidden="{{!nav.show}}"
+							title="{{nav.title}}"
+							ok-btn-label="${Save}"
+							widget-data="nav.widget_data"&gt;&lt;/sn-vcab-modal&gt;
+					&lt;/div&gt;
+				&lt;/li&gt;
+				&lt;li uib-popover-html="c.data.meeting.conference_details.html"
+                    ng-keydown="navigateToolbar($event, c.data.navs.length)"
+                    ng-attr-id="header_nav_item_{{c.data.navs.length}}"
+                    tabindex="-1"
+                    role="button"
+                    aria-haspopup="true"
+                    popover-placement="bottom"
+                    ng-keypress="toggleConfInfoPopover($event)"
+                    popover-trigger="click outsideClick" popover-is-open="isPopoverOpen"&gt;
+					&lt;a href="javascript:void(0);" tabindex="-1"&gt;{{::c.data.msg.conf_info}}&lt;/a&gt;
+				&lt;/li&gt;
+			&lt;/ul&gt;
+		&lt;/div&gt;
+		&lt;div class="clearfix"&gt;&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>149757f84f313300496900fe9310c750</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Header</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_149757f84f313300496900fe9310c750</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

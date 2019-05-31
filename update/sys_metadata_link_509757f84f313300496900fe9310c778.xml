@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>a538a25adf802200ba13a4836bf26359</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($window) {
+	var c = this;
+	c.shared = c.options.shared;
+	c.add = function() {
+		c.shared.add();
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.empty-state-wrapper {
+  width: 100%;
+  height: 100%;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding: 60px 40px 40px 40px;
+
+  .empty-state {
+    background-color: white;
+    border: 1px solid #e7e9eb;
+    border-radius: 10px;
+    font-size: 15px;
+    width: 100%;
+    max-width: 1024px;
+    padding: 25px 40px;
+
+    .empty-state-header {
+      text-align: center;
+      color: #343d47;
+    }
+
+    .empty-state-content {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+      flex-direction: row;
+      -webkit-align-content: baseline;
+      -ms-flex-line-pack: baseline;
+      align-content: baseline;
+
+      .empty-state-badge {
+        background-color: #428bca;
+        top: 24px;
+        left: 50%;
+        position: absolute;
+        height: 72px;
+        width: 72px;
+        -webkit-align-items: center;
+        -ms-flex-align: center;
+        align-items: center;
+        border-radius: 100%;
+        color: #ffffff;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        font-size: 40px;
+        -webkit-justify-content: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        margin-left: -36px;
+        text-align: center;
+      }
+
+      .empty-state-list {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        width: 250px;
+
+        .header {
+          text-align: center;
+        }
+
+      }
+
+      .empty-state-instructions {
+        -webkit-box-flex: 2.5;
+        -webkit-flex: 2.5;
+        -ms-flex: 2.5;
+        flex: 2.5;
+        padding-left: 45px;
+
+        li {
+          padding: 7px 7px;
+        }
+      }
+
+      ul {
+        list-style: disc outside;
+        margin: 20px 0;
+        padding: 0 0 0 20px;
+      }
+    }
+  }
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;x-we-empty-state&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;x-we-empty-state&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"ID of referenced record","name":"record_id","section":"Data","label":"Record ID","type":"string"},{"hint":"Table name of referenced record","name":"record_table","section":"Data","label":"Record Table","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	var widget = new GlideRecord("sp_widget");
+	data.canCreate = widget.canCreate();
+	data.recentWidgets = [];
+	var recentWidgetsGR = new GlideRecord("sp_widget");
+	recentWidgetsGR.orderByDesc("sys_updated_on");
+	recentWidgetsGR.setLimit(5);
+	recentWidgetsGR.query();
+	while (recentWidgetsGR.next()) {
+		data.recentWidgets.push({
+			name: recentWidgetsGR.getValue("name"),
+			sys_id: recentWidgetsGR.getUniqueValue()
+		});
+	}
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-06-18 21:52:48&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;a538a25adf802200ba13a4836bf26359&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;20&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;x-we-empty-state&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_a538a25adf802200ba13a4836bf26359&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:16:28&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="empty-state-wrapper"&gt;
+  &lt;div class="empty-state"&gt;
+    &lt;h2 class="empty-state-header"&gt;${Widget Editor}&lt;/h2&gt;
+    &lt;div class="empty-state-content"&gt;
+      &lt;div class="empty-state-badge fa fa-list-alt"&gt;&lt;/div&gt;
+      &lt;div class="empty-state-list"&gt;
+        &lt;h3 class="empty-state-header m-t-none"&gt;${Recently Updated}&lt;/h3&gt;
+        &lt;div class="list-group" style="max-height: none; overflow-y: auto;"&gt;
+          &lt;a ng-repeat="widget in c.data.recentWidgets" class="list-group-item" ng-href="?id=widget_editor&amp;sys_id={{widget.sys_id}}"&gt;
+            {{widget.name}}
+          &lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="empty-state-instructions"&gt;
+        &lt;p&gt;${Widget Editor is a development tool that allows you to view and edit the source code for existing widgets, create new widgets, and update a widget's option schema}&lt;/p&gt;
+        &lt;ul&gt;
+          &lt;li&gt;${Check out the} &lt;a ng-href="?id=widget_editor&amp;sys_id=6f2cff80d721120023c84f80de61033c"&gt;${Hello World Example}&lt;/a&gt;&lt;/li&gt;
+          &lt;li ng-if="data.canCreate"&gt;&lt;a href ng-click="c.add()"&gt;${Create a new widget}&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;${Edit an existing widget}&lt;/li&gt;
+          &lt;div class="rp m-t-xs"&gt;
+            &lt;sn-record-picker class="rp" placeholder="${Select a widget}"
+                              field="c.shared.ed_widget" table="'sp_widget'"
+                              display-field="'name'" value-field="'sys_id'"
+                              display-fields="'id'" search-fields="'id,name'"
+                              page-size="100" options="c.pickerOptions"&gt;&lt;/sn-record-picker&gt;
+          &lt;/div&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:28</sys_created_on>
+        <sys_id>509757f84f313300496900fe9310c778</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x-we-empty-state</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_509757f84f313300496900fe9310c778</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:28</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

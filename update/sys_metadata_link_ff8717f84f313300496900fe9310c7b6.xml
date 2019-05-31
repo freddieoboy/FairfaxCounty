@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>5b600425d721120023c84f80de6103b3</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $location, $rootScope) {
+	var c = this;
+	c.submit = function() {
+		c.server.update().then(function(response) {
+			$rootScope.$broadcast('$sp.widget-close-modal');
+			var s = $location.search();
+			s.sys_id = c.data.sys_id;
+			$location.search(s).replace();
+			window.location.reload();
+		});
+	}
+	c.fixID = function(id, blurred) {
+		if (!id) return;
+		c.data.id = id.toString().toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+		if (blurred)
+			c.data.id = c.data.id.replace(/^-|-$/g, '');
+	}
+
+	c.fixPageID = function(id) {
+		if (!id) return;
+		c.data.test_page_id = id.toString().toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+    .replace(/^-|-$/g, '');
+	}
+	
+	// Automatically provide an ID that is based on the name of the widget
+	c.updateID = function() {
+		c.data.id = c.data.name.toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+    .replace(/^-|-$/g, '');
+		
+		c.data.test_page_id = c.data.name.toLowerCase()
+		.replace(/[^a-z0-9-]/gi, '_')
+    .replace(/^-|-$/g, '');
+	}
+	
+	$scope.$on("widget_clone_modal_close", function() {
+		c.data.id = "";
+		c.data.name = "";
+	});
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.error {
+  color: #f95050;
+}
+
+.form-control.ng-invalid {
+  border: 1px solid #f95050;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"options": {
+		"sys_id": "33442352cb30020000f8d856634c9c3f"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;true&lt;/has_preview&gt;
+        &lt;id&gt;widget-clone&lt;/id&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Clone Widget&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"always_show","section":"Behavior","label":"Show even when empty","type":"boolean"},{"name":"panel_body_height","section":"Presentation","label":"List body height","type":"string"},{"name":"image_field","section":"Presentation","label":"Image field","type":"field_name"},{"name":"secondary_fields","section":"Data","label":"Secondary fields","type":"field_list"},{"name":"rounded_images","section":"Presentation","label":"Rounded images","type":"boolean"},{"displayValue":"Page","name":"list_page","section":"Data","label":"List page","type":"reference","value":"sp_page","ed":{"reference":"sp_page"}},{"name":"hide_footer","section":"Presentation","label":"Hide Footer","type":"boolean"},{"displayValue":"UI View","hint":"View to use when target page is a form","name":"view","section":"Behavior","label":"View","type":"reference","value":"sys_ui_view","ed":{"reference":"sys_ui_view"}}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[data.pageIDRequiredMsg = gs.getMessage("Page ID (Required)");
+data.widgetNameMsg = gs.getMessage("Widget name");
+data.widgetIDMsg = gs.getMessage("Widget ID");
+
+var widgetCopyFields = ["template", "script", "client_script", "link", "data_table", "field_list", "controller_as", "public", "css", "documentation", "demo_data", "has_preview", "option_schema"];
+
+if (input) {
+	var widgetGR = new GlideRecord("sp_widget");
+	widgetGR.addQuery("id", input.id);
+	widgetGR.query();
+	if (widgetGR.next()) {
+		// Error Message
+	} else {
+		var copyFromWidget = new GlideRecord("sp_widget");
+		copyFromWidget.addQuery("sys_id", input.copyFromWidgetSysID);
+		copyFromWidget.query();
+
+		if (copyFromWidget.next()) {
+			widgetGR.setValue("id", input.id);
+			widgetGR.setValue("name", input.name);
+
+			widgetCopyFields.forEach(function(field) {
+				widgetGR.setValue(field, copyFromWidget.getValue(field));
+			});
+
+			var newSysID = widgetGR.insert();
+			data.sys_id = newSysID;
+
+			// dependencies
+			var depGR = new GlideRecord('m2m_sp_widget_dependency');
+			depGR.query("sp_widget", input.copyFromWidgetSysID);
+			while (depGR.next()) {
+				depGR.sp_widget = newSysID;
+				depGR.insert();
+			}
+
+			// providers
+			proGR = new GlideRecord('m2m_sp_ng_pro_sp_widget');
+			proGR.query("sp_widget", input.copyFromWidgetSysID);
+			while (proGR.next()) {
+				proGR.sp_widget = newSysID;
+				proGR.insert();
+			}
+			
+			// save cloned widget's relationship to OOB parent
+			new SPWidgetCloneUtils().createCloneRelationship(copyFromWidget.getUniqueValue(), newSysID);
+
+			if (input.createTestPage) {
+				var pageGR = new GlideRecord("sp_page");
+				pageGR.addQuery("id", input.test_page_id);
+				pageGR.query();
+				if (pageGR.next()) {
+					//error
+				} else {
+					pageGR.setValue("id", input.test_page_id);
+					pageGR.setValue("title", input.name + " - Test Page");
+					pageGR.insert();
+
+					var containerGR = new GlideRecord("sp_container");
+					containerGR.initialize();
+					containerGR.sp_page = pageGR.getUniqueValue();
+					containerGR.insert();
+
+					var rowGR = new GlideRecord("sp_row");
+					rowGR.initialize();
+					rowGR.sp_container = containerGR.getUniqueValue();
+					rowGR.insert();
+
+					var colGR = new GlideRecord("sp_column");
+					colGR.initialize();
+					colGR.sp_row = rowGR.getUniqueValue();
+					colGR.insert();
+
+					var instanceGR = new GlideRecord(widgetGR.getValue("data_table"));
+					instanceGR.initialize();
+					instanceGR.sp_column = colGR.getUniqueValue();
+					instanceGR.sp_widget = widgetGR.getUniqueValue();
+					instanceGR.insert();
+				}
+			}
+		}
+	}
+}
+
+data.copyFromWidgetSysID = options.sys_id;]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-02-12 19:07:19&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;5b600425d721120023c84f80de6103b3&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;68&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Clone Widget&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_5b600425d721120023c84f80de6103b3&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-15 19:01:42&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;form name="cloneWidget" ng-submit="c.submit()"&gt;
+  &lt;div class="form-group"&gt;
+    &lt;input required type="text" class="form-control" ng-change="c.updateID()" ng-required="true" name="name" ng-model="c.data.name" placeholder="{{::data.widgetNameMsg}}" /&gt;
+  &lt;/div&gt;
+
+  &lt;div class="form-group"&gt;
+    &lt;input required type="text" class="form-control" ng-blur="c.fixID(c.data.id, true)" maxlength="40" name="id" ng-model="c.data.id" placeholder="{{::data.widgetIDMsg}}" /&gt;
+    &lt;div class="m-t-xs"&gt;${Use only lowercase letters, numbers, underscores, and hyphens}&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;div class="checkbox"&gt;
+    &lt;label&gt;
+      &lt;input ng-model="c.data.createTestPage" type="checkbox"&gt; ${Create test page}
+    &lt;/label&gt;
+  &lt;/div&gt;
+  
+  &lt;div ng-if="c.data.createTestPage" class="form-group"&gt;
+    &lt;input required type="text" class="form-control" ng-blur="c.fixPageID(c.data.test_page_id)" maxlength="40" name="test-page-id" ng-model="c.data.test_page_id" placeholder="{{::data.pageIDRequiredMsg}}" /&gt;
+    &lt;div class="m-t-xs"&gt;${Use only lowercase letters, numbers, underscores, and hyphens}&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;input class="btn btn-primary" ng-class="{'disabled': !cloneWidget.$valid}" type="submit"/&gt;
+
+&lt;/form&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:25</sys_created_on>
+        <sys_id>ff8717f84f313300496900fe9310c7b6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Clone Widget</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_ff8717f84f313300496900fe9310c7b6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:25</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

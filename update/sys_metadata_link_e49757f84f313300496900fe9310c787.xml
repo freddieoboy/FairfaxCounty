@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>b001d945d7a43200f2d224837e6103d0</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;standard&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $rootScope, $timeout, $http, modelUtil, contextualSearch, contextualFeedback, $log, i18n) {
+	var c = this;
+	var ARIA_MSG_GAP = 1000;
+	var PREVIEW_STR = "Preview";
+	var HELPED_STR = "This helped";
+	$scope.i18n = i18n;
+	c.data.cxs.RESULT_TITLE_ID = 'result_title_';
+	var ariaMsgs = c.data.ariaMsgs;
+	$scope.cxs = c.data.cxs;
+	var cxs = $scope.cxs;  // local pointer to simplify code
+	cxs.trigger = {
+		field: $scope.page.g_form.getField("IO:" + cxs.config.search_variable.value)
+	};
+	cxs.display = {
+		collapsed: false
+	};
+
+	function clearDisplay() {
+		delete(cxs.display.results);
+		delete(cxs.display.result_detail);
+		delete(cxs.display.result_index);
+		delete(cxs.display.result);
+	}
+
+	$scope.getRatingDesc = function(rating) {
+		rating = $scope.getRating(rating);
+		if(rating == 0)
+			return c.data.i18nMsgs.noRating;
+		return i18n.format(c.data.i18nMsgs.rating, $scope.getRating(rating));
+	}
+
+	$scope.getRating = function(rating) {
+		return Math.round(rating || 0);
+	}
+
+	function hasResults(){
+		return cxs.display.results &amp;&amp; cxs.display.results.length != 0;
+	}
+
+	$scope.$watch("cxs.trigger.field.stagedValue", function (newValue, oldValue) {
+		if (cxs.trigger.timeout)
+			$timeout.cancel(cxs.trigger.timeout);
+		
+		if (!newValue || newValue.replace(/\s/g,'') === "") {
+			clearDisplay();
+			delete(cxs.response);
+			$scope.setAriaStatus(ariaMsgs.noResultsToDisplay, 0);
+			return;
+		}
+		
+		cxs.trigger.timeout = $timeout(function() {
+			$timeout.cancel(cxs.trigger.timeout);
+			$scope.setAriaStatus(i18n.format(ariaMsgs.searching, newValue), 0);
+			var searchRequest = contextualSearch.newSearchRequest({
+				context: cxs.config.cxs_context_config.value,
+				query: {
+					freetext: newValue
+				},
+				meta: {
+					limit: cxs.config.limit.value,
+					window: {
+						start: 0,
+						end: cxs.config.results_per_page.value
+					},
+					session: cxs.session,
+					includePinnedArticles: true
+				},
+				g_form: $scope.page.g_form
+			});
+			
+			// Submit search request and handle results returned from promise
+			searchRequest.submit().then(
+				function(response) {
+					clearDisplay();
+					cxs.response = response;
+					cxs.display.results = response.results;
+					if(hasResults()) {
+						if($scope.hasMoreResults())
+							$scope.setAriaStatus(ariaMsgs.searchCompleted, ARIA_MSG_GAP);
+						else
+							$scope.setAriaStatus(ariaMsgs.allResultsLoaded, ARIA_MSG_GAP);
+					}
+					else
+						$scope.setAriaStatus(i18n.format(ariaMsgs.noMatchingResults, newValue), ARIA_MSG_GAP);
+				},
+				function(response) {
+					clearDisplay();
+					delete(cxs.response);
+				}
+			);
+		},
+		cxs.property.wait_time);
+	});
+	
+	$scope.getMoreResults = function() {
+		if (!$scope.hasMoreResults())
+			return;
+		// Set limit if request_next exceeds it.
+		if (cxs.response.request_next.meta.window.end &gt; cxs.config.limit.value)
+			cxs.response.request_next.meta.window.end = cxs.config.limit.value;
+		$scope.setAriaStatus(ariaMsgs.loadingMoreResults, 0);
+		cxs.response.request_next.submit().then(
+			function(response) {
+				cxs.response = response;
+				cxs.display.results = cxs.display.results.concat(response.results);
+				if($scope.hasMoreResults())
+					$scope.setAriaStatus(ariaMsgs.resultsLoaded, ARIA_MSG_GAP);
+				else
+					$scope.setAriaStatus(ariaMsgs.allResultsLoaded, ARIA_MSG_GAP);
+			},
+			function(response) {
+				$log.info("BAD");
+			}
+		);
+	};
+	
+	$scope.hasMoreResults = function() {
+		return cxs.response.meta.has_more_results
+			&amp;&amp; cxs.response.request_next.meta.window.start &lt; cxs.config.limit.value;
+	};
+	
+	$scope.displayDetail = function(resultIndex) {
+		if (!cxs.display.results[resultIndex])
+			return;
+		
+		var result = cxs.display.results[resultIndex];
+		if (result._record) {
+			cxs.display.result_index = resultIndex;
+			cxs.display.result_detail = result._record;
+			cxs.display.result = result;
+			$scope.sendFeedback(PREVIEW_STR,cxs.display.result);
+			return;
+		}
+		
+		// Lookup if we haven't already.
+		var id = result.id.split(":");
+		$http.get("/api/now/table/" + id[0] + "?sysparm_display_value=all&amp;sysparm_query=sys_id%3D" + id[1]).then(
+			function(response) {
+				result._record = response.data.result[0];
+				modelUtil.addFriendlyDisplayValueToAll(result._record);
+				cxs.display.result_index = resultIndex;
+				cxs.display.result_detail = result._record;
+				cxs.display.result = result;
+				$scope.sendFeedback(PREVIEW_STR,cxs.display.result);
+			},
+			function(response) {
+				$log.info("BAD II");
+			}
+		);
+	};
+	
+	$scope.toggleExpandCollapse = function() {
+		cxs.display.collapsed = !cxs.display.collapsed;
+	};
+	
+	$scope.getResultTemplate = function(result) {
+		return (result &amp;&amp; result.meta.source) ? "cxs-result-" + result.meta.source : "cxs-result-default";
+	};
+	
+	$scope.getDetailTemplate = function() {
+		var result = cxs.display.results[cxs.display.result_index];
+		return (result &amp;&amp; result.meta.source) ? "cxs-detail-" + result.meta.source : "cxs-detail-default" ;
+	};
+	
+	$scope.getKBParentCategories = function(result) {
+		if (!result)
+			return;
+		
+		var parentCategories = [];
+		// copy by value. slice() does not work on this array
+		if (result.meta.parentCategories)
+			for (var i = 0; i &lt; result.meta.parentCategories.length; i++)
+			parentCategories.push(result.meta.parentCategories[i]);
+		return parentCategories.reverse().join(' &gt; ');
+	};
+	
+	// Detail navigation
+	$scope.backToResults = function() {
+		delete(cxs.display.result_detail);
+		delete(cxs.display.result_index);
+		delete(cxs.display.result);
+		$scope.onBackToResult();
+	};
+	
+	$scope.toNext = function() {
+		if (cxs.display.result_index &gt;= cxs.display.results.length-1 &amp;&amp; $scope.hasMoreResults())
+			$scope.getMoreResults();
+		
+		if ($scope.hasNext())
+			$scope.displayDetail(cxs.display.result_index + 1);	
+	};
+	
+	$scope.toPrev = function() {
+		if ($scope.hasPrev())
+			$scope.displayDetail(cxs.display.result_index - 1);
+	};
+	
+	$scope.hasNext = function() {
+		return cxs.display.result_index &lt; cxs.display.results.length-1 || $scope.hasMoreResults();
+	};
+	
+	$scope.hasPrev = function() {
+		return cxs.display.result_index &gt; 0;
+	};
+	
+	$scope.sendFeedback = function(action_value, result) {
+		if (!result)
+			result = cxs.display.results[cxs.display.result_index];
+		var relevance = true;
+		if(action_value == HELPED_STR)
+			relevance = !$scope.isRelevant(action_value);
+		var feedbackRequest = contextualFeedback.newFeedbackRequest({
+			session: cxs.session,
+			search_request: cxs.response.request,
+			relevant_doc: result.id,
+			relevant_doc_url: result.sp_link || result.link,
+			relevance: action_value,
+			relevant: relevance,
+			score: result.meta['score'],
+            index: cxs.display.result_index,
+			displayed_on: cxs.displayed_on
+		});
+		
+		feedbackRequest.submit().then(
+			function(response) {
+				if (!result.meta.relevance)
+					result.meta.relevance = {};
+				if(action_value == PREVIEW_STR)
+					result.meta.relevance[action_value] = true;
+				else if(action_value == HELPED_STR)
+					result.meta.relevance[action_value] = !$scope.isRelevant(action_value, result);
+			},
+			function(response) {
+				$log.info("BAD III");
+			}
+		);
+	};
+
+	$scope.isRelevant = function(action_value, result) {
+		if (!result)
+			result = cxs.display.results[cxs.display.result_index];
+		return result.meta.relevance &amp;&amp; result.meta.relevance[action_value];
+	};
+	
+	$rootScope.$on("$sp.sc_cat_item.submitted", function(event, response){
+        contextualFeedback.link(cxs.session, response.table, response.sys_id);
+    });
+	
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.panel-body { &amp;#13;
+  border: 1px solid #ccc; &amp;#13;
+  border-top-left-radius: 4px; &amp;#13;
+  border-top-right-radius: 4px;&amp;#13;
+  border-bottom-left-radius: 4px; &amp;#13;
+  border-bottom-right-radius: 4px;&amp;#13;
+  padding: 0px 0px 0px 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.margin-bottom {&amp;#13;
+  margin-bottom: 10px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.row {&amp;#13;
+  margin: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-container .col-md-12 {&amp;#13;
+  padding: 16px 0px 16px 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-container .col-md-1 {&amp;#13;
+  width: 3%;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-container .col-md-11 {&amp;#13;
+  width: 97%;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-detail-container {&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-detail-container .article-content {&amp;#13;
+  overflow-wrap: break-word;&amp;#13;
+  word-wrap: break-word;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-detail-container .col-md-12 {&amp;#13;
+  padding: 16px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-detail-container hr {&amp;#13;
+  margin-top: 6px;&amp;#13;
+  margin-bottom: 16px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-results-panel {  &amp;#13;
+  border-top-left-radius: 4px; &amp;#13;
+  border-top-right-radius: 4px;&amp;#13;
+  border-bottom-left-radius: 4px; &amp;#13;
+  border-bottom-right-radius: 4px;&amp;#13;
+  padding: 0px;&amp;#13;
+  &amp;#13;
+  font-family: "SourceSansPro";&amp;#13;
+  font-weight: 400;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-results-title-bar {&amp;#13;
+  border-top-left-radius: 4px; &amp;#13;
+  border-top-right-radius: 4px;&amp;#13;
+  padding: 6px 12px 6px 12px;&amp;#13;
+  border-bottom: 1px solid #ccc;&amp;#13;
+  background-color: #f5f5f5;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-results {&amp;#13;
+  padding: 6px 12px 6px 12px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-snippet {&amp;#13;
+  font-size: 14px;&amp;#13;
+  color: #717171;&amp;#13;
+  overflow-wrap: break-word;&amp;#13;
+  word-wrap: break-word;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-results-title {&amp;#13;
+  font-size: 14px;&amp;#13;
+  color: #343D47;&amp;#13;
+  font-weight: 600;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-preview-content {&amp;#13;
+  margin-top: 16px;&amp;#13;
+  border: 1px solid #ccc;&amp;#13;
+  padding: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+span.cxs-result-icon {&amp;#13;
+  padding-right: 8px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-icon i {&amp;#13;
+  color: #86c0fd;&amp;#13;
+  font-size: 20px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-icon i.push {&amp;#13;
+	margin-top: 3px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+i.cxs-preview-icon {&amp;#13;
+  font-size: 10px;&amp;#13;
+  color: #343D47;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-button-order {&amp;#13;
+  border: 1px solid #428bca;&amp;#13;
+  color: #428bca;&amp;#13;
+  font-size: 14px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-button-order:hover {&amp;#13;
+  border-color: #2a6496;&amp;#13;
+  color: #2a6496;&amp;#13;
+  background-color: #eeeeee;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-button-order-pad {&amp;#13;
+  margin-left: 10px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+div.cxs-result-content {&amp;#13;
+  padding: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+div.cxs-result-chrome {&amp;#13;
+  border-bottom: 1px solid #ccc;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-title {&amp;#13;
+  font-weight: 600;&amp;#13;
+  font-size: 16px;&amp;#13;
+  color: #428bca;&amp;#13;
+  overflow-wrap: break-word;&amp;#13;
+  word-wrap: break-word;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-result-breadcrumbs {&amp;#13;
+  font-size: 13px;&amp;#13;
+  color: #979797;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-icon-star {&amp;#13;
+  font-size: 10px;&amp;#13;
+  line-height: 18px;&amp;#13;
+  vertical-align: middle;&amp;#13;
+  margin-right: 3px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-icon-star-empty {&amp;#13;
+  font-size: 10px;&amp;#13;
+  line-height: 18px;&amp;#13;
+  vertical-align: middle;&amp;#13;
+  margin-right: 3px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-action-button-icon {&amp;#13;
+  font-size: 16px;&amp;#13;
+  vertical-align: middle;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-meta-row {&amp;#13;
+   line-height: 0.8;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-ec-chevron {&amp;#13;
+    font-size: 12px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-meta_row .cxs-article-info {&amp;#13;
+  display: block;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-preview {&amp;#13;
+  color: #343D47;&amp;#13;
+}&amp;#13;
+&amp;#13;
+ul.cxs-article-info {&amp;#13;
+  padding: 0px;&amp;#13;
+  margin: 4px 0px 0px 0px;&amp;#13;
+  font-size: 13px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+ul.cxs-article-info &amp;gt; li:first-child {&amp;#13;
+  margin-left: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+ul.cxs-article-info li {&amp;#13;
+  margin-right: 0px;&amp;#13;
+  margin-left: 0px;&amp;#13;
+  display: inline;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-article-info li::before {&amp;#13;
+  content: "\2022"&amp;#13;
+}&amp;#13;
+&amp;#13;
+ul.cxs-article-info &amp;gt; li:first-child::before {&amp;#13;
+  content: ""&amp;#13;
+}&amp;#13;
+&amp;#13;
+ul.cxs-article-info &amp;gt; li:first-child span.cxs-article-label {&amp;#13;
+  margin-left: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-article-label {&amp;#13;
+  margin-left: 0px;&amp;#13;
+  margin-right: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-article-value {&amp;#13;
+  margin-left: 0px;&amp;#13;
+  margin-right: 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-rating-readonly {&amp;#13;
+  height: 18px;&amp;#13;
+  line-height: 18px;&amp;#13;
+  display: inline-block;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.b {&amp;#13;
+  border: 0px solid transparent&amp;#13;
+}&amp;#13;
+&amp;#13;
+div.cxs-result-title, div.cxs-meta-row {&amp;#13;
+  padding-bottom: 8px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-button-bar {&amp;#13;
+  height: 45px;&amp;#13;
+  line-height: 45px;&amp;#13;
+  white-space: nowrap;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-button-bar button {&amp;#13;
+	vertical-align: middle;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-results-button-bar {&amp;#13;
+  height: 45px;&amp;#13;
+  line-height: 45px;&amp;#13;
+  text-align: center;&amp;#13;
+}&amp;#13;
+&amp;#13;
+button.cxs-hlp-btn {&amp;#13;
+  line-height: 16px;&amp;#13;
+  margin: 0px 0px 3px 0px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+span.cxs-hlp-btn-label {&amp;#13;
+  vertical-align: middle;&amp;#13;
+  font-size: 14px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+span.cxs-results-vcr {&amp;#13;
+  text-align: center;&amp;#13;
+}&amp;#13;
+&amp;#13;
+i:before {&amp;#13;
+  vertical-align: baseline;&amp;#13;
+}&amp;#13;
+&amp;#13;
+img.cxs-result-image, img.cxs-record-image {&amp;#13;
+  width: 100%;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.icon-star {&amp;#13;
+  color: gold;&amp;#13;
+  font-size: 10px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.icon-star-empty {&amp;#13;
+  color: #343D47;&amp;#13;
+  font-size: 10px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.panel-heading { display: none; }&amp;#13;
+&amp;#13;
+.side-box {&amp;#13;
+  margin: 0 0;&amp;#13;
+  border: #bdc0c4 1px solid;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.side-box .box {&amp;#13;
+  padding: 5px;&amp;#13;
+  display: inline-block;&amp;#13;
+  width: 49%;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.side-box .box:nth-child(2) {&amp;#13;
+  border-left: #bdc0c4 1px solid;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.side-box .box .number-box {&amp;#13;
+  direction: ltr;&amp;#13;
+  padding-top: 2px;&amp;#13;
+  padding-bottom: 2px;&amp;#13;
+  font-size: 20px;&amp;#13;
+  text-align: center;&amp;#13;
+  color: #000000;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.side-box .box .text-box {&amp;#13;
+  font-size: 11px;&amp;#13;
+  color: #bdc0c4;&amp;#13;
+  text-align: center;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.btn-icon {&amp;#13;
+  background: none;&amp;#13;
+  padding: 3px;&amp;#13;
+  border: none;&amp;#13;
+  border-top-color: initial;&amp;#13;
+  border-top-style: none;&amp;#13;
+  border-top-width: initial;&amp;#13;
+  border-right-color: initial;&amp;#13;
+  border-right-style: none;&amp;#13;
+  border-right-width: initial;&amp;#13;
+  border-bottom-color: initial;&amp;#13;
+  border-bottom-style: none;&amp;#13;
+  border-bottom-width: initial;&amp;#13;
+  border-left-color: initial;&amp;#13;
+  border-left-style: none;&amp;#13;
+  border-left-width: initial;&amp;#13;
+  border-image-source: initial;&amp;#13;
+  border-image-slice: initial;&amp;#13;
+  border-image-width: initial;&amp;#13;
+  border-image-outset: initial;&amp;#13;
+  border-image-repeat: initial;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-preview-button {&amp;#13;
+  font-size: 20px;&amp;#13;
+  color: #343D47;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-lozenge {&amp;#13;
+  color: white;&amp;#13;
+  font-size: 11px;&amp;#13;
+  background-color: #3d89cb;&amp;#13;
+  padding: 2px 6px 2px 6px;&amp;#13;
+  margin-left: 10px;&amp;#13;
+  border-radius: 5px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cxs-record-short-description {&amp;#13;
+  overflow-wrap: break-word;&amp;#13;
+  word-wrap: break-word; &amp;#13;
+}
+
+#sp_cxs_aria_status {
+	font-size:0px !important;
+}
+
+.cxs-aria-status {
+	border: 1px solid #bdc0c4;
+	padding: 10px;
+	min-height: 1em;
+	text-align: center;
+}
+
+.sp-cxs-a11y {
+
+	.cxs-result-breadcrumbs span, .number-box, .text-box {
+		color: #777474 !important;
+	}
+	.cxs-lozenge {
+		background-color: #006ee0 !important;
+	}
+
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description&gt;This provides contextual search functionality for Service Portal&lt;/description&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cxs-inline-results-widget&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link&gt;&lt;![CDATA[function($scope, el, attr) {
+	var focusId;
+	$(el).on('click', '.cxs-result-title&gt;a', function($event) {
+		focusId = $(this).attr('id');
+	});
+
+	$scope.onBackToResult = function() {
+		setTimeout(function() {
+			$('#' + focusId).focus();
+		}, 500);
+	};
+
+	/*
+		we can use angular expressions for the below funtionalities. But JAWS is reading angular expressions on live regions.
+		so we are manipulating directly DOM.
+	*/
+	var timerPromise;
+	$scope.cxs.ariaStatus = '';
+	var $timeout = $injector.get('$timeout');
+	function updateAriaStatus(msg) {
+		var target = $(el).find('#sp_cxs_aria_status')[0];
+		$scope.cxs.ariaStatus = msg; 
+		target.innerHTML = '&lt;div class="sr-only"&gt;' +$('&lt;div&gt;', { text:msg }).html() + '&lt;/div&gt;';
+	}
+
+	$scope.setAriaStatus = function(msg, delay) {
+		delay = delay || 0;
+		if(delay == 0 || timerPromise)
+			$timeout.cancel(timerPromise);
+
+		(function(val) {
+			timerPromise = $timeout(function() {
+				timerPromise = undefined;
+				updateAriaStatus(val);
+		}, delay);})(msg);
+	}
+
+	$scope.setAriaStatus(scope.c.data.ariaMsgs.noResultsToDisplay);
+}]]&gt;&lt;/link&gt;
+        &lt;name&gt;Contextual Search - Inline Results&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"max_number","section":"Presentation","label":"Max number","type":"integer"},{"displayValue":"Knowledge Category","name":"kb_category","section":"Data","label":"KB category","type":"reference","value":"kb_category","ed":{"reference":"kb_category"}}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.cxs = {
+		session: gs.generateGUID(),
+		displayed_on: "record_producer:" + $sp.getParameter("sys_id"),
+		config: new sn_cxs.CXSUIConfig().getRPConfig($sp.getParameter("sys_id")),
+	    property: {
+			show_meta_data: gs.getProperty("com.snc.contextual_search.widget.form.show_meta_data", false) == "true" || false,
+			wait_time: parseInt(gs.getProperty("com.snc.contextual_search.wait_time", 500))
+		},
+		kb_property: {
+			show_author: (gs.getProperty("glide.knowman.search.show_author", false) == "true" || false),
+			show_article_number: (gs.getProperty("glide.knowman.search.show_article_number", false) == "true" || false),
+			show_category: (gs.getProperty("glide.knowman.search.show_category", false) == "true" || false),
+			show_relevance: (gs.getProperty("glide.knowman.search.show_relevancy", false) == "true" || false),
+			show_last_modified: (gs.getProperty("glide.knowman.search.show_last_modified", false) =="true" || false),
+			show_published: (gs.getProperty("glide.knowman.search.show_published", false) == "true" || false),
+			show_unpublished: (gs.getProperty("glide.knowman.show_unpublished", false) == "true" || false),
+			show_view_count: (gs.getProperty("glide.knowman.search.show_view_count", false) == "true" || false),
+			show_rating: (gs.getProperty("glide.knowman.search.show_rating", false) == "true" || false)
+		}
+	};
+	var i18nMsgs = {
+		noRating: gs.getMessage("No rating"),
+		rating: gs.getMessage("{0} star rating"),
+		views: gs.getMessage("{0} views"),
+		view: gs.getMessage("{0} view"),
+		catalog: {
+			order: gs.getMessage("Navigates to {0} catalog page")
+		}
+	};
+	var ariaMsgs = {
+		searchCompleted: gs.getMessage("Showing search results"),
+		searching: gs.getMessage("Searching for {0}"),
+		loadingMoreResults: gs.getMessage("Loading more results"),
+		resultsLoaded: gs.getMessage("More results loaded"),
+		allResultsLoaded: gs.getMessage("Showing all search results"),
+		noMatchingResults: gs.getMessage("No matching results found for {0}"),
+		noResultsToDisplay: gs.getMessage("No results to display")
+	};
+	data.ariaMsgs = ariaMsgs;
+	data.i18nMsgs = i18nMsgs;
+	data.isA11yEnabled = GlideAccessibility.isEnabled();
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2017-01-24 11:01:58&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;b001d945d7a43200f2d224837e6103d0&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;519&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Contextual Search - Inline Results&lt;/sys_name&gt;
+        &lt;sys_package display_value="Contextual Search - Service Portal" source="com.snc.contextual_search.service-portal"&gt;5729783111c033006517bd11ae6a4c5f&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_b001d945d7a43200f2d224837e6103d0&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-05-16 20:36:21&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;sp-panel ng-if="cxs.response" class="cxs-results-panel" ng-class = "::{'sp-cxs-a11y': c.data.isA11yEnabled}"&gt;
+  &lt;div class="cxs-results-title-bar" ng-click="cxs.config.allow_expand_collapse.value &amp;&amp; toggleExpandCollapse()"
+       ng-attr-aria-expanded="{{cxs.config.allow_expand_collapse.value ? !cxs.display.collapsed : true}}"
+       ng-attr-aria-disabled="{{cxs.config.allow_expand_collapse.value ? false : true}}"&gt;
+     &lt;span class="cxs-results-title"&gt;
+       {{cxs.config.results_header_text.display_value}}&amp;nbsp;
+       &lt;i ng-class="['cxs-ec-chevron','fa',{'fa-chevron-down': cxs.display.collapsed, 'fa-chevron-up': !cxs.display.collapsed}]" ng-if="cxs.config.allow_expand_collapse.value"&gt;&lt;/i&gt;
+    &lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div ng-show="!cxs.display.result_detail &amp;&amp; cxs.display.results &amp;&amp; !cxs.display.collapsed" class="cxs-results"&gt;
+    &lt;div ng-repeat="result in cxs.display.results" class="m-b"&gt;
+      &lt;ng-include src="getResultTemplate(result)" /&gt;
+    &lt;/div&gt;
+    &lt;div class="row cxs-results-button-bar col-md-12" ng-if="hasMoreResults()"&gt;
+      &lt;button class="btn btn-default margin-bottom" ng-click="getMoreResults()" aria-label = "${Shows more search results}"&gt;${Show more}&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;!-- Display message if no Search Results returned --&gt;
+    &lt;div ng-if="(!cxs.display.results || cxs.display.results.length == 0)"&gt;
+      ${No matching results found for {{cxs.response.request.query.freetext}}}
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;!-- Display Search Result Detail --&gt;
+  &lt;div ng-if="cxs.display.result_detail &amp;&amp; !cxs.display.collapsed"  class="cxs-individual-result"&gt;
+    &lt;div&gt;&lt;ng-include src="'cxs-detail-header'" /&gt;&lt;/div&gt;
+    &lt;div class="row col-md-12 cxs-record"&gt;
+  		&lt;ng-include src="getDetailTemplate()" /&gt;
+	&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/sp-panel&gt;
+&lt;!-- Start - Accessibility specific DOM --&gt;
+&lt;div ng-if="::c.data.isA11yEnabled" class = "cxs-results-panel cxs-aria-status"
+     ng-class="(c.data.isA11yEnabled &amp;&amp; !cxs.response) ? 'cxs-results-panel cxs-aria-status' : 'sr-only'"&gt;
+  {{cxs.ariaStatus}}
+&lt;/div&gt;
+&lt;!-- 
+	if we use any of the angular expression for 2 way binding in this live region,
+	then screen readers are not reading correctly. so going to raw mode
+	JAWS : reading angular expressions
+	Voiceover : After usage of some time ( 5 to 10 min) , stops reading the content.
+--&gt;
+	&lt;div id='sp_cxs_aria_status' aria-live="assertive" aria-atomic = "true"&gt;
+	&lt;/div&gt;
+&lt;!--End - Accessibility specific DOM --&gt;
+&lt;style&gt;
+@media screen and (max-width: 992px) {
+  div.cxs-result-icon.col-md-1 {
+    display: none;
+  }
+  .cxs-wide-action {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 992px) {
+  span.cxs-result-icon {
+  	display: none;
+  }
+    .cxs-narrow-action {
+    display: none;
+  }
+}
+&lt;/style&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:28</sys_created_on>
+        <sys_id>e49757f84f313300496900fe9310c787</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Contextual Search - Inline Results</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_e49757f84f313300496900fe9310c787</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:28</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

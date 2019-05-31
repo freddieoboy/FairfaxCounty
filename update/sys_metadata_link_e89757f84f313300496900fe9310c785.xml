@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>af0f73105b0122000d7ec7ad31f91a27</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;standard&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, $window, $http, userPreferences, $filter) {
+	var c = this;		
+	c.language = {value: 'en', displayValue: 'English'};		
+	c.changed = function(a) {							
+		c.server.get(c.language).then(function() {			
+			$window.location.reload();			
+		});
+	};
+
+	// get the list of values for a property using the concourse picker api (timezone, language)
+	var getListValuesForProperty = function(endpoint, listProperty) {
+		$http.get('/api/now/ui/concoursepicker/' + endpoint).then(function(response) {
+			if (response &amp;&amp; response.data &amp;&amp; response.data.result &amp;&amp; response.data.result.list) {
+				if (!listProperty.list)
+					listProperty.list = [];
+
+				listProperty.list = response.data.result.list;
+				if (response.data.result.current) {
+					if (!listProperty.current)
+						listProperty.current = {};
+					listProperty.current = $filter('filter')(listProperty.list, {value: response.data.result.current}, true)[0];
+				}
+			}
+		});
+	};
+
+	// list of user properties that are not user preferences
+	$scope.data.listProperties = {
+		language: {}
+	};
+
+	// initialize dropbox data
+	getListValuesForProperty('language', $scope.data.listProperties.language);
+	//set the user property
+	$scope.setPreferenceValue = function(endpoint, value) {
+		$http.put('/api/now/ui/concoursepicker/' + endpoint, {current : value}).then(function(response) {
+			if (response &amp;&amp; response.data &amp;&amp; response.data.result) {
+				$scope.data.userPreferencesChanged = true;
+				c.changed();
+			}
+		});
+	};
+
+	//set the user preference value
+	$scope.setUserPreferenceValue = function(userProperty) {
+		userPreferences.setPreference(userProperty.key, userProperty.value).then(function() {
+			$scope.data.userPreferencesChanged = true;
+		});
+	};
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.list-group-item {
+  border: none;
+  padding: 0px;
+}
+
+.list-group {
+  margin-bottom: 0px;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;sp-lang-switch&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Language Switch&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"max_number","section":"Presentation","label":"Max number","type":"integer"},{"displayValue":"Knowledge Category","name":"kb_category","section":"Data","label":"KB category","type":"reference","value":"kb_category","ed":{"reference":"kb_category"}}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {			
+	data.languageEnabled = pm.isActive('com.glide.i18n') &amp;&amp; gs.getProperty('glide.ui.language_picker.enabled', 'true') == 'true';
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-08-01 16:07:09&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;af0f73105b0122000d7ec7ad31f91a27&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;90&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Language Switch&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_af0f73105b0122000d7ec7ad31f91a27&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:05:38&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-{{::c.options.color}} b" ng-if="data.languageEnabled"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h4 class="panel-title"&gt;${Language}&lt;/h4&gt;
+  &lt;/div&gt;  
+  &lt;div class="panel-body"&gt;
+    &lt;div class="list-group"&gt;
+      &lt;div class="list-group-item"&gt;
+        &lt;select id="language_picker_select" class="form-control"
+                name="language_picker_select" ng-model="data.listProperties.language.current"
+                ng-change="setPreferenceValue('language', data.listProperties.language.current.value)"
+                ng-options="item as item.label for item in data.listProperties.language.list "/&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;      
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:28</sys_created_on>
+        <sys_id>e89757f84f313300496900fe9310c785</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Language Switch</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_e89757f84f313300496900fe9310c785</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:28</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

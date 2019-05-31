@@ -1,0 +1,828 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>6e7bf89247301200ba13a5554ee490e3</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, spUtil, $location, $timeout, $window, $rootScope, $uibModal, spPreference, $compile) {
+	var c = this;
+	var specialCodeBlocks = ['documentation', 'preview'];
+
+	setReadOnly();
+	c.isReadOnly = function(value) {
+		return c.readOnly || value;
+	}
+
+	c.codeBlocks = {
+		template: {title: $scope.data.htmlBlockMsg, display: true, type: 'html', enabled: true},
+		css: {title: $scope.data.cssBlockMsg, display: false, type: 'css', enabled: true},
+		client_script:{ title: $scope.data.clientScriptMsg, display: true, type: 'script', enabled: true},
+		script:{title: $scope.data.serverScriptMsg, display: true, type: 'script', enabled: true},
+		link: {title: $scope.data.linkMsg, display: false, type: 'script', enabled: true},
+		demo_data: {title: $scope.data.demoDataMsg, display: false, type: 'script', enabled: false},
+		preview: {title: $scope.data.previewMsg, display: false, widget: true, enabled: true},
+		documentation: {title: $scope.data.docMsg, display: false, mode: 'preview', edit: false, enabled: true}
+	}
+
+	c.getCodeBlocks = function() {
+		var result = {};
+		angular.forEach(c.codeBlocks, function(value, key) {
+			if (!~specialCodeBlocks.indexOf(key)) {
+				result[key] = value;
+			}
+		});
+		return result;
+	}
+
+	c.demoOptions = {mode: 'JSON'};
+	c.transition = {event: '$sp.widget-edit-panel-css-transition-end'};
+	c.updated = true;
+	c.codeHasChanged = false;
+	c.data.updatedDocContent = c.data.docContent;
+	$scope.$watch("c.data.docContent", function() {
+		c.data.updatedDocContent = c.data.docContent;
+	})
+
+	c.saveLayout = function() {
+		var str = c.data.layoutPref || "{}";
+		var layout = JSON.parse(str);
+
+		var codeBlocks = c.codeBlocks;
+		angular.forEach(codeBlocks, function(codeBlock, key) {
+			layout[key] = c.codeBlocks[key].display;
+		});
+
+		c.data.layoutPref = JSON.stringify(layout);
+		spPreference.set("wep-layout", c.data.layoutPref);
+	};
+
+	c.closeBlock = function(section) {
+		section.display = false;
+		c.saveLayout();
+	}
+
+	c.closeDep = function(dependency, type) {
+		dependency.show = false;
+		$rootScope.$broadcast('$sp.wep-' + type, 'close', c.data.sys_id);
+	}
+
+	function loadLayout() {
+		var str = c.data.layoutPref || "{}";
+		var layout = JSON.parse(str);
+
+		c.codeBlocks.demo_data.enabled = (c.data.f._fields.has_preview.value == 'true') ? true : false;
+
+		if (layout.documentation)
+			c.codeBlocks.documentation.display = layout.documentation;
+
+		angular.forEach(layout, function(display, key) {
+			if (c.codeBlocks[key])
+				c.codeBlocks[key].display = display;
+		});
+		
+		var oneVisible = false;
+		angular.forEach(c.codeBlocks, function(codeBlock, key) {
+			if (c.codeBlocks[key].display == true)
+				oneVisible = true;
+		});
+		if (!oneVisible) {
+			c.codeBlocks.template.display = true;
+			c.codeBlocks.client_script.display = true;
+			c.codeBlocks.script.display = true;
+		}
+	}
+
+	//prevent the config options dropdown when an input checkbox is clicked.
+	$('.config-dropdown').click(function(e) {
+		e.stopPropagation();
+	});
+
+	function setReadOnly() {
+		c.readOnly = (c.data.sys_id &amp;&amp; c.data.canRead &amp;&amp; c.data.f._fields.template.sys_readonly);
+	}
+
+	function setPageTitle(){
+		$window.document.title = (c.data.title) ? '${Editing:} ' + c.data.title : '${Widget Editor}';
+	}
+
+	function transition() {
+		$timeout(function() {
+			$rootScope.$broadcast(c.transition.event);
+		}, 100);
+	}
+
+	function setUrlParams(list) {
+		var s = $location.search();
+		for (var x in list)
+			s[x] = list[x];
+		s.spa = 1;
+		$location.search(s).replace();
+	}
+
+	setPageTitle();
+	var search = $location.search();
+
+	// for the widget picker
+	c.ed_widget = {
+		displayValue: c.data.title,
+		value: c.data.sys_id,
+		name: 'widget'
+	}
+
+	$scope.$on('field.change', function(evt, params) {
+		if (params.field.name != 'widget')
+			return;
+
+		c.codeBlocks.documentation.edit = false;
+		c.codeBlocks.documentation.mode = 'preview';
+		c.codeHasChanged = false;
+		c.data.sys_id = params.newValue;
+		c.data.action = 'get';
+		c.server.update().then(function() {
+			loadLayout();
+			c.updated = false;
+			$timeout(function() {
+				c.updated = true;
+				setReadOnly();
+				setPageTitle();
+				$rootScope.$broadcast('$sp.wep-provider', 'clear');
+				$rootScope.$broadcast('$sp.wep-provider', 'load');
+				
+				$rootScope.$broadcast('$sp.wep-template', 'clear');
+				$rootScope.$broadcast('$sp.wep-template', 'load');
+				
+				$scope.$broadcast('$sp.preview', 'reload');
+				transition();
+			});
+
+		});
+
+		if (params.newValue.length &gt; 0) {
+			setUrlParams({sys_id: c.data.sys_id});
+		}
+	})
+
+	c.saveButtonSuffix = spUtil.getAccelerator('s');
+
+	c.save = function() {
+		$scope.status = '${Saving}';
+		$scope.data.action = 'save';
+		
+		$rootScope.$broadcast('$sp.wep-provider', 'save', c.data.sys_id);		
+		$rootScope.$broadcast('$sp.wep-template', 'save', c.data.sys_id);
+		
+		$scope.server.update().then(function(data) {
+			$scope.$broadcast('$sp.preview', 'reload');
+			spUtil.addTrivialMessage('Saved');
+			$scope.status = 'Saved';
+
+			$timeout(function() {
+				c.status = "";
+			}, 1500);
+		}, function(error) {
+			spUtil.addErrorMessage($scope.data.errorMsg + ": " + error.status + " " + error.statusText);
+		})
+	}
+
+	c.toggle = function(type) {
+		c.codeBlocks[type].display = !c.codeBlocks[type].display;
+
+		if (type === 'preview')
+			c.codeBlocks.demo_data.enabled = c.codeBlocks.preview.display;
+
+		c.saveLayout(type, c.codeBlocks[type].display);
+	}
+
+	c.docToggleMode = function() {
+		c.codeBlocks.documentation.mode = (c.codeBlocks.documentation.mode === 'preview') ? 'edit' : 'preview';
+		$rootScope.$broadcast('$sp.widget-edit-panel-toggle-mode', c.codeBlocks.documentation.mode);
+	}
+
+	c.docEdit = function() {
+		c.codeBlocks.documentation.edit = true;
+		c.codeBlocks.documentation.mode = 'edit';
+		transition();
+	}
+
+	var instance;  // modal instance
+
+	c.add = function() {
+		var options = {
+			size: 'sm',
+			scope: $scope,
+			templateUrl: 'add-widget-modal.html'
+		};
+
+		instance = $uibModal.open(options)
+	}
+
+	c.clone = function() {
+		var options = {
+			size: 'sm',
+			scope: $scope,
+			templateUrl: 'clone-widget-modal.html'
+		}
+
+		instance = $uibModal.open(options);
+		instance.result.then(function() {}, function() {
+			$rootScope.$broadcast("widget_clone_modal_close");
+		});
+	}
+
+	c.cancel = function() {
+		instance.dismiss('cancel');
+	}
+
+	c.editOptionSchema = function(event){
+		var myModalCtrl;
+		event.preventDefault();
+		event.stopPropagation();
+		var unregister = $scope.$on('$sp.we20.options_saved', function(event, savedOptions){
+			c.data.f._fields.option_schema = savedOptions;
+			myModalCtrl.close();
+		});
+
+		var myModal = angular.copy($scope.data.widgetOptionSchemaModal);
+		myModal.options.afterOpen = function(ctrl){
+			myModalCtrl = ctrl;
+		};
+		myModal.options.afterClose = function() {
+			unregister();
+			c.widgetOptionSchemaModal = null;
+			myModalCtrl = null;
+		};
+		c.widgetOptionSchemaModal = myModal;
+	}
+
+	var deregister = $scope.$on('$sp.save', c.save);
+	$scope.$on('$destroy', function() {deregister()});
+	if (c.data.sys_id)
+		loadLayout();
+	
+	// data shared with empty state widget
+	var shared = c.data['x-we-empty-state'].options.shared;
+	shared.ed_widget = c.ed_widget;
+	shared.add = c.add;
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;
+.iframe-preview {
+  width: 100%;
+  height: 100%;
+  padding-top: 5px;
+  border: none;
+}
+
+.preview-header {
+  border-bottom:1px solid #DDDDDD;
+}
+
+/* toolbar */
+.toolbar {
+  padding: 5px;
+
+  .has-content {
+    color: #428bca;
+  }
+}
+
+/* above each code section */
+.minibar {
+	padding: 2px;
+
+  .btn {
+  	border: none;
+  }
+}
+
+input[type=checkbox] {
+  margin-right: .25em;
+}
+
+.check {
+  white-space: nowrap;
+  margin-bottom: 0;
+  margin-left: 1rem;
+}
+
+/* record pickers */
+.rp {
+  width: 15em;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
+}
+
+/* edit panel containers */
+.code-container {
+  background-color: #ccc;
+  overflow: hidden;
+
+  &amp;gt; div {
+    background-color: #fff;
+    margin: 5px 0 5px 5px;
+    padding: 0;
+    overflow: hidden;
+
+    &amp;amp;:last-child {
+      margin: 5px;
+    }
+  }
+  
+  .CodeMirror {
+  	height: 100%;
+    width: 100%;
+  }
+  
+  .CodeMirror-scroll {
+    height: 100% !important;
+    max-height: inherit;
+  }
+
+}
+
+.animate {
+  transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+  -webkit-transition: 350ms flex-grow cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms padding cubic-bezier(0.075, 0.820, 0.165, 1.000), 350ms margin cubic-bezier(0.075, 0.820, 0.165, 1.000);
+}
+
+/* slide the panels in */
+.flex.animate.ng-enter {
+  -webkit-box-flex: 0;
+  -webkit-flex-grow: 0;
+  -ms-flex-positive: 0;
+  flex-grow: 0;
+}
+
+.flex.animate.ng-enter.ng-enter-active {
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+
+/* and slide them back out */
+.flex.animate.ng-leave.ng-leave-active {
+  -webkit-box-flex: 0;
+  -webkit-flex-grow: 0;
+  -ms-flex-positive: 0;
+  flex-grow: 0;
+  padding: 5px 0;
+  margin: 0;
+}
+
+.relative {
+  position: relative;
+}
+
+.button-nav {
+  .btn-group {
+    margin-left: 0.5rem;
+  }
+  
+  button {
+    min-width: 40px;
+  }
+}
+
+.doc {
+  overflow: auto;
+  width: 98%;
+}
+
+.doc-icons {
+  position: absolute;
+  padding: 5px;
+  right: 0px;
+}
+
+.dropdown-icon {
+  padding-right: 10px;
+}
+
+.sp-dep {
+  width: 200px;
+}
+
+.read-only-message {
+  text-align: center;
+
+  .alert {
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+}
+
+.cm-s-snc_readonly { background-color: #e6e8ea; color: #444444; }
+
+.cm-s-snc_readonly_readonly span.cm-meta { color: #FF1717; }
+
+.cm-s-snc_readonly span.cm-keyword { font-weight: bold; color: #7F0055; }
+
+.cm-s-snc_readonly span.cm-atom { color: #219; }
+
+.cm-s-snc_readonly span.cm-number { color: #164; }
+
+.cm-s-snc_readonly span.cm-def { color: #00f; }
+
+.cm-s-snc_readonly span.cm-variable { color: black; }
+
+.cm-s-snc_readonly span.cm-variable-2 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-variable-3 { color: #0000C0; }
+
+.cm-s-snc_readonly span.cm-property { color: black; }
+
+.cm-s-snc_readonly span.cm-operator { color: black; }
+
+.cm-s-snc_readonly span.cm-comment { color: #3F7F5F; }
+
+.cm-s-snc_readonly span.cm-string { color: #2A00FF; }
+
+.cm-s-snc_readonly span.cm-string-2 { color: #f50; }
+
+.cm-s-snc_readonly span.cm-error { color: #f00; }
+
+.cm-s-snc_readonly span.cm-qualifier { color: #555; }
+
+.cm-s-snc_readonly span.cm-builtin { color: #30a; }
+
+.cm-s-snc_readonly span.cm-bracket { color: #cc7; }
+
+.cm-s-snc_readonly span.cm-tag { color: #170; }
+
+.cm-s-snc_readonly span.cm-attribute { color: #00c; }
+
+.cm-s-snc_readonly span.cm-link { color: #219; }
+
+.cm-s-snc_readonly .CodeMirror-matchingbracket {
+  color: OrangeRed !important;;
+}
+
+// readonly
+[role="editor-container"][data-readonly="true"] {
+  .CodeMirror {
+    background-color: #F7F7F7 !important;
+  }
+}
+&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"options": {
+		"sys_id": "33442352cb30020000f8d856634c9c3f"
+	}
+}&lt;/demo_data&gt;
+        &lt;description&gt;A full page, IDE like editor for modifying widget code&lt;/description&gt;
+        &lt;docs display_value=""&gt;2a748c805b0212000d7ec7ad31f91a33&lt;/docs&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;widget-edit-panel&lt;/id&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Widget Edit Panel&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Hide percentage of people who found this article helpful","name":"hide_percent_helpful","section":"Presentation","label":"Hide percent helpful","type":"boolean"},{"hint":"Response to show once viewer has clicked Yes or No","name":"response","section":"Behavior","label":"Response","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles&gt;sp_admin&lt;/roles&gt;
+        &lt;script&gt;&lt;![CDATA[(function(){
+	data.depsMsg = gs.getMessage("Dependencies");
+	data.templatesMsg = gs.getMessage("Templates");
+	
+	data.htmlBlockMsg = gs.getMessage("HTML Template");
+	data.cssBlockMsg = gs.getMessage("CSS - SCSS");
+	data.clientScriptMsg = gs.getMessage("Client Script");
+	data.serverScriptMsg = gs.getMessage("Server Script");
+	data.linkMsg = gs.getMessage("Link Function");
+	data.demoDataMsg = gs.getMessage("Demo Data (JSON)");
+	data.previewMsg = gs.getMessage("upper_preview");
+	data.docMsg = gs.getMessage("Documentation");
+	data.errorMsg = gs.getMessage("Error when saving the widget");
+	
+	data.angularProviders = [];
+	data.sys_id = (input) ? input.sys_id : $sp.getParameter('sys_id');
+	data.layoutPref = gs.getPreference("wep-layout");
+	data.providersPref = gs.getPreference("wep-provider-" + data.sys_id);
+	data.templatesPref = gs.getPreference("wep-template-" + data.sys_id);
+	
+	var gr = new GlideRecord('sp_widget');
+	data.canCreate = gr.canCreate();
+	// save the contents
+	if (input &amp;&amp; input.action == "save") {
+		result = $sp.saveRecord(input.f.table, input.f.sys_id, input.f._fields);
+		
+		input.angularProviders.map(function(provider) {
+			$sp.saveRecord(provider.f.table, provider.f.sys_id, provider.f._fields);
+		});
+		
+		data.angularProviders = input.angularProviders;
+		
+		input.ngTemplates.map(function(template) {
+			$sp.saveRecord(template.f.table, template.f.sys_id, template.f._fields);
+		});
+		
+		data.ngTemplates = input.ngTemplates;
+		
+		if (input.updatedDocContent &amp;&amp; input.updatedDocContent != input.docContent) {
+			var widgetGR = new GlideRecord("sp_widget");
+			if (widgetGR.get(data.sys_id)) {
+				var documentationGR;
+
+				if (widgetGR.getValue("docs")) {
+					documentationGR = widgetGR.getElement("docs").getRefRecord();
+					documentationGR.setValue("content", input.updatedDocContent);
+					documentationGR.update();
+				} else {
+					documentationGR = new GlideRecord("sp_documentation");
+					documentationGR.initialize();
+					documentationGR.setValue("content", input.updatedDocContent);
+					documentationGR.setValue("title", widgetGR.getValue("name"));
+					var documentationID = documentationGR.insert();
+					widgetGR.setValue("docs", documentationID);
+					widgetGR.update();
+				}
+			}
+		}
+
+		return result;
+	}
+
+	// add new modal
+	data.widgetAddNew = $sp.getWidget('widget-add-new', {});
+	if (!data.sys_id)
+		return;
+
+	// Nested Widgets - clone and option schema
+	data.widgetClone = $sp.getWidget('widget-clone', {sys_id: data.sys_id});
+	data.widgetOptionSchemaModal = $sp.getWidget('widget-modal', {embeddedWidgetId: 'we20', embeddedWidgetOptions: {sys_id: data.sys_id}});
+
+	// the target widget
+	gr = new GlideRecordSecure('sp_widget');
+	var q = gr.addQuery('sys_id', data.sys_id);
+	gr.query();
+	if (!gr.next()) {
+		gs.addErrorMessage("cannot find widget " + data.sys_id);
+		return;
+	}
+
+	data.outOfScope = !gr.isInSelectedScope();
+	data.recordScopeLabel = gs.getScopeLabelByRecordId(gr.getUniqueValue());
+	data.currentScopeLabel = gs.getCurrentApplicationName();
+	data.canRead = gr.canRead();
+	data.canWrite = gr.canWrite() &amp;&amp; gr.getDisplayValue("read_only") !== "true";
+	data.title = gr.getValue("name");
+	// get the model for the widget from spForm
+	data.f = $sp.getForm('sp_widget', gr.getUniqueValue());
+	data.docContent = (data.f._fields.docs.value) ?
+		gr.getElement("docs").getRefRecord().getValue("content") :
+		getDocs("948bab53d721120023c84f80de61034e");
+	
+	// Get any related angular providers
+	var m2mProviderGR = new GlideRecord("m2m_sp_ng_pro_sp_widget");
+	m2mProviderGR.addQuery("sp_widget", data.sys_id);
+	m2mProviderGR.query();
+	while (m2mProviderGR.next()) {
+		var providerGR = m2mProviderGR.getElement("sp_angular_provider").getRefRecord();
+		if (!providerGR.canRead())
+			continue;
+
+		var provider = {
+			show: false,
+			name: providerGR.getValue("name"),
+			f: $sp.getForm('sp_angular_provider', providerGR.getUniqueValue()),
+			type: 'provider'
+		};
+		data.angularProviders.push(provider);
+	}
+		
+	var ngTemplates = new GlideRecord("sp_ng_template");	
+	ngTemplates.addQuery("sp_widget", data.sys_id);
+	ngTemplates.query();
+	
+	data.ngTemplates = []
+	
+	while (ngTemplates.next()) {		
+		data.ngTemplates.push({
+			show: false,
+			name: ngTemplates.getValue("id"),
+			f: $sp.getForm('sp_ng_template', ngTemplates.getUniqueValue()),
+			type: 'template'
+		});		
+	}
+		
+	function getDocs(id) {
+		var gr = new GlideRecord('sp_documentation');
+		gr.get(id);
+		return gr.getValue("content");
+	}	
+})()]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-01-09 00:34:13&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;6e7bf89247301200ba13a5554ee490e3&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;2216&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Widget Edit Panel&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_6e7bf89247301200ba13a5554ee490e3&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:17:07&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="fill-section flex-column"&gt;
+  &lt;div ng-if="c.data.sys_id" class="flex-row toolbar"&gt;
+    &lt;div class="flex-grow flex-row items-center"&gt;
+      &lt;label&gt;${Widget}&lt;/label&gt;
+      &lt;div class="rp"&gt;
+        &lt;sn-record-picker field="c.ed_widget" table="'sp_widget'"
+                          display-field="'name'" value-field="'sys_id'"
+                          display-fields="'id'" search-fields="'id,name'" page-size="300" 
+                          options="{cache: true, allowClear: false}"&gt;&lt;/sn-record-picker&gt;
+      &lt;/div&gt;
+      &lt;label class="group"&gt;${Show}&lt;/label&gt;
+      &lt;span class="check" ng-repeat="(key, section) in c.getCodeBlocks()" ng-if="section.enabled"&gt;
+        &lt;label ng-class="{'has-content': (data.f._fields[key].value.length)}"&gt;
+          &lt;input type="checkbox" ng-model="section.display" ng-change="c.saveLayout()" /&gt;{{section.title}}
+        &lt;/label&gt;
+      &lt;/span&gt;
+
+
+      &lt;div ng-if="c.data.angularProviders.length" class="rp"&gt;
+        &lt;sp-dep-manager options="c.data.angularProviders" label="c.data.depsMsg" prefs="c.data.providersPref" type="'provider'"&gt;&lt;/sp-dep-manager&gt;
+      &lt;/div&gt;
+
+      &lt;div ng-if="c.data.ngTemplates.length" class="rp"&gt;
+        &lt;sp-dep-manager options="c.data.ngTemplates" label="c.data.templatesMsg" prefs="c.data.templatesPref" type="'template'"&gt;&lt;/sp-dep-manager&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+    &lt;div class="button-nav"&gt;
+      &lt;!-- access / hot keys --&gt;
+      &lt;div class="btn-group" uib-dropdown&gt;
+        &lt;button type="button" accesskey="h" class="btn btn-default" uib-dropdown-toggle 
+                uib-tooltip="${Keymap information}" tooltip-placement="bottom"&gt;
+          &lt;fa name="info" /&gt;
+        &lt;/button&gt;
+        &lt;div class="dropdown-menu dropdown-menu-right" uib-dropdown-menu role="menu"&gt;
+          &lt;widget id="x-cm-key-bindings" options="{editor: 'ed'}"&gt;&lt;/widget&gt;              
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;!-- preview --&gt;
+      &lt;button type="button" ng-click="c.toggle('preview')" class="btn  btn-group" ng-class="{true: 'btn-primary', false: 'btn-default'}[c.codeBlocks.preview.display &amp;&amp; c.data.f._fields.has_preview.value == 'true']" ng-disabled="c.data.f._fields.has_preview.value == 'false'"
+              uib-tooltip="${Preview widget (available when widget is marked as having the preview capability)}" tooltip-placement="bottom"&gt;
+        &lt;span class="glyphicon" ng-class="(c.data.f._fields.has_preview.value == 'true') ? 'glyphicon-eye-open': 'glyphicon-eye-close'"&gt;&lt;/span&gt;
+      &lt;/button&gt;
+      &lt;button ng-if="c.documentation" type="button btn-group" ng-click="c.toggle('documentation')" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[c.codeBlocks.documentation.display]"&gt;&lt;fa name="info-circle" /&gt;&lt;/button&gt;
+      &lt;!-- save --&gt;
+      &lt;button ng-if="c.data.canWrite" type="submit" ng-click="c.save()" class="btn btn-primary btn-group"
+              uib-tooltip="${Save updates}" tooltip-placement="bottom"&gt;${Save} &lt;span ng-if="c.saveButtonSuffix"&gt;({{c.saveButtonSuffix}})&lt;/span&gt;&lt;/button&gt;
+      &lt;!-- dropdown menu --&gt;
+      &lt;div class="btn-group"&gt;
+        &lt;button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"&gt;
+          &lt;fa name="bars" /&gt;
+        &lt;/button&gt;
+        &lt;ul class="dropdown-menu dropdown-menu-right config-dropdown"&gt;
+          &lt;li ng-show="c.data.f._fields.id.value != ''" class="dropdown-header"&gt;{{c.data.f._fields.id.value}}&lt;/li&gt;
+          &lt;li ng-if="!data.f._fields.public.sys_readonly"&gt;
+            &lt;div class="checkbox m-l"&gt;
+              &lt;label&gt;
+                &lt;input type="checkbox" ng-model="c.data.f._fields.public.value" ng-true-value="'true'" ng-false-value="'false'"&gt;
+                ${Public Widget}
+              &lt;/label&gt;
+            &lt;/div&gt;
+          &lt;/li&gt;
+          &lt;li ng-if="!data.f._fields.has_preview.sys_readonly"&gt;
+            &lt;div class="checkbox m-l"&gt;
+              &lt;label&gt;
+                &lt;input type="checkbox" ng-model="c.data.f._fields.has_preview.value" ng-true-value="'true'" ng-false-value="'false'"&gt;
+                ${Enable Preview}
+              &lt;/label&gt;
+            &lt;/div&gt;
+          &lt;/li&gt;
+          &lt;li ng-if="!data.f._fields.option_schema.sys_readonly"&gt;
+            &lt;a href="javascript:void(0)" ng-click="c.editOptionSchema($event)"&gt;${Edit option schema}&lt;/a&gt;
+          &lt;/li&gt;
+          &lt;li ng-if="data.canCreate &amp;&amp; !data.f._fields.option_schema.sys_readonly || !data.f._fields.public.sys_readonly || !data.f._fields.has_preview.sys_readonly" role="separator" class="divider"&gt;&lt;/li&gt;
+          &lt;li ng-if="data.canCreate"&gt;&lt;a href="javascript:void(0)" ng-click="c.add()"&gt;&lt;span class="fa fa-plus dropdown-icon"&gt;&lt;/span&gt;${Create New Widget}&lt;/a&gt;&lt;/li&gt;
+          &lt;li ng-if="data.canCreate"&gt;&lt;a href="javascript:void(0)" ng-click="c.clone()"&gt;&lt;span class="fa fa-copy dropdown-icon"&gt;&lt;/span&gt;${Clone "{{data.title}}"}&lt;/a&gt;&lt;/li&gt;
+          &lt;li role="separator" class="divider"&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a ng-href="/sp_widget.do?sys_id={{c.data.sys_id}}" target="_blank"&gt;${Open in platform}&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;span&gt;{{c.status}}&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;!-- no permission to view --&gt;
+  &lt;div ng-if="c.data.sys_id &amp;&amp; !c.data.canRead" class="read-only-message"&gt;
+    &lt;div class="alert alert-info" role="alert"&gt;
+      &lt;p&gt;${You do not have permission to view this widget}&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;!-- readOnly --&gt;
+  &lt;div ng-if="c.readOnly" class="read-only-message"&gt;
+    &lt;div class="alert alert-info" role="alert"&gt;
+      &lt;p ng-if="!c.data.outOfScope"&gt;${This widget is &lt;strong&gt;read only&lt;/strong&gt; and cannot be edited&lt;span ng-if="!c.data.f._fields.public.sys_readonly"&gt; except for the &lt;strong&gt;Public&lt;/strong&gt; checkbox&lt;/span&gt;.} &lt;span ng-if="data.canCreate"&gt;${You can clone this widget by clicking the &lt;span class="fa fa-bars"&gt;&lt;/span&gt; button in the top right corner of the editor}&lt;/span&gt;&lt;/p&gt;
+      &lt;p ng-if="c.data.outOfScope"&gt;${This widget is in the &lt;strong&gt;{{data.recordScopeLabel}}&lt;/strong&gt; application, but &lt;strong&gt;{{data.currentScopeLabel}}&lt;/strong&gt; is your current application}. &lt;span ng-if="data.canCreate"&gt;${You can clone this widget by clicking the &lt;span class="fa fa-bars"&gt;&lt;/span&gt; button in the top right corner of the editor}&lt;/span&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;!-- code columns --&gt;
+  &lt;div ng-if="c.data.sys_id &amp;&amp; c.data.f._fields.template" class="code-container flex-row flex" role="editor-container" data-readonly="{{c.readOnly}}"&gt;
+
+    &lt;div ng-repeat="(key, section) in c.getCodeBlocks()" ng-if="section.display" class="animate flex flex-column" sp-on-transition="c.transition"&gt;
+      &lt;div class="minibar flex-row"&gt;
+        &lt;div class="flex-grow"&gt;{{section.title}}&lt;/div&gt;
+        &lt;button class="btn btn-default btn-xs" ng-click="c.closeBlock(section)"&gt;&lt;fa name="close"/&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div ng-switch="section.type" class="flex-grow flex-column relative"&gt;
+        &lt;div ng-switch-when="html" class="fill-section"&gt;
+          &lt;sp-html-editor field="data.f._fields[key]" data-length="4000" sn-disabled="c.isReadOnly(c.data.f._fields[key].sys_readonly)" ng-if="c.updated" /&gt;
+        &lt;/div&gt;
+        &lt;div ng-switch-when="css" class="fill-section"&gt;
+          &lt;sp-css-editor field="data.f._fields[key]" data-length="4000" sn-disabled="c.isReadOnly(c.data.f._fields[key].sys_readonly)" ng-if="c.updated" /&gt;
+        &lt;/div&gt;
+        &lt;div ng-switch-default class="fill-section"&gt;
+          &lt;sp-script-editor field="data.f._fields[key]" data-length="4000" sn-disabled="c.isReadOnly(c.data.f._fields[key].sys_readonly)" ng-if="c.updated" /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div ng-repeat="provider in c.data.angularProviders" ng-if="provider.show" class="animate flex-grow flex flex-column" sp-on-transition="c.transition"&gt;
+      &lt;div class="minibar flex-row"&gt;
+        &lt;div class="flex-grow"&gt;{{provider.name}}&lt;/div&gt;
+        &lt;button class="btn btn-default btn-xs" ng-click="c.closeDep(provider, 'provider')"&gt;&lt;fa name="close"/&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div  class="flex-grow flex-column relative"&gt;
+        &lt;div class="fill-section"&gt;
+          &lt;sp-script-editor field="provider.f._fields.script" data-length="4000" ng-if="c.updated"
+                            sn-disabled="c.isReadOnly(provider.f._fields.script.sys_readonly)" ng-change="c.codeHasChanged = true"/&gt;
+
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div ng-repeat="template in c.data.ngTemplates" ng-if="template.show" class="animate flex-grow flex flex-column" sp-on-transition="c.transition"&gt;
+      &lt;div class="minibar flex-row"&gt;
+        &lt;div class="flex-grow"&gt;{{template.name}}&lt;/div&gt;
+        &lt;button class="btn btn-default btn-xs" ng-click="c.closeDep(template, 'template')"&gt;&lt;fa name="close"/&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div  class="flex-grow flex-column relative"&gt;
+        &lt;div class="fill-section"&gt;
+          &lt;sp-html-editor field="template.f._fields.template" data-length="4000" ng-if="c.updated"
+                          sn-disabled="c.isReadOnly(template.f._fields.template.sys_readonly)" ng-change="c.codeHasChanged = true"/&gt;
+
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- preview --&gt;
+    &lt;div ng-if="c.codeBlocks.preview.display &amp;&amp; c.data.f._fields.has_preview.value == 'true'" class="flex-column flex-grow flex" sp-on-transition="c.transition"&gt;
+      &lt;div class="minibar flex-row preview-header"&gt;
+        &lt;div class="flex-grow"&gt;${Preview}&lt;/div&gt;
+        &lt;button class="btn btn-default btn-xs" ng-click="c.closeBlock(c.codeBlocks.preview)"&gt;&lt;fa name="close"/&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class="flex-grow relative"&gt;
+        &lt;div class="fill-section" ng-if="c.codeBlocks.preview.widget"&gt;
+          &lt;sp-preview options="c.data.sys_id"&gt;&lt;/sp-preview&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- documentation --&gt;
+    &lt;div ng-if="c.codeBlocks.documentation.display" class="animate flex flex-column" sp-on-transition="c.transition"&gt;
+      &lt;div class="doc flex-grow"&gt;
+        &lt;div class="doc-icons"&gt;
+          &lt;button type="button" class="btn btn-default" ng-click="c.docToggleMode()"&gt;
+            &lt;span class="glyphicon" ng-class="{edit: 'glyphicon-eye-open', preview: 'glyphicon-pencil'}[c.codeBlocks.documentation.mode]"&gt;&lt;/span&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;sp-epiceditor field="c.data.updatedDocContent" ng-if="c.updated"&gt;&lt;/sp-epiceditor&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;sp-widget widget="c.widgetOptionSchemaModal" ng-if="c.widgetOptionSchemaModal"&gt;&lt;/sp-widget&gt;
+
+  &lt;!-- Empty state --&gt;
+  &lt;div ng-if="!c.data.sys_id"&gt;
+    &lt;widget id="x-we-empty-state" options="{shared: {}}"&gt;&lt;/widget&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>738757f84f313300496900fe9310c716</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Widget Edit Panel</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_738757f84f313300496900fe9310c716</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

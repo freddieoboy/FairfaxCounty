@@ -1,0 +1,1503 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>769e08755b2322003d1c484c11f91aa0</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category/&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $rootScope, i18n, $location, $window, spUtil) {  /* widget controller */  var c = this;
+
+c.LIST_VIEW = 'list';
+
+c.KEYS = {TAB: 9, LEFT: 37, RIGHT: 39, UP: 38, DOWN: 40, SPACE: 32, ESC: 27, ENTER: 13};
+
+c.getUrlParams = function(linkType, linkParams) {
+  var params = {};
+
+  if (!!linkParams &amp;&amp; !!linkParams.iid)
+    params.id = 'details';
+
+  // Save the view
+  if (linkType == 'details' &amp;&amp; !!c.view.id &amp;&amp; !c.view.overview) {
+    params.iid = c.view.id;
+  }
+
+  // Save the layout
+  if (c.options.listView)
+    params.layout = c.LIST_VIEW;
+
+  // Save the breakdowns
+  if (!!c.data.breakdown.type &amp;&amp; !!c.data.breakdown.value) {
+    params.type = c.data.breakdown.type;
+    params.value = c.data.breakdown.value;
+  }
+
+  // Save the category
+  if (linkType != 'overview')
+    params.category = c.category.id;
+
+  // Save the group
+  if (linkType != 'overview' &amp;&amp; !!c.category.group)
+    params.group = c.category.group;
+
+  if (!!linkParams)
+    Object.keys(linkParams).forEach(function(key) {params[key] = linkParams[key];});
+
+  return params;
+};
+
+c.getUrl = function(linkType, linkParams) {
+  var params = c.getUrlParams(linkType, linkParams);
+
+  return '?' + Object.keys(params).map(function(key) {return key + '=' + params[key];}).join('&amp;');
+};
+
+c.updateUrl = function(linkType, linkParams) {
+  var params = c.getUrlParams(linkType, linkParams);
+  $location.search(params);
+};
+
+c.setConfig = function() {
+  var params = c.options.params;
+
+  // Set overview or detailed view
+  if (!!params.iid) {
+    c.view.id = params.iid;
+    c.view.overview = false;
+  }
+
+  // Set the layout
+  c.options.listView = (params.layout == c.LIST_VIEW);
+
+  // Set the breakdowns
+  if (!!params.type &amp;&amp; !!params.value) {
+    c.data.breakdown.type = params.type;
+    c.data.breakdown.value = params.value;
+  }
+
+  // Set the category
+  if (!!params.category &amp;&amp; params.category in c.data.categories.idMap) {
+    c.category.id = params.category;
+	c.setScores(c.data.months.current[c.category.id]);
+  }
+
+  // Set the group
+  if (!!params.group &amp;&amp; params.group in c.data.groups.idMap)
+    c.category.group = params.group;
+};
+
+var updateBreadcrumbs = function(bc) {
+  var breadcrumbs = [];
+
+  if (!!c.category.id)
+    breadcrumbs.push({label: c.data.categories.idMap[c.category.id].display, url: c.getUrl('category')});
+
+  if ((!!bc &amp;&amp; !bc.length) || !!c.view.id)
+    breadcrumbs.push({label: c.data.indicators.idMap[c.view.id].display, url: '#'});
+
+  $rootScope.$broadcast('sp.update.breadcrumbs', breadcrumbs);
+};
+
+c.toggleSelector = function($event, opt) {
+    c.categorySelector = (opt != null &amp;&amp; opt != undefined) ? opt : !c.categorySelector;
+    if(c.IndicatorSelector)
+      c.IndicatorSelector = false;
+    $event.stopPropagation();
+};
+
+c.toggleIndicatorSelector = function($event) {
+    c.IndicatorSelector = !c.IndicatorSelector;
+    $event.stopPropagation();
+};
+
+c.changeCategory = function($event, id) {
+  c.category.id = id;
+  c.category.group = '';
+  c.makeSelect();
+  c.setScores(c.data.months.current[id]);
+  c.toggleSelector($event, false);
+  var doesBreakdownExist = !!c.data.breakdown.type &amp;&amp; c.data.breakdownMap[id][c.data.breakdown.type].idList.indexOf(c.data.breakdown.value) &lt; 0;
+  if (doesBreakdownExist) {
+	  var currBreakdown = c.data.breakdowns[c.data.breakdown.type].idMap[c.data.breakdown.value].display;
+	  var currCategory = c.data.categories.idMap[c.category.id].display;
+	  var alertMsg = i18n.format(c.data.i18n.alertMsg, [currBreakdown, currCategory]);
+	  spUtil.addInfoMessage(alertMsg);
+	  c.removeBreakdownSelection();
+  }
+  var index = c.data.categories.idList.indexOf(id);
+  c.data.categories.idList.splice(index, 1);
+  c.data.categories.idList.unshift(id);
+  updateBreadcrumbs();
+};
+
+c.removeBreakdownSelection = function () {
+  $("#breakdown").select2("val", "");
+  c.bdSelected = '';
+  c.data.breakdown.type = '';
+  c.data.breakdown.value = '';
+};
+
+// Fetch trend from server
+c.getTrend = function(item, callback) {
+  var id = item.sys_id;
+  c.server.get({iid: id}).then(function(response) {
+
+    var updated = false;
+	var months;
+    if (!!response &amp;&amp; !!response.data) {
+      months = response.data.months;
+      c.data.indicators.idMap[id].scores = response.data.indicators.idMap[id].scores;
+      item.ourTrend = c.getOurTrend(item, months.idList.concat().reverse(), months.idMap);
+      updated = true;
+    }
+
+    callback(item, months, updated);
+  });
+};
+
+// Set variables with trend data
+c.getOurTrend = function(item, months, monthsMap) {
+  return {
+    name: i18n.getMessage('Your Instance &amp; Percentile Rank'),
+    data: months.map(function(m) {
+      var theMonth = monthsMap[m];
+      return [
+        new Date(theMonth.year, theMonth.month-1).valueOf(),
+        (m in item.scores) ? item.scores[m].local.value : null
+      ];
+    }),
+    monthlyChange: months.map(function(m) {
+      return (m in item.scores) ? item.scores[m].local.monthlyChange : null;
+    })
+  };
+};
+
+c.getTheirScore = function(item, bd, month, months, monthsMap) {
+	var score = {value: 0, display: i18n.getMessage('N/A'),
+			percentile_rank: i18n.getMessage('N/A')};
+	var trend = {name: '', data: null};
+
+	/* Check if a breakdown is selected */
+	if (!!bd.type &amp;&amp; !!bd.value) {
+
+		/* Set the trend name and data */
+		trend.data  =  months.map(function (m) {
+			var theMonth = monthsMap[m];
+			var value = null;
+			try { value = item.scores[m].breakdowns[bd.type].elements[bd.value].mean; }
+			catch (err) {}
+			return [new Date(theMonth.year, theMonth.month-1).valueOf(), value];
+		});
+
+		/* Try to set the score values */
+		try {
+			/* Set the trend name */
+			trend.name     =  c.data.breakdowns[bd.type].idMap[bd.value].display;
+
+			/* Set the score values */
+			var element    = item.scores[month].breakdowns[bd.type].elements[bd.value];
+			score.value    =  element.mean;
+			score.display  =  element.display.toLowerCase();
+			if(!!element.rank)
+				score.percentile_rank = element.rank;
+		}
+		catch (err) {}
+	}
+	else {
+
+		/* Trend values */
+		trend.name = i18n.getMessage('Global Benchmark');
+		trend.data = months.map(function (m) {
+			var theMonth = monthsMap[m];
+			var value = null;
+			try {
+				value = item.scores[m].global.mean;
+			}
+			catch (err) {}
+			return [new Date(theMonth.year, theMonth.month-1).valueOf(), value];
+		});
+
+		try {
+			/* Set global score value */
+			score.value = item.scores[month].global.mean;
+			if(!!item.scores[month].global.rank)
+				score.percentile_rank = item.scores[month].global.rank;
+
+			/* Set global score display value */
+			if (!!item.scores[month].global.display)
+				score.display = item.scores[month].global.display.toLowerCase();
+		} catch (err) {}
+	}
+
+	return {score: score, trend: trend};
+};
+
+c.getOurScore = function(item, month, prevMonth){
+	/* Function to check which direction the change is better */
+    var isBetter  = function(minimizeDirection, a, b) {
+        return (minimizeDirection) ? (a &lt;= b) : (a &gt;= b);
+    };
+
+	if (month in item.scores)
+		item.ourScore  =  {value: item.scores[month].local.value, display: (!item.scores[month].local.display ? '0' : item.scores[month].local.display.toLowerCase())};
+	else
+		item.ourScore = {value: null, display: '0'};
+
+	var display = item.ourScore.display;
+	var replaceStr = '';
+	if(item.ourScore.display.indexOf('days') != -1) {
+		replaceStr = 'days';
+	}
+	else if(item.ourScore.display.indexOf('day') != -1) {
+		replaceStr = 'day';
+	}
+	else if(item.ourScore.display.indexOf('d') != -1) {
+		replaceStr = 'd';
+	}
+	display = display.replace(replaceStr, '&lt;span class="os-sm"&gt;' + replaceStr + '&lt;/span&gt;').replace('%', '&lt;span class="os-sm"&gt;%&lt;/span&gt;');
+
+	if(item.ourScore.display.indexOf('hours') != -1) {
+		replaceStr = 'hours';
+	}
+	else if(item.ourScore.display.indexOf('hour') != -1) {
+		replaceStr = 'hour';
+	}
+	else if(item.ourScore.display.indexOf('h') != -1) {
+		replaceStr = 'h';
+	}
+	item.ourScore.display = display.replace(replaceStr, '&lt;span class="os-sm"&gt;' + replaceStr + '&lt;/span&gt;');
+
+	try {
+		var lastMonthValue  =  item.scores[prevMonth].local.value;
+		item.difference     =  parseInt(Math.abs((item.ourScore.value - lastMonthValue) / lastMonthValue).toFixed(2) * 100);
+		item.color          =  isBetter(item.minimize, item.ourScore.value, lastMonthValue) ? 'success' : 'danger';
+		item.direction      =  (item.ourScore.value &lt; lastMonthValue) ? 'glyphicon-triangle-bottom' :  'glyphicon-triangle-top';
+
+		if (isNaN(item.difference))
+			throw TypeError;
+	}
+	catch (err) {
+		var lastMonthValue  =  0;
+		item.difference     =  'NA';
+		item.color          =  'grey';
+		item.direction      =  '';
+	}
+};
+
+c.setScores = function(month) {
+
+    var updateScores = function(item, month) {
+        var result       =  c.getTheirScore(item, c.data.breakdown, month, months, c.data.months.idMap);
+        item.theirTrend  =  result.trend;
+
+        $('.their-score-val').css('opacity', 0);
+        setTimeout(function(){
+          $('.their-score-val').css('opacity', 1);
+          item.theirScore  =  result.score;
+          item.textColor   =  ((!item.minimize &amp;&amp; item.ourScore.value &gt;= item.theirScore.value) || (item.minimize &amp;&amp; item.ourScore.value &lt;= item.theirScore.value)) ? 'text-success' : 'text-danger';
+          $scope.$apply();
+        }, 400);
+    };
+
+    /* List of months and previous month */
+    var months    = c.data.months.idList.concat().reverse();
+    var prevMonth = c.data.months.idMap[month].previous;
+
+    /* Set the scores for all instances */
+    c.data.indicators.idList.forEach(function(id, index) {
+        var item       =  c.data.indicators.idMap[id];
+
+        /* Set controls for trends on card view */
+        item.trendView = {show: false};
+
+        /* Get our scores */
+        c.getOurScore(item, month, prevMonth);
+
+        item.ourTrend  =  c.getOurTrend(item, months, c.data.months.idMap);
+
+        /* Get their scores */
+        updateScores(item, month);
+
+    });
+
+    /* If the breakdown has changed */
+    $scope.$watch('c.data.breakdown.value', function() {
+        c.data.indicators.idList.forEach(function(id, index) {
+            updateScores(c.data.indicators.idMap[id], month);
+        });
+        updateBreadcrumbs();
+		c.makeAccessible();
+    });
+};
+
+c.isTouchDevice = function(){
+  return ('ontouchstart' in $window);
+};
+
+c.getHoursDisplay = function(value) {
+    return value == 1 ? i18n.getMessage('1 hour') :
+		i18n.format(c.data.i18n.kpiDisplay.hours, value);
+  };
+
+c.getDisplayValue = function(mean) {
+	var days = Math.floor(mean / 24).toString();
+	var hours = (mean % 24).toString();
+	if(days == '0') {
+		return c.getHoursDisplay(hours);
+	}
+	else if(hours == '0') {
+		return days == '1' ? i18n.getMessage('1 day') :
+			i18n.format(c.data.i18n.kpiDisplay.days, days);
+	}
+	return i18n.format(c.data.i18n.kpiDisplay.days_hours, [days, hours]);
+};
+
+c.getYDisplayValue = function(value, item) {
+	if(item.unit.indexOf('Hrs') != -1) {
+		return c.data.timeUnit == 'hours' ? c.getHoursDisplay(value) : c.getDisplayValue(value);
+	}
+	if(item.unit.length)
+		return item.unit.replace('{0}', value);
+	return value;
+};
+
+c.accessibilityFormatter = function(point, item, monthList, monthMap) {
+	if(c.data.isMobile)
+		return;
+	var date        = getDateFromTimestamp(point.x, monthList, monthMap);
+	var yDisplay    = c.getYDisplayValue(point.y, item);
+	if(point.series.name === 'Series 3') {
+		return i18n.format(c.data.i18n.recoText, point.text, new Date(point.x).toDateString());
+	}
+	var resultLabel = i18n.format(c.data.i18n.chart.theirTrend, [date.display, point.series.name, yDisplay]);
+	var ourTrend    = item.ourTrend.name   === point.series.name;
+	var theirTrend  = item.theirTrend.name === point.series.name;
+	if(ourTrend) {
+		var rank          = i18n.getMessage('N/A');
+		var noData        = true;
+		var bd            = c.data.breakdown;
+		try {
+			noData = !item.scores[date.display].local.v2_score;
+			if(!!bd.type &amp;&amp; !!bd.value) {
+				var breakdown = item.scores[date.display].breakdowns[bd.type];
+				rank = breakdown.elements[bd.value].rank;
+			}
+			else
+				rank = item.scores[date.display].global.rank;
+		}
+		catch(err) {}
+		if(noData)
+			resultLabel   = i18n.format(c.data.i18n.chart.ourTrendNoPA, [date.display, yDisplay, rank]);
+		else
+			resultLabel   = i18n.format(c.data.i18n.chart.ourTrend, [date.display, yDisplay, rank]);
+	}
+	else if(!theirTrend) {
+		var index         = point.series.data.indexOf(point);
+		var monthlyChange = item.ourTrend.monthlyChange[index];
+		if(monthlyChange != null &amp;&amp; monthlyChange != 0)
+			resultLabel   = (monthlyChange &gt; 0)
+							? i18n.format(c.data.i18n.chart.miniTrendIncreased, [date.display, yDisplay, Math.abs(monthlyChange)])
+							: i18n.format(c.data.i18n.chart.miniTrendDecreased, [date.display, yDisplay, Math.abs(monthlyChange)]);
+		else if(monthlyChange == 0)
+			resultLabel   = i18n.format(c.data.i18n.chart.miniTrend, [date.display, yDisplay, monthlyChange + '%']);
+		else
+			resultLabel   = i18n.format(c.data.i18n.chart.miniTrend, [date.display, yDisplay, i18n.getMessage('N/A')]);
+	}
+	return  resultLabel;
+};
+
+var getDateFromTimestamp = function(ts, monthList, monthMap) {
+	var datetime = new Date(ts);
+	var month = datetime.getMonth() + 1;
+	var year = datetime.getFullYear();
+	var monthDisplay = monthList.filter(function(m) {
+		return monthMap[m].month == month &amp;&amp; monthMap[m].year == year;
+	});
+
+	return {
+		year: year,
+		month: month,
+		display: monthDisplay.length ? monthDisplay[0] : null
+	};
+};
+
+c.getChart = function(chartConfig){
+
+	var item   = (!!chartConfig &amp;&amp; !!chartConfig.item)   ? chartConfig.item   : '';
+	var months = (!!chartConfig &amp;&amp; !!chartConfig.months) ? chartConfig.months : '';
+	var title  = (!!chartConfig &amp;&amp; !!chartConfig.title)  ? chartConfig.title  : '';
+	var divId  = (!!chartConfig &amp;&amp; !!chartConfig.divId)  ? chartConfig.divId  : '';
+	var width  = (!!chartConfig &amp;&amp; !!chartConfig.width)  ? chartConfig.width  : '';
+	var height = (!!chartConfig &amp;&amp; !!chartConfig.height) ? chartConfig.height : '';
+	var escape = (!!chartConfig &amp;&amp; !!chartConfig.escape) ? chartConfig.escape : '';
+
+	var monthList  = ('idList' in months) ? months.idList : months;
+	var monthMap   = ('idMap' in months) ? months.idMap  : c.data.months.idMap;
+
+	var chartObj = {
+		accessibility: {
+			pointDescriptionFormatter: function(point) {
+				return c.accessibilityFormatter(point, item, monthList, monthMap);
+			}
+		},
+		chart: {
+			spacingLeft: 20,
+			spacingRight: 20,
+			renderTo: 'chart-container',
+			type: 'spline',
+			plotBorderWidth: 1,
+			style: {
+				fontFamily: '"SourceSansPro", Helvetica, Arial, sans-serif'
+			}
+		},
+		lang: {
+			noData: i18n.getMessage('No data to display')
+		},
+		tooltip: {
+			useHTML: true,
+			xDateFormat: '%m/%y',
+			pointFormatter: function() {
+				var display = c.getYDisplayValue(this.y, item);
+
+				var ourTrend = this.series.name == item.ourTrend.name;
+				var noData = true;
+				var rank = i18n.getMessage('N/A');
+				var seriesName = this.series.name;
+				if (ourTrend) {
+					seriesName = i18n.getMessage('Your Instance');
+					try {
+						var dateinfo = getDateFromTimestamp(this.x, monthList, monthMap);
+						noData = !item.scores[dateinfo.display].local.v2_score;
+						var bd = $scope.data.breakdown;
+						if(!!bd.type &amp;&amp; !!bd.value) {
+							var breakdown = item.scores[dateinfo.display].breakdowns[bd.type];
+							rank = breakdown.elements[bd.value].rank;
+						}
+						else {
+							rank = item.scores[dateinfo.display].global.rank;
+						}
+					} catch (err) {
+						noData = true;
+					}
+				}
+
+                var rank_label = i18n.getMessage('Percentile Rank');
+                var ttip = '&lt;span style="color:' + this.color + '; margin-left:1px"&gt;\u25CF&amp;nbsp;&lt;/span&gt; '
+                + seriesName + ': &lt;b&gt;' + display + '&lt;/b&gt; ';
+                var noDataText ='';
+                var rankDisplay = '';
+                if(ourTrend) {
+                    if(noData &amp;&amp;  !$scope.c.data.isMobile) {
+                        noDataText = $scope.c.data.i18n.noPAScoreText;
+                    }
+                    if(rank == '${N/A}') {
+                        rank = i18n.getMessage('N/A');
+                    }
+                    var icon = '&lt;span class ="fa fa-circle-o" style="color:'+ this.color +'"&gt;&lt;/span&gt; ';
+                    ttip = icon + seriesName + ': &lt;b&gt;' + display + '&lt;/b&gt; ';
+                    rankDisplay =  icon + rank_label + ': &lt;b&gt;' + rank + '&lt;/b&gt;';
+                }
+
+                return '&lt;div class="chart-tooltip"&gt;' + ttip  + noDataText + '&lt;br/&gt;'+ rankDisplay + '&lt;/div&gt;';
+            },
+            shared: true
+        },
+		xAxis: {
+			type: 'datetime',
+			minPadding: 0.1,
+			maxPadding: 0.1,
+			labels: {
+				format: '{value:%m/%y}'
+			},
+			tickPositions: item.ourTrend.data.map(function(d) {return d[0]})
+		},
+		yAxis: {
+			title: {text: ''},
+			labels: {
+				formatter: function() {
+					if (item.unit.indexOf('Hrs') != -1) {
+						return c.getHoursDisplay(this.value);
+					}
+
+					if (item.unit.length)
+						return item.unit.replace('{0}', this.value);
+
+					return this.value;
+				}
+			},
+			minPadding: 0.08,
+			maxPadding: 0.05,
+			minTickInterval: 1
+		},
+		title: {
+			y: 30,
+			align: 'left',
+			margin: 50,
+			style: {'fontSize': '16px'},
+			text: title
+		},
+		credits: {enabled: false},
+		exporting: {enabled: false},
+		series: [{
+				name:  item.theirTrend.name,
+				data:  item.theirTrend.data,
+				color: '#5cb85c',
+				marker: {
+					radius: 3,
+					symbol: 'circle'
+				}
+			}, {
+				name:  item.ourTrend.name,
+				data:  item.ourTrend.data,
+				color: '#428bca',
+				marker: {
+					fillColor: '#ffffff',
+					lineWidth: 2,
+					lineColor: null,
+					radius: 5
+				},
+				point: {
+					events: {
+						click: function(e) {
+							if ($scope.c.data.isMobile)
+								return;
+
+							var uuid = item.pa_indicator + ':' + item.aggregation;
+							var dateinfo = getDateFromTimestamp(this.x, monthList, monthMap);
+							var date = [dateinfo.year, ('0' + dateinfo.month).slice(-2), '01'].join('');
+
+							var canView = false;
+							try {
+								canView = item.scores[dateinfo.display].local.v2_score;
+							} catch (err) {
+								canView = false;
+							}
+
+							var params = '$pa_detailed.do?jvar_uuid=' + uuid + '&amp;jvar_date=' + date;
+							var url = '/nav_to.do?uri=' + encodeURIComponent(params);
+
+							if (canView)
+								window.open(url);
+						}
+					}
+				}
+			}]
+	};
+	if(!!divId)
+		chartObj.chart['renderTo'] = divId;
+	if(!!width)
+		chartObj.chart['width'] = width;
+	if(!!height)
+		chartObj.chart['height'] = height;
+	if(escape)
+		chartObj.series[0].name = chartObj.series[0].name.replace(/&lt;/g, '&amp;lt;');
+	return new Highcharts5.Chart(chartObj);
+};
+
+c.makeSelect = function() {
+  setTimeout(function() {
+    $('#group-selector').select2({
+      allowClear: true,
+      minimumResultsForSearch: Infinity
+    });
+  }, 100);
+};
+
+c.makeAccessible = function() {
+	setTimeout(function() {
+		$('.select2-search-choice-close').attr('aria-label', i18n.getMessage('Close'));
+		$('.select2-search-choice-close').attr('role', 'button');
+		$('.select2-search-choice-close').attr('tabindex', '-1');
+	}, 400);
+	$(document).on('keydown', '.select2-container', function(e) {
+		c.focusClose(e);
+		e.stopImmediatePropagation();
+	});
+};
+
+c.getCurrentIndicator = function(){
+	var urlParams = $location.search();
+	var currentIndicator = urlParams.iid;
+	var currentCategory = urlParams.category;
+	if(currentIndicator !== undefined) {
+		var index = c.data.activeGlobalIndicators[currentCategory].idList.indexOf(currentIndicator);
+		if(index &gt; -1){
+			var selectedIndicatorId = c.data.activeGlobalIndicators[currentCategory].idList.splice(index, 1)[0];
+			c.data.activeGlobalIndicators[currentCategory].idList.unshift(selectedIndicatorId);
+		}
+	}
+};
+
+c.changeIndicator = function($event, kpiId){
+	c.updateUrl('details',{iid:kpiId});
+};
+
+c.focusActiveGroup = function() {
+	$('#group-' + c.category.group).focus();
+	$('#group-' + c.category.group + ' &gt; a').focus();
+};
+
+c.focusKpiDefinition = function() {
+	$('#kpi-definition').focus();
+};
+
+c.switchTab = function(event, index) {
+	var key = null;
+	if (event.keyCode === c.KEYS.LEFT || event.keyCode === c.KEYS.UP)
+		key = c.KEYS.LEFT;
+	else if (event.keyCode === c.KEYS.RIGHT || event.keyCode === c.KEYS.DOWN)
+		key = c.KEYS.RIGHT;
+	else if (event.keyCode === c.KEYS.TAB) {
+		event.preventDefault();
+		if (event.shiftKey)
+			$('.btn.dl-btn').focus();
+		else
+			$('.btn.b-card-view').focus();
+	}
+
+	if (key === null)
+		return;
+
+	// Get max number of groups in category
+	var numGroups = c.data.groups.idList.filter(function(gid) {
+		return c.category.id === c.data.groups.idMap[gid].category;
+	}).length;
+
+	// Handle left or right key press
+	if (key === c.KEYS.LEFT)
+		c.category.group = (index == 0) ? '' : (index &lt; 0) ? c.data.groups.idList[numGroups - 1] : c.data.groups.idList[index - 1];
+	else if (key === c.KEYS.RIGHT)
+		c.category.group = (index &lt; numGroups - 1) ? c.data.groups.idList[index + 1] : '';
+
+	// Focus the group tab and prevent propagation
+	c.focusActiveGroup();
+	event.preventDefault();
+};
+
+c.setSelector = function(value, isCategory) {
+	if(isCategory)
+		c.categorySelector  = value;
+	else
+		c.IndicatorSelector = value;
+};
+
+c.scrollSelector = function(event, index, isCategory) {
+	var updatedIndex  = index;
+	var focusRequired = false;
+	var idList        = (isCategory) ? c.data.categories.idList : c.data.activeGlobalIndicators[c.category.id].idList;
+	var selector      = (isCategory) ? '#cat-' : '#kpi-';
+
+	if (event.keyCode === c.KEYS.UP &amp;&amp; index &gt; 0) {
+		focusRequired = true;
+		updatedIndex  = index - 1;
+	}
+	if (event.keyCode === c.KEYS.DOWN &amp;&amp; index &lt; idList.length - 1){
+		focusRequired = true;
+		updatedIndex  = index + 1;
+	}
+
+	if([c.KEYS.UP, c.KEYS.DOWN].indexOf(event.keyCode) &gt;= 0) {
+		if(focusRequired)
+			$(selector + idList[updatedIndex] + ' &gt; a').focus();
+		event.preventDefault();
+	}
+
+	if (event.keyCode === c.KEYS.ESC) {
+		c.setSelector(false, isCategory);
+		if(isCategory)
+			$('#select-category').focus();
+		else
+			$('#select-kpi').focus();
+	}
+	if (event.keyCode === c.KEYS.TAB) {
+		if((index == 0 &amp;&amp; event.shiftKey) || (index == idList.length - 1 &amp;&amp; !event.shiftKey))
+			c.setSelector(false, isCategory);
+	}
+	if(event.keyCode === c.KEYS.SPACE)
+		event.preventDefault();
+};
+
+c.scrollCategory = function(event, index) {
+	c.scrollSelector(event, index, true);
+};
+
+c.scrollIndicator = function(event, index) {
+	c.scrollSelector(event, index, false);
+};
+
+c.showSelector = function(event, isCategory) {
+	if(!!event.keyCode &amp;&amp; [c.KEYS.UP, c.KEYS.DOWN, c.KEYS.ESC, c.KEYS.SPACE, c.KEYS.TAB].indexOf(event.keyCode) &lt; 0)
+		return;
+	if(event.keyCode == c.KEYS.TAB) {
+		if(event.shiftKey)
+			c.setSelector(false, isCategory);
+	}
+	else if(event.keyCode == c.KEYS.ESC) {
+		c.setSelector(false, isCategory);
+	}
+	else {
+		c.setSelector(true, isCategory);
+		var idList        = (isCategory) ? c.data.categories.idList : c.data.activeGlobalIndicators[c.category.id].idList;
+		var selector      = (isCategory) ? '#cat-' : '#kpi-';
+		$(selector + idList[0] + ' &gt; a').focus();
+		event.preventDefault();
+	}
+};
+
+c.showCatSelector = function(event) {
+	c.showSelector(event, true);
+};
+
+c.showKPISelector = function(event) {
+	c.showSelector(event, false);
+};
+
+c.focusClose = function(event) {
+	if(!$('.select2-search-choice-close').first().is(':focus')) {
+		if(!!c.data.breakdown.type &amp;&amp; !!c.data.breakdown.value &amp;&amp; event.keyCode == c.KEYS.TAB &amp;&amp; !event.shiftKey) {
+			$('.select2-search-choice-close').first().focus();
+			event.preventDefault();
+		}
+	}
+	else {
+		if(event.keyCode == c.KEYS.TAB &amp;&amp; !event.shiftKey) {
+			$('.btn.dl-btn').focus();
+			event.preventDefault();
+		}
+		if(event.keyCode == c.KEYS.TAB &amp;&amp; event.shiftKey) {
+			$('#breakdown').select2('focus');
+			event.preventDefault();
+		}
+		if(event.keyCode == c.KEYS.ENTER) {
+			c.data.breakdown.type  = '';
+			c.data.breakdown.value = '';
+			c.bdSelected           = '';
+			$('#breakdown').select2('val', '');
+		}
+	}
+};
+
+(function init() {
+  // Reset the industry and size bucket
+  // Can take from parameters here
+  c.data.breakdown   =  {type: '', value: ''};
+  c.bdSelected = '';
+  c.error = !c.data.optedIn || !c.data.indicators || c.data.indicators.idList.length == 0 || !c.data.categories || c.data.categories.idList.length == 0;
+
+  if (c.error)
+    return;
+
+  c.view = {
+    id: null,
+    overview: true
+  };
+
+  c.category = { id: c.data.categories.idList[0], group: '' };
+
+  try {
+    $scope.yourIndustry = c.data.industries.idMap[c.data.industries.current].display;
+  } catch (err) {}
+
+  c.setConfig();
+  // Set the scores variables
+  c.setScores(c.data.months.current[c.category.id]);
+  updateBreadcrumbs();
+  c.getCurrentIndicator();
+
+  angular.element(document).ready(function() {
+    c.makeSelect();
+	c.makeAccessible();
+  });
+
+})();
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;
+div[role="link"], tr[role="link"] {
+  cursor: pointer;
+}
+
+.indicator-header-row {
+  margin-top: -10px;
+}
+
+.kpi-table-container, .cards-container {
+  margin:10px auto;
+}
+
+@media screen and (max-width: 399px) {
+    .chart-tooltip {
+       width:230px !important;
+       white-space:normal !important;
+    }
+}
+
+@media screen and (min-width: 400px) and (max-width: 767px) {
+     .chart-tooltip {
+        width:300px !important;
+        white-space:normal !important;
+    }
+}
+
+.kpi-card {
+  padding: 0 10px 20px 10px;
+
+  .panel.panel-default {
+    position: relative;
+  }
+
+  .panel-body {
+    min-height: 180px;
+    position:relative;
+
+    .rank {
+      position:absolute;
+      bottom:15px;
+      padding-left:8px;
+      padding-right:7px;
+    }
+  }
+
+  .trend-panel {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background: #455464;
+    top: 0;
+    left: 0;
+    z-index: 100;
+
+    .close-icon,
+    .loading-icon,
+    .chart-footer {
+      position: absolute;
+      z-index: 1000;
+      color: #eeeeee;
+    }
+
+    .close-icon {
+      right: 0;
+      top: 0;
+
+      .close-text {margin-right: 4px;}
+      .glyphicon-remove {top: 2px}
+    }
+
+    .loading-icon,
+    .chart-footer {
+      width: 100%;
+    }
+
+    .loading-icon {
+      top: 45%;
+      width: 100%;
+      text-align: center;
+    }
+
+    .chart-footer {
+      bottom: 15px;
+    }
+  }
+
+  .trend-panel.ng-hide {
+    opacity: 0;
+  }
+
+  .trend-panel,
+  .trend-panel.ng-hide-add,
+  .trend-panel.ng-hide-remove {
+    transition: all 300ms ease-out;
+  }
+
+  .trend-panel .trend-container {
+    color: white;
+    height: 100%;
+    width: 100%;
+  }
+
+  .their-score {
+    font-weight: 600;
+    margin: 5px 0 8px 0;
+    line-height: 1.1;
+    font-size: 18px;
+  }
+
+  .trend-icon {
+    margin: 3px 0 0 0;
+  }
+
+  .trend-icon-font {
+    font-size: 18px;
+  }
+
+  .b-trend-link {
+    margin-top: 4px;
+  }
+
+}
+
+.kpi-card .b-trend-link,
+.kpi-card .trend-icon button,
+.dl-btn {
+  padding: 0;
+  border: none;
+}
+
+.kpi-table .kpi-heading {
+  margin: 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kpi-table th,
+.kpi-table td {
+  padding: 16px 9px;
+  border: none;
+}
+
+.kpi-table .row-item,
+.kpi-table .difference {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.kpi-table .row-item .info-icon {
+  margin-left: 4px;
+}
+
+.kpi-card .difference {
+  font-size:12px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.kpi-table th {
+  text-transform: uppercase;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+.kpi-table &amp;gt; thead &amp;gt; tr &amp;gt; th:first-child,
+.kpi-table &amp;gt; tbody &amp;gt; tr &amp;gt; td:first-child {
+  padding-left: 24px;
+}
+
+.kpi-table &amp;gt; thead &amp;gt; tr &amp;gt; th:last-child,
+.kpi-table &amp;gt; tbody &amp;gt; tr &amp;gt; td:last-child {
+  padding-right: 24px;
+}
+
+.label {
+  font-size: 90%;
+  font-weight: normal;
+}
+
+.label-grey {
+  background: #81878E;
+}
+
+.kpi-table .diff-label-wrapper {
+  margin-top: 4px;
+}
+
+.kpi-card .score-diff-wrapper {
+  display: inline-block;
+}
+
+.triangle-container {padding:0;}
+.triangle-topleft {
+  width: 0;
+  height: 0;
+  border-top: 8px solid #c00;
+  border-right: 8px solid transparent;
+  border-left: 8px solid #c00;
+  border-bottom: 8px solid transparent;
+  border-radius: 3px 0 0 0;
+}
+
+.toggle-btn {
+  padding: 0 0 0 20px;
+}
+
+.download-button span.fa-download,
+.view-toggle-buttons {
+  font-size: 24px;
+}
+
+.black-btn { color: inherit; }
+.black-btn:hover,
+.black-btn:focus {
+  color: #000;
+}
+
+.view-toggle-buttons {
+  padding: 0 0 0 0px;
+}
+
+.view-toggle-buttons:active {
+  box-shadow: none;
+}
+
+.view-toggle-buttons.b-off {color: #d8d8d8;}
+
+.report-download-cont {
+  margin-top:30px;
+  margin-bottom:10px;
+}
+
+.breakdown-row {
+  margin-top: 20px;
+  margin-bottom: 16px;
+}
+
+.breakdown-row .filter-text.bm-desktop-only {
+  text-align: right;
+  margin-top: 11px;
+}
+
+.breakdown-row.hidden-xs .col-np,
+.breakdown-row .col-np-fixed {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.breakdown-row .download-button {
+  margin-top: 10px;
+}
+
+.breakdown-row .filter-element,
+.toggle-buttons {
+  margin-top: 4px;
+}
+
+.detail-view {
+  .score, .score-indicator {
+    display: inline-block;
+  }
+  .score { font-size: 24px; }
+  .score-indicator {
+    position:relative;
+    top: -5px;
+    left: 10px;
+  }
+}
+
+#chart-container {
+  margin-top:20px;
+}
+
+.indicator-selector {
+	z-index: 100;
+	position: absolute;
+	left: 6px;
+	margin-top: 10px;
+	max-height: 170px;
+	overflow: auto;
+	width: 100%;
+ }
+
+.indicator-container{
+    display:inline-block;
+}
+
+.indicator-title{
+  font-size: 24px;
+  margin-bottom: 0px;
+}
+
+.c-selected {
+  color: #444;
+}
+
+.c-unselected {
+  cursor: pointer;
+}
+
+.category-container {
+  cursor: auto;
+  position: relative;
+
+  .category-selector {
+    z-index: 100;
+    position: absolute;
+    left: 0;
+    width: 300px;
+    margin-left: 8px;
+    max-height: 170px;
+    overflow: auto;
+  }
+
+  a.black-btn {
+    margin-left: 6px;
+  }
+
+  .subhead {
+    font-size: 16px;
+    margin-top: 10px;
+    .sh-label { font-weight: 600; }
+    .sep { margin:0 3px 0 6px; }
+    .filter-button {
+      margin-left: 3px;
+      cursor: pointer;
+    }
+  }
+}
+
+.tabs-row {
+  margin: 10px 0;
+
+  .item {
+    a {
+      color: inherit;
+      text-transform: uppercase;
+    }
+    a:hover {
+      border-bottom-width: 3px;
+      border-bottom-style: solid;
+    }
+  }
+
+  .item.selected a {
+    font-weight: 600;
+    border-bottom: 3px solid #428bca;
+  }
+}
+
+.tabs-row.visible-xs {margin-top: 5px;}
+
+.breakdown-row.visible-xs {
+  margin-left: -2px; /* To offset the funky markup */
+}
+
+.line-sep {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #CDCDCD;
+}
+
+.perf-trend {
+  margin-top: 15px;
+  padding-bottom: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.their-score-val {
+  transition: all 500ms ease-in-out;
+}
+
+.kpi-card .os-sm {font-size: 22px;}
+
+.detail-desc {
+  white-space: pre-line;
+}
+
+.perf-trend .expand-icon {
+  margin-right: 4px;
+}
+
+.kpi-card .clickable-panel:focus,
+.kpi-table tr:focus,
+.trend-panel:focus,
+.select2-search-choice-close:focus {
+  outline: 3px auto #3b99fc;
+  outline-color: -webkit-focus-ring-color;
+}
+&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"data": {
+		"sometext": "world"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;kpi_overview_list&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;KPI Overview List&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"cartTemplate","section":"Behavior","default_value":"large_shopping_cart_v2.html","label":"Cart Template","type":"string"},{"hint":"This will sync cart across different sessions","name":"auto_update_cart","default_value":"false","section":"Behavior","label":"Auto update cart","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */
+  data.isMobile    =  gs.isMobile();
+  options.params   =  {iid:     $sp.getParameter('iid'),
+                      view:     $sp.getParameter('view'),
+                      type:     $sp.getParameter('type'),
+                      value:    $sp.getParameter('value'),
+                      group:    $sp.getParameter('group'),
+                      layout:   $sp.getParameter('layout'),
+                      category: $sp.getParameter('category')
+                      };
+
+  if (input &amp;&amp; !!input.iid)
+    options.params.iid = input.iid;
+
+  var bu           =  new BenchmarkUtil();
+  data.optedIn     =  bu.getOptIn();
+
+  /* If not opted; don't query scores */
+  if (!data.optedIn)
+    return;
+
+  /* Get score data */
+  var scoreData    =  (!!options.params.iid) ? bu.getScores(6, options.params.iid) : bu.getScores(2);
+
+  data.months      =  scoreData.months;
+  data.groups      =  scoreData.groups;
+  data.categories  =  scoreData.categories;
+  data.indicators  =  scoreData.indicators;
+  data.timeUnit    =  gs.getProperty('sn_bm_client.dashboard_display_unit');
+	data.i18n = {};
+	data.i18n.kpiDisplay = {
+		hours : gs.getMessage('{0} hours'),
+		days_hours : gs.getMessage('{0}d {1}h'),
+		days : gs.getMessage('{0} days')
+	};
+	data.i18n.recoText = gs.getMessage("Recommendation '{0}' is implemented on {1}");
+	data.i18n.alertMsg = gs.getMessage('No breakdown score exist for {0} in {1}');
+	data.i18n.noRankText = gs.getMessage('(Percentile rank is not available for this KPI)');
+	data.i18n.noPAScoreText = gs.getMessage('(Data unavailable in Performance Analytics scorecard)');
+	data.i18n.chart = {
+		ourTrendNoPA: gs.getMessage('{0}: Your Instance, {1} (Data unavailable in Performance Analytics scorecard), Percentile rank, {2}'),
+		ourTrend: gs.getMessage('{0}: Your Instance, {1}, Percentile rank, {2}'),
+		miniTrend: gs.getMessage('{0}: Your Instance, {1}, Monthly Change, {2}'),
+		miniTrendIncreased: gs.getMessage('{0}: Your Instance, {1}, Monthly Change, Increased by {2}%'),
+		miniTrendDecreased: gs.getMessage('{0}: Your Instance, {1}, Monthly Change, Decreased by {2}%'),
+		theirTrend: gs.getMessage('{0}: {1}, {2}')
+	};
+
+  var categories   =  bu.getCategoryByRoles(data.categories);
+  data.authorized  =  (data.categories.idList.length == 0) ? true : categories.length &gt; 0;
+  data.categories.idList  =  categories;
+  data.clientConfig = bu.getClientConfig();
+  var value = gs.nil(options.params.value) ? '' : options.params.value;
+  var config = data.clientConfig;
+  data.showRank =  value == config.sn_bm_common_size_bucket ||
+                   value == config.sn_bm_client_region ||
+                   value == config.sn_bm_common_industry ||
+                   value == '';
+  data.activeGlobalIndicators = bu.getActiveGlobalIndicators();
+  if (!input || input.all == 'true') {
+	data.breakdowns   = bu.getBreakdowns();
+    data.breakdownMap = bu.getAvailableBreakdownMap(data.categories.idList);
+    data.industries   = bu.getIndustryHistory();
+  }
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-12-07 21:04:29&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;769e08755b2322003d1c484c11f91aa0&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;59&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;KPI Overview List&lt;/sys_name&gt;
+        &lt;sys_package display_value="Benchmark Client" source="sn_bm_client"&gt;3ad18693db92220004997878f0b8f516&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Benchmark Client"&gt;3ad18693db92220004997878f0b8f516&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_769e08755b2322003d1c484c11f91aa0&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-20 19:54:06&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-click="c.toggleSelector($event, false)" role="presentation"&gt;
+&lt;now-message key="N/A" value="${N/A}"&gt;&lt;/now-message&gt;
+&lt;now-message key="days" value="${days}"&gt;&lt;/now-message&gt;
+&lt;now-message key="hour" value="${hour}"&gt;&lt;/now-message&gt;
+&lt;now-message key="hours" value="${hours}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Benchmarks" value="${Benchmarks}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Your Instance" value="${Your Instance}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Your Instance &amp; Percentile Rank" value="${Your Instance &amp; Percentile Rank}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Percentile Rank" value="${Percentile Rank}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Percentile" value="${Percentile}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Global Benchmark" value="${Global Benchmark}"&gt;&lt;/now-message&gt;
+&lt;now-message key="6 month history" value="${6 month history}"&gt;&lt;/now-message&gt;
+&lt;now-message key="KPI Performance Trends" value="${KPI Performance Trends}"&gt;&lt;/now-message&gt;
+&lt;now-message key="KPI Name" value="${KPI Name}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Benchmark" value="${Benchmark}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Monthly Change" value="${Monthly Change}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Month" value="${Month}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Industry" value="${Industry}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Region" value="${Region}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Number of users" value="${Number of users}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Industry or Number of users or Region" value="${Industry or Number of users or Region}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Industry / Number of users / Region" value="${Industry / Number of users / Region}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Summary" value="${Summary}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Your Industry" value="${Your Industry}"&gt;&lt;/now-message&gt;
+&lt;now-message key="1 hour" value="${1 hour}"&gt;&lt;/now-message&gt;
+&lt;now-message key="1 day 1 hour" value="${1 day 1 hour}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Compared with" value="${Compared with}"&gt;&lt;/now-message&gt;
+&lt;now-message key="No data to display" value="${No data to display}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Data unavailable in Performance Analytics scorecard" value="${Data unavailable in Performance Analytics scorecard}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Not authorized to view the category" value="${Not authorized to view the category}"&gt;&lt;/now-message&gt;
+&lt;now-message key="ServiceNow Confidential. © ServiceNow, Inc. All rights reserved." value="${ServiceNow Confidential. © ServiceNow, Inc. All rights reserved.}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Percentile rank is not available for this KPI" value="${Percentile rank is not available for this KPI}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Not enough participation on this KPI to generate global value" value="${Not enough participation on this KPI to generate global value}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Select indicator" value="${Select indicator}"&gt;&lt;/now-message&gt;
+&lt;now-message key="Close" value="${Close}"&gt;&lt;/now-message&gt;
+&lt;style&gt;
+section.page {
+  overflow-y: scroll;
+}
+  .rank-tooltip {
+    max-width: 140px;
+    word-break: normal;
+  }
+
+  .global-score-tooltip {
+    max-width: 180px;
+    word-break: normal;
+  }
+
+@media screen and (max-width: 767px) {
+  .row .breakdown-row {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .subhead-wrapper {margin-top: 20px;}
+
+  .breakdown-row .filter-text.bm-desktop-only {
+    text-align: left !important;
+  }
+}
+&lt;/style&gt;
+&lt;div class="indicator-header-row" ng-if="!c.error"&gt;
+  &lt;div class="container"&gt;
+
+    &lt;!-- Top row with heading and download buttons --&gt;
+    &lt;div class="row"&gt;
+      &lt;div class="col-xs-12 col-sm-6 category-container"&gt;
+        &lt;div ng-if="c.view.overview" ng-class="{'indicator-container' : data.categories.idList.length &gt; 1}"&gt;
+          &lt;h2 class="category-title" ng-click="data.categories.idList.length &gt; 1 &amp;&amp; c.toggleSelector($event)" aria-expanded="{{c.categorySelector}}"
+              ng-keydown="data.categories.idList.length &gt; 1 &amp;&amp; c.showCatSelector($event)"&gt;{{data.categories.idMap[c.category.id].display}}&amp;nbsp;
+            &lt;a href class="black-btn" id="select-category" ng-if="data.categories.idList.length &gt; 1"&gt;
+            	&lt;span class="sr-only"&gt;${Select category}&lt;/span&gt;
+            	&lt;span class="small glyphicon glyphicon-menu-down" aria-hidden="true"&gt;&lt;/span&gt;
+            &lt;/a&gt;
+          &lt;/h2&gt;
+        &lt;/div&gt;
+
+       &lt;div ng-if="!c.view.overview" ng-class="{ 'indicator-container' : c.data.activeGlobalIndicators[c.category.id].idList.length &gt; 1 }"&gt;
+         &lt;h2 class="col-sm-6 col-md-12 col-xs-12" class="indicator-title" ng-click="c.data.activeGlobalIndicators[c.category.id].idList.length &gt; 1 &amp;&amp; c.toggleIndicatorSelector($event)" aria-expanded="{{c.IndicatorSelector}}"
+             ng-keydown="c.data.activeGlobalIndicators[c.category.id].idList.length &gt; 1 &amp;&amp; c.showKPISelector($event)"&gt;{{data.indicators.idMap[c.view.id].display}}
+                &lt;a href class="black-btn" id="select-kpi" ng-if="c.data.activeGlobalIndicators[c.category.id].idList.length &gt; 1"&gt;
+                	&lt;span class="sr-only"&gt;${Select indicator}&lt;/span&gt;
+                	&lt;span class="small glyphicon glyphicon-menu-down" aria-hidden="true"&gt;&lt;/span&gt;
+                &lt;/a&gt;
+        &lt;/h2&gt;
+
+          &lt;div class="indicator-selector panel panel-default" ng-show="c.IndicatorSelector" role="menu"&gt;
+	          &lt;div class="panel-body"&gt;
+	            &lt;div class="wrapper-xs" ng-class="$first? 'c-selected' : 'c-unselected'" ng-repeat="kpiId in c.data.activeGlobalIndicators[c.category.id].idList"
+                     ng-init="kpiName = c.data.activeGlobalIndicators[c.category.id].idMap[kpiId]" id="kpi-{{kpiId}}"&gt;
+	              &lt;a class="black-btn" ng-click="c.changeIndicator($event, kpiId)" href ng-keydown="c.scrollIndicator($event, $index)" role="menuitem"&gt;
+	                &lt;span&gt;{{kpiName}}&lt;/span&gt;
+	              &lt;/a&gt;
+	            &lt;/div&gt;
+	          &lt;/div&gt;
+          &lt;/div&gt;
+       &lt;/div&gt;
+        &lt;div class="category-selector panel panel-default" ng-show="c.categorySelector" role="menu"&gt;
+          &lt;div class="panel-body"&gt;
+            &lt;div class="wrapper-xs" ng-repeat="id in data.categories.idList" ng-init="category = data.categories.idMap[id]" id="cat-{{id}}"&gt;
+              &lt;a class="black-btn" ng-click="c.changeCategory($event, id)" href ng-keydown="c.scrollCategory($event, $index)" role="menuitem"&gt;
+                &lt;span ng-class="(id == c.category.id) ? 'c-selected' : 'c-unselected'"&gt;{{category.display}}&lt;/span&gt;
+              &lt;/a&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="subhead-wrapper"&gt;
+          &lt;h3 role="presentation" class="subhead summary-month visible-xs visible-sm-inline-block visible-md-inline-block visible-lg-inline-block"&gt;
+          	&lt;span class="sh-label"&gt;${Summary:}&lt;/span&gt;
+          	&lt;span&gt;&amp;nbsp;{{data.months.idMap[data.months.current[c.category.id]].display}}&lt;/span&gt;
+          &lt;/h3&gt;
+          &lt;span class="subhead"&gt;&lt;span role="separator" class="sep hidden-xs" ng-if="yourIndustry"&gt;|&lt;/span&gt;
+          &lt;h3 role="presentation" class="subhead our-industry visible-xs visible-sm-inline-block visible-md-inline-block visible-lg-inline-block" ng-if="yourIndustry"&gt;
+            &lt;span class="sh-label"&gt;${Your Industry:}&lt;/span&gt;
+            &lt;span &gt;&amp;nbsp;{{yourIndustry}}&lt;/span&gt;
+          &lt;/h3&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;!-- Filter options --&gt;
+      &lt;div class="col-xs-12 col-sm-6 breakdown-row"&gt;
+        &lt;bm-kpi-filters category="c.category.id" industry="yourIndustry" data="c.data" id="1" c="c"&gt;&lt;/bm-kpi-filters&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Group Tabs --&gt;
+    &lt;div class="row" ng-if="c.view.overview"&gt;
+      &lt;div class="col-xs-12"&gt;
+        &lt;div class="tabs-row hidden-xs"&gt;
+          &lt;ul class="nav nav-tabs" role="tablist"&gt;
+            &lt;li class="item" ng-class="c.category.group == '' ? 'selected' : ''" ng-click="c.category.group = ''" role="tab" tabindex="-1"
+            	id="group-" ng-keydown="c.switchTab($event, -1)"&gt;
+              &lt;a href&gt;${All}&lt;/a&gt;
+            &lt;/li&gt;
+            &lt;li class="item" ng-repeat="id in data.groups.idList" ng-init="group = data.groups.idMap[id]" role="tab" tabindex="-1"
+              ng-class="c.category.group == id ? 'selected' : ''" ng-click="c.category.group = id" ng-show="c.category.id == group.category"
+              id="group-{{id}}" ng-keydown="c.switchTab($event, $index)"&gt;
+              &lt;a href&gt;{{group.display}}&lt;/a&gt;
+            &lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+        &lt;div class="tabs-row visible-xs"&gt;
+          &lt;label for="group-selector"&gt;${Sort by:}&lt;/label&gt;
+          &lt;select ng-model="c.category.group" ng-change="c.changeGroup()" name="group-selector" id="group-selector" data-placeholder="${All}"&gt;
+            &lt;option value=""&gt;&lt;/option&gt;
+            &lt;option ng-repeat="id in data.groups.idList" ng-init="group = data.groups.idMap[id]" value="{{id}}"
+              ng-show="c.category.id == group.category"&gt;{{group.display}}&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="container" ng-if="c.error"&gt;
+  &lt;div ng-if="data.optedIn &amp;&amp; !data.authorized" class="alert alert-danger"&gt;${Not authorized to view the category}&lt;/div&gt;
+  &lt;div ng-if="data.optedIn &amp;&amp; data.authorized" class="alert alert-danger"&gt;${No data found}&lt;/div&gt;
+  &lt;div ng-if="!data.optedIn" class="alert alert-danger"&gt;${You are not opted in to ServiceNow Benchmarks}&lt;/div&gt;
+&lt;/div&gt;
+&lt;div ng-if="!c.error"&gt;
+  &lt;div class="container"&gt;
+
+    &lt;div class="row" ng-if="c.view.overview &amp;&amp; !c.data.isMobile"&gt;
+      &lt;!-- View toggle buttons --&gt;
+      &lt;div class="col-xs-12 text-right toggle-buttons"&gt;
+        &lt;bm-kpi-view-toggles options="c.options" c="c"&gt;&lt;/bm-kpi-view-toggles&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- end row --&gt;
+
+    &lt;!-- List of KPIs --&gt;
+    &lt;div ng-if="c.view.overview"&gt;
+      &lt;bm-kpi-overview c="c" list-view="c.options.listView" category="c.category" update-url="c.updateUrl" get-trend="c.getTrend"&gt;&lt;/bm-kpi-overview&gt;
+    &lt;/div&gt;
+
+    &lt;div ng-if="!c.view.overview"&gt;
+      &lt;bm-kpi-details item="data.indicators.idMap[c.view.id]" months="data.months" breakdown="c.data.breakdown" update-url="c.updateUrl" is-mobile="c.data.isMobile" c="c"&gt;&lt;/bm-kpi-details&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+&lt;/div&gt;&lt;/div&gt;
+&lt;div class="wrapper-md"&gt;&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>0c9757f84f313300496900fe9310c71c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KPI Overview List</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_0c9757f84f313300496900fe9310c71c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>35c51f56d7f33100a9ad1e173e24d4b1</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;kb&lt;/category&gt;
+        &lt;client_script/&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "fields": [
+      {
+        "type": "glide_date_time",
+        "value": "2016-01-31T17:33:54+00:00",
+        "label": "Approval Example Label"
+      }
+    ],
+    "state": "requested",
+    "label": "incident"
+  },
+  "options": {
+    "color": "default"
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list&gt;title,color,glyph&lt;/field_list&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;KB Topic Articles&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Card Fields Config","name":"card_fields","section":"Data","label":"Card Fields","type":"string"},{"hint":"User Background color","name":"user_background_color","section":"Presentation","label":"User Background Color","type":"string"},{"hint":"Node Background Color","name":"node_background_color","section":"Presentation","label":"Node Background Color","type":"string"},{"hint":"URL to open on click","name":"url","section":"Behavior","label":"URL","type":"string"},{"name":"table_layout","section":"Presentation","label":"Table Layout","type":"string"},{"name":"row_layout","section":"Presentation","label":"Row Layout","type":"string"},{"name":"line","section":"Presentation","label":"Line","type":"string"},{"name":"tree_layout","section":"Presentation","label":"Tree Layout","type":"string"},{"name":"picture_layout","section":"Presentation","label":"Picture Layout","type":"string"},{"name":"table_layout","section":"Presentation","label":"Table Layout","type":"string"},{"name":"page","section":"Behavior","label":"Page","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[// populate the 'data' variable
+$sp.getValues(data, "color,glyph,kb_topic,title");
+data.items = $sp.getKBTopicArticles(data.kb_topic);
+]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-05-05 22:36:48&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;35c51f56d7f33100a9ad1e173e24d4b1&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;42&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;KB Topic Articles&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_35c51f56d7f33100a9ad1e173e24d4b1&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 18:55:37&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-{{::data.color}}"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h3 class="panel-title"&gt;
+      &lt;span ng-if="data.glyph" class="m-r"&gt;
+        &lt;glyph sn-char="{{::data.glyph}}" /&gt;
+      &lt;/span&gt;
+      &lt;a href="?id=kb_topic&amp;kb_topic={{::data.kb_topic}}"&gt;{{::data.title}}&lt;/a&gt;
+    &lt;/h3&gt;
+  &lt;/div&gt;
+  &lt;div class="panel-body panel-body-250"&gt;
+    &lt;div class="m-b panel-link" ng-repeat="i in data.items"&gt;
+      &lt;a href="?id=kb_article&amp;sys_id={{::i.sys_id}}"&gt;{{::i.title}}&lt;/a&gt;
+    &lt;/div&gt;
+    &lt;div ng-if="data.items.length == 0"&gt;
+      (${No articles})
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>df8717f84f313300496900fe9310c77e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KB Topic Articles</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_df8717f84f313300496900fe9310c77e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

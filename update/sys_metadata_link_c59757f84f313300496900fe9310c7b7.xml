@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>d65e4495c3331200e44574e1c1d3aeb2</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($rootScope,$http, $scope, i18n, nowAttachmentHandler, $timeout, $location) {
+	// widget controller
+	var c = this;
+	$timeout(function() {
+		if(c.data.parameterizedMsgsMap &amp;&amp; c.data.parameterizedMsgsMap.title &amp;&amp; c.data.parameterizedMsgsMap.title.length &gt; 0){
+			var bc = [{label: c.data.parameterizedMsgsMap.title, url: '#'}];
+			$rootScope.$broadcast('sp.update.breadcrumbs', bc);
+		}
+	});
+	var searchObject = $location.search();
+	c.isPublic = ('id' in searchObject) &amp;&amp; searchObject['id'].indexOf('public_survey') == 0;
+	c.state = -1;	
+	
+	c.startSurvey = function() {
+		c.state = 0;
+	};
+
+	c.redirect = function(target) {
+		window.location = target;
+	};
+
+	// Mark all categories as non collapsed
+	if (!!c.data.categories &amp;&amp; !!c.data.categories.idList &amp;&amp; !!c.data.categories.idList.length)
+		c.data.categories.idList.forEach(function(id){
+			c.data.categories.idMap[id].collapsed = false;
+		});
+
+	c.setupAttachmentHandler = function(field){
+		if (field.attachmentHandler)
+			return;
+
+		field.attachmentHandler = new nowAttachmentHandler(attachSuccess, appendError);
+
+		function attachSuccess(attachments, action) {
+			field.attachments = attachments;
+		}
+
+		function appendError(error) {
+			c.showInlineErrorMessage(error);
+		}
+
+		$timeout(function() {
+			field.attachmentHandler.setParams('asmt_assessment_instance_question', field.sys_id);
+			field.attachmentHandler.getAttachmentList();
+		})
+	}
+	
+	c.isDependencySatisfied = function(field) {
+		return c.isDependencySatisfiedHelper(field, false);
+	};
+	
+	//for the form rendering, since we need to load all questions/dependency fields and toggle based on selection we are ok with any one of the filed is satisfied.
+	c.isAnyDependencySatisfied = function(field) {
+		var self = this;
+		if (field.type == 'template') {
+			var group = c.data.templateGroups[field.templateGroup];
+			return group &amp;&amp; group.questions &amp;&amp; group.questions.reduce(function(x, y) {return x || c.isDependencySatisfiedHelper(c.data.questions.idMap[y])}, false);
+		}
+		return c.isDependencySatisfiedHelper(field, true);
+	};
+	
+
+	c.isDependencySatisfiedHelper = function(field, checkAny) {
+		if (!field.depends_on)
+			return true;
+
+		var retVal = false;
+		var dependencyId;
+		
+		if(c.data.evaluation_method == 'assessment' 
+		   || c.data.evaluation_method == 'attestation_v2' 
+		   || c.data.evaluation_method == 'risk_assessment'){
+				dependencyId = c.data.questions.metricMap[field.depends_on+field.source_id];
+		}
+		else{
+			dependencyId = c.data.questions.metricMap[field.depends_on];
+		}
+		
+		var dependency = c.data.questions.idMap[dependencyId];
+
+		switch (dependency.type) {
+			case 'scale':
+			case 'choice':
+			case 'template':
+			case 'imagescale':
+			case 'numericscale':
+				var displayedWhen = (dependency.type != 'template') ? field.displayed_when.split(',') : field.displayed_when_template.split(',');
+				var choices = (dependency.type == 'template') ? dependency.template.choices : dependency.choices;
+				var selectedChoice = choices.filter(function(choice){return dependency.value == choice.value})[0];
+
+				if (!selectedChoice)
+					break;
+
+				displayedWhen.forEach(function(sys_id) {
+					if (selectedChoice.sys_id == sys_id)
+						retVal = true;
+				});
+				break;
+			case 'multiplecheckbox':
+				var selectedChoices = dependency.choices.filter(function(choice) {return choice.selected}).map(function(c){return c.sys_id});
+				var displayedWhen = field.displayed_when.split(',');
+
+				displayedWhen.forEach(function(sys_id) {
+					selectedChoices.forEach(function(choiceId) {
+						if (choiceId == sys_id)
+							retVal = true;
+					});
+				});
+				break;
+			case 'boolean':
+				retVal = (dependency.value == field.displayed_when_yesno);
+				break;
+			case 'checkbox':
+				var displayedWhen = (field.displayed_when_checkbox == '1') ? 'true' : 'false';
+				retVal = (dependency.value == displayedWhen);
+				break;
+			default:
+				break;
+		}
+
+		return retVal &amp;&amp; (checkAny ? c.isAnyDependencySatisfied(dependency) : c.isDependencySatisfied(dependency));
+	};
+
+	c.showSignatureMessage = function() {
+		c.showInlineErrorMessage(i18n.getMessage("You must complete the required signature"));
+	};
+
+	c.showMandatoryMessage = function() {
+		c.showInlineErrorMessage(i18n.getMessage("All mandatory fields must be filled before submission"));
+	};
+
+	c.showInvalidResponseMessage = function() {
+		c.showInlineErrorMessage(i18n.getMessage("Please fill all the fields with valid responses"));
+	};
+
+	c.hideInlineErrorMessage = function() {
+		c.data.showInlineError = false;
+	};
+
+	c.isMandatoryFilled = function(field) {
+		if (!field)
+			return true;
+		
+		// for mandatory check we cannot use the isDepndencySatisfied because we have to check each individual dependency field requiredness only cannot use the cumulative result of all questions,
+		// which is being returned in isDependencySatisfied, however for display purpose that is a valid way of checking.
+		if (!!field.depends_on &amp;&amp; field.depends_on.length == 32 &amp;&amp; !c.isDependencySatisfiedHelper(field))
+			return true;
+
+		if (field.type == 'multiplecheckbox')
+			return field.choices.map(function(choice) {return choice.selected}).reduce(function(x, y) {return x || y}, false);
+
+		if (field.type == 'attachment')
+			return field.attachments &amp;&amp; field.attachments.length &gt; 0;
+
+		if (field.type == 'ranking')
+			return field.choices.map(function(choice) {return !!choice.value &amp;&amp; choice.value != '-1'}).reduce(function(x, y) {return x &amp;&amp; y}, true);
+
+		if (field.type == 'boolean')
+			return field.value == 0 || field.value == 1 || field.value == -1;
+
+		var fieldValue = (field.type != 'template') ? field.value : c.data.questions.idMap[field.sys_id].value;
+		return fieldValue != null &amp;&amp; fieldValue != undefined &amp;&amp; fieldValue != '';
+	};
+
+	c.showInlineErrorMessage = function(msg) {
+		if (typeof(msg) == 'string')
+			c.data.inlineErrorMessage = [msg];
+		else
+			c.data.inlineErrorMessage = msg;
+
+		c.data.showInlineError = true;
+		$('section.page').scrollTop(0);
+	};
+    
+	var errorMessage = '';
+	if (!c.data.questions || !c.data.questions.idList || !c.data.questions.idList.length) {
+		c.showInlineErrorMessage(i18n.getMessage("Invalid URL"));
+		c.invalidSurvey = true;
+		return;
+	}
+
+	if (c.data.state == 'complete' &amp;&amp; !c.data.can_retake) {
+		errorMessage = c.data.parameterizedMsgsMap.already_completed;
+		c.showInlineErrorMessage(errorMessage);
+		c.invalidSurvey = true;
+	}
+
+	c.updateQuestion = function(questionId, formdata) {
+		var question = c.data.questions.idMap[questionId];
+		if (!c.isDependencySatisfied(question)) {
+			// Clear out any selected choices
+			if (question.type != 'multiplecheckbox' &amp;&amp;  question.type != 'ranking' &amp;&amp; question.type != 'attachment' ) {
+				formdata[question.name] = '';
+				formdata["ADDINFO:" + question.name] = '';
+			} else if (question.type == 'attachment') {
+				if (!!question.attachments)
+					question.attachments.forEach(function(attachment) {
+						question.attachmentHandler.deleteAttachment(attachment);
+					});
+				formdata["ADDINFO:" + question.name] = '';
+			} else {
+				var prefix = question.type == 'multiplecheckbox'?'ASMTDEFINITION:':'ASMTDEFINITIONRANK:';
+				question.choices.map(function(choice) {
+					var key = prefix + choice.sys_id + '_' + question.metric+'_'+ question.source_id;
+					if(question.type == 'multiplecheckbox')
+						formdata[key] = '';
+					else
+						formdata[key] = '';
+					formdata["ADDINFO:" + key] = '';
+				});
+			}
+			return;
+		}
+
+		if (question.type != 'multiplecheckbox' &amp;&amp;  question.type != 'ranking' ) {
+			formdata[question.name] = question.value;
+			formdata["ADDINFO:" + question.name] = question.add_info;
+		} else {
+			var prefix = question.type == 'multiplecheckbox'?'ASMTDEFINITION:':'ASMTDEFINITIONRANK:';
+			question.choices.map(function(choice) {
+				var key = prefix + choice.sys_id + '_' + question.metric+'_'+ question.source_id;
+				if(question.type == 'multiplecheckbox')
+					formdata[key] = (choice.selected || choice.selected == 'true') ? true : '';
+				else
+					formdata[key] = choice.value;
+				formdata["ADDINFO:" + key] = question.add_info;
+			});
+		}
+	};
+
+	c.submitAjax = function(formdata) {
+	
+		// first stringify the formData
+		var stringifiedFormData = JSON.stringify(formdata);
+		// then encode the stringified form data to handle any special characters and pass this to processor
+		// this will be decoded in processor
+		var encodedFormData = encodeURIComponent(stringifiedFormData);
+		
+		$http({
+			method: 'POST',
+			url: '/sp_survey.do',
+			data: encodedFormData,
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+			}
+		})
+		.success(successHandler);
+
+		function successHandler(responseData) {
+			if (responseData.success &amp;&amp; (responseData.success || responseData.success == 'true')) {
+				var conclusion = c.data.parameterizedMsgsMap.submitted_msg;
+				c.data.conclusion = (c.data.conclusion &amp;&amp; c.data.conclusion.length &gt; 0) ? c.data.conclusion : conclusion;
+
+				if (formdata.sysparm_action == 'submit' || formdata.updateSuccessMessage) {
+					if (formdata.sysparm_action == 'submit') {
+						if(c.data.redirect_url &amp;&amp; c.data.redirect_url.length &gt; 0){
+							 window.location.href = c.data.redirect_url;	
+						}else{
+							 c.data.successMessage = c.data.conclusion;
+						}
+					} else if (formdata.sysparm_action == 'save') {
+						c.data.successMessage = c.data.parameterizedMsgsMap.saved_msg;
+					} else if (formdata.sysparm_action == 'cancel') {
+						c.data.successMessage = c.data.parameterizedMsgsMap.not_saved_msg;
+					} 
+				}
+			} else {
+				c.showInlineErrorMessage(i18n.getMessage("Something went wrong. Please try again later."));
+				c.invalidSurvey = true;
+			}
+
+			c.data.showMessage = true;
+		}
+	};
+
+	c.getPercentAnswered = function() {
+		var totalCount = 0;
+		var totalAnswered = 0;
+		c.data.questions.idList.forEach(function(qid) {
+			var question = c.data.questions.idMap[qid];
+			if (c.isDependencySatisfied(question)) {
+				totalCount++;
+				if (question.type == 'multiplecheckbox' &amp;&amp; question.choices.reduce(function(x, y) {return x || y.selected;}, false)) 
+					totalAnswered++;
+				else if (question.type == 'ranking' &amp;&amp; question.choices.reduce(function(x, y){return x &amp;&amp; !!y.value;}, true)) 
+					totalAnswered++;
+				else if (question.type == 'attachment' &amp;&amp; !!question.attachments &amp;&amp; question.attachments.length &gt; 0) 
+					totalAnswered++;
+				else if (!!question.value) 
+					totalAnswered++;
+			}
+		});
+
+		return (totalAnswered * 100.0) / totalCount;
+	};
+
+	c.showSignatureAuthModal = function() {
+		c.signAuthFailure = false;
+		var modal = jQuery('#sign-auth-modal');
+		var left = (window.innerWidth - parseInt(modal.css('width'))) / 2;
+		left = left ? (left + 'px') : '25%';
+		modal.css('display', 'block').css('left', left);
+	};
+
+	c.hideSignatureAuthModal = function() {
+		if ($scope.c.data.signature.validationCallback &amp;&amp; c.signAuthFailure) {
+			$scope.c.data.signature.validationCallback(false);
+		}
+		jQuery('#sign-auth-modal').css('display', 'none');
+	};
+
+	c.checkLogin = function() {
+		c.signAuthFailure = false;
+		$http({
+			method: 'POST',
+			url: '/sp_survey.do',
+			data: {
+				sysparm_request_type: 'verify_signature',
+				sysparm_user: jQuery('#sign-auth-username').val(),
+				sysparm_password: jQuery('#sign-auth-password').val()
+			}
+		}).then(function (response) {
+			if (response.data == 'true') {
+				c.hideSignatureAuthModal();
+				$scope.c.data.signature.validated = true;
+				if ($scope.c.data.signature.validationCallback) {
+					$scope.c.data.signature.validationCallback(true);
+					$scope.c.data.signature.validationCallback = null;
+				}
+				return;
+			}
+			c.signAuthFailure = true;
+			return false;
+		});
+	};
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.question-label, .category-label, .title-label, .description-text, .sps-checkbox-label, .sps-radio-label, .sps-scale-radio-label, .details-text, .assessable-record-text{&amp;#13;
+	color:black;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.assessable-record{&amp;#13;
+	margin-left : -1px;&amp;#13;
+  	margin-top : -1px;&amp;#13;
+    margin-right : -1px;  &amp;#13;
+  	background : #eff3f4;&amp;#13;
+  	padding:4px 4px;&amp;#13;
+}&amp;#13;
+.assessable-record-text{&amp;#13;
+	margin-left : 15px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.category-description{&amp;#13;
+	margin-left: 16px;&amp;#13;
+    color : #e6e8ea;&amp;#13;
+	font-weight : 100;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.sp-attachment-block-single-line {&amp;#13;
+	margin-bottom:6px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.sps-panel-spacer{&amp;#13;
+  margin : 24px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.survey-heading-text {&amp;#13;
+  	margin: 4px 0px 4px 15px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.intro-text .survey-icon, .survey-heading {&amp;#13;
+	color:white;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.intro-text .survey-icon {&amp;#13;
+	font-size:4em;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.intro-text .outer-circle, .survey-heading {&amp;#13;
+	background: #3071a9;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.intro-text .outer-circle{&amp;#13;
+	padding: 10px 22px 22px 18px;&amp;#13;
+	display:inline-block;&amp;#13;
+	border-radius:100%;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.intro-icon-assessment{&amp;#13;
+  margin-left:4px;&amp;#13;
+  margin-top:4px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.survey-heading{&amp;#13;
+  padding: 3px 6px;&amp;#13;
+  font-weight: 100;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.visible-xs .details-text {&amp;#13;
+	margin-bottom:16px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.visible-xs .input-group-checkbox {&amp;#13;
+	padding: 0 20px;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.sps-ranking-list li.hovered {&amp;#13;
+  cursor: move;&amp;#13;
+  background-color: #eee;&amp;#13;
+}&amp;#13;
+&amp;#13;
+li.sortable-ghost {&amp;#13;
+	visibility: hidden;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.field-has-reference {&amp;#13;
+	padding-right:0 !important;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.add_info_no_padding {&amp;#13;
+	padding-left: 0;&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;take-survey&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Take Survey&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"title","section":"other","label":"Title","type":"string"},{"name":"number","section":"other","label":"Number","type":"string"},{"name":"table","section":"other","label":"Table","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	var page_id = options.id || $sp.getParameter('id');
+	var typeId = options.type_id || $sp.getParameter('type_id');
+	var surveyId = options.instance_id || $sp.getParameter('instance_id');
+	var sp = new SPSurveyAPI();
+	if (page_id == 'public_survey') {
+		if(!!typeId &amp;&amp; (!sp.isSurveyPublic(typeId) || gs.isLoggedIn()))
+			data.redirectTarget = "?id=take_survey&amp;type_id=" + typeId;
+		else if(!!surveyId &amp;&amp; (!sp.isSurveyInstancePublic(surveyId) || gs.isLoggedIn()))
+			data.redirectTarget = "?id=take_survey&amp;instance_id=" + surveyId;
+	}
+	
+	sp.loadSurvey(typeId,surveyId, data);
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-06-02 21:50:55&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;d65e4495c3331200e44574e1c1d3aeb2&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;737&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Take Survey&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal Surveys" source="sn_portal_surveys"&gt;67ac5062db10220035417878f0b8f5c4&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Service Portal Surveys"&gt;67ac5062db10220035417878f0b8f5c4&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_d65e4495c3331200e44574e1c1d3aeb2&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-06-27 21:45:55&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;script language="javascript" ng-if="data.redirectTarget" ng-init="c.redirect(data.redirectTarget)"&gt;&lt;/script&gt;
+&lt;now-message key="Choose" value="${Choose}"/&gt;
+&lt;now-message key="Invalid URL" value="${Invalid URL}"/&gt;
+&lt;now-message key="Please fill all the fields with valid responses" value="${Please fill all the fields with valid responses}"/&gt;
+&lt;now-message key="You must complete the required signature" value="${You must complete the required signature}"/&gt;
+&lt;now-message key="All mandatory fields must be filled before submission" value="${All mandatory fields must be filled before submission}"/&gt;
+&lt;now-message key="Something went wrong. Please try again later." value="${Something went wrong. Please try again later.}"/&gt;
+
+&lt;!-- Spacing from top; just for mobile --&gt;
+&lt;div class="sps-panel-spacer hidden-xs" /&gt;
+
+&lt;!-- Inline error messages visible on both layouts --&gt;
+&lt;div class="row" ng-if="data.showInlineError &amp;&amp; data.inlineErrorMessage &amp;&amp; data.inlineErrorMessage.length"&gt;
+	&lt;div class="col-md-10 col-md-offset-1 col-sm-12"&gt;
+		&lt;div class="alert alert-danger" ng-repeat="msg in data.inlineErrorMessage track by $index"&gt;{{::msg}}&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div ng-if="!data.redirectTarget &amp;&amp; !c.invalidSurvey"&gt;
+
+	&lt;div class="row"&gt;
+		&lt;div class="col-md-10 col-md-offset-1 col-sm-12"&gt;
+			&lt;div class="panel panel-default"&gt;
+
+				&lt;!-- Survey Intro page --&gt;
+				&lt;div class="wrapper-md text-center intro-text" ng-if="c.state == -1"&gt;
+					&lt;div class="wrapper-sm"&gt;
+						&lt;div class="outer-circle"&gt;   
+                            &lt;span class = "intro-icon-assessment survey-icon glyphicon icon-article-document"
+                                  ng-if="(data.evaluation_method == 'assessment' || data.evaluation_method == 'attestation_v2' || data.evaluation_method == 'risk_assessment')"&gt;&lt;/span&gt;
+                            &lt;span ng-if="(data.evaluation_method == 'survey' || data.evaluation_method == 'quiz')" class="survey-icon glyphicon icon-form"&gt;&lt;/span&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+					&lt;div class="wrapper-sm"&gt;
+						&lt;h3 class="title-label"&gt;{{::data.title}}&lt;/h3&gt;
+						&lt;div ng-if="data.trigger_id" style="font-size:15px;"&gt;
+                          {{::data.evaluation_method_display}} ${is in reference to} &lt;a href="?id=ticket&amp;table={{::data.trigger_table}}&amp;sys_id={{::data.trigger_id}}"&gt;{{::data.trigger_display}}&lt;/a&gt;
+						&lt;/div&gt;
+						&lt;div ng-if="data.trigger_desc" style="font-size:15px;"&gt;
+							{{::data.trigger_desc}}
+						&lt;/div&gt;
+						&lt;div ng-if="data.introduction" style="font-size:15px;"&gt;
+							&lt;div ng-bind-html="::data.introduction"&gt;&lt;/div&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+
+					&lt;div class="row"&gt;
+						&lt;div class="col-xs-12 col-sm-6 col-sm-offset-3"&gt;
+							&lt;div class="wrapper-lg"&gt;
+								&lt;button class="btn btn-primary btn-block btn-lg" ng-click="c.startSurvey()"&gt;${Get Started}&lt;/button&gt;
+							&lt;/div&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+				&lt;/div&gt;
+
+				&lt;!-- Begin mobile-only --&gt;
+				&lt;div class="visible-xs"&gt;
+					&lt;sp-survey-form c="c" data="data" pagination="'question'" is-mobile="true"&gt;&lt;/sp-survey-form&gt;
+				&lt;/div&gt;
+				&lt;!-- End mobile only --&gt;
+
+				&lt;!-- Begin desktop only --&gt;
+				&lt;div class="hidden-xs"&gt;
+					&lt;sp-survey-form c="c" data="data" pagination="data.pagination"&gt;&lt;/sp-survey-form&gt;
+				&lt;/div&gt;
+				&lt;!-- End desktop only --&gt;
+
+				&lt;div class="sp-message-dialog" id="sign-auth-modal" style="display:none;position:fixed;top:10%"&gt;
+					&lt;div class="modal-dialog modal-sm"&gt;
+						&lt;div class="modal-content"&gt;
+							&lt;form ng-submit="c.checkLogin()"&gt;
+								&lt;div class="modal-header"&gt;
+									&lt;button type="button" class="close" ng-click="c.hideSignatureAuthModal()" aria-label="Close"&gt;&lt;span aria-hidden="true"&gt;&amp;times;&lt;/span&gt;&lt;/button&gt;
+									&lt;h4 class="modal-title"&gt;${Signature Authentication}&lt;/h4&gt;
+								&lt;/div&gt;
+								&lt;div class="modal-body"&gt;
+									&lt;div ng-if="c.signAuthFailure" class="alert alert-danger text-center"&gt;${Invalid credentials}&lt;/div&gt;
+									&lt;div class="row wrapper-xs"&gt;
+										&lt;div class="col-xs-4"&gt;&lt;label class="wrapper-xs" for="sign-auth-username"&gt;${Username}&lt;/label&gt;&lt;/div&gt;
+										&lt;div class="col-xs-8"&gt;&lt;input ng-model="data.signature.username" class="form-control" id="sign-auth-username" type="text" name="sign-auth-username" disabled="true" /&gt;&lt;/div&gt;
+									&lt;/div&gt;
+									&lt;div class="row wrapper-xs"&gt;
+										&lt;div class="col-xs-4"&gt;&lt;label class="wrapper-xs" for="sign-auth-password"&gt;${Password}&lt;/label&gt;&lt;/div&gt;
+										&lt;div class="col-xs-8"&gt;&lt;input class="form-control" id="sign-auth-password" type="password" name="sign-auth-password" /&gt;&lt;/div&gt;
+									&lt;/div&gt;
+								&lt;/div&gt;
+								&lt;div class="modal-footer"&gt;
+									&lt;button class="btn btn-primary" ng-click="c.checkLogin()"&gt;${OK}&lt;/button&gt;
+									&lt;button class="btn btn-default" ng-click="c.hideSignatureAuthModal()"&gt;${Cancel}&lt;/button&gt;
+								&lt;/div&gt;
+							&lt;/form&gt;
+						&lt;/div&gt;
+					&lt;/div&gt;
+				&lt;/div&gt;
+			&lt;/div&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:30</sys_created_on>
+        <sys_id>c59757f84f313300496900fe9310c7b7</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Take Survey</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_c59757f84f313300496900fe9310c7b7</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:30</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

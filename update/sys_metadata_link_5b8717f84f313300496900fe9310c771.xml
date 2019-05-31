@@ -1,0 +1,912 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>27eb09900b111200b0b02c6317673aff</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $rootScope, $timeout, $http){
+	var c = this;
+
+	$timeout(function(){
+		c.initModel();
+		c.initListeners();
+	});
+
+	c.isValidSysId = function(sys_id) {		
+		return _.hasIn(c, "data.portal_id") ? (c.data.portal_id === sys_id) : false;
+	}
+		
+	c.changePortal = function(portal_id) {
+		if (c.data.portal_id &amp;&amp; c.data.portal_id === portal_id) return;
+
+		c.isPreviewLoading = false;
+		c.previewPageUrl = null;
+		c.canUndo = false;
+		c.data.portal = null;
+		c.data.portal_id = portal_id;
+
+		c.server.update().then(function() {
+			c.initModel();
+		});
+	}
+
+	c.initModel = function(){
+		c.undoModel = angular.copy(c.data.fieldModel);
+		c.themePreviewPage = 'theme_preview';
+		c.quickSetupPreviewPage = c.data.portal.homepage;
+		c.setPagePreview(c.quickSetupPreviewPage, true);
+		$scope.hasTagLineProperties = hasTagLineProperties();
+	}
+
+	c.initListeners = function() {
+		$rootScope.$on("snImageUploader:complete", c.onUploadComplete); 
+		$rootScope.$on("snImageUploader:delete", c.onUploadDelete); 
+	}
+	
+	c.undo = function(){
+		// Sets all of the fields back to their previous values
+		c.data.doUndo = true;
+		c.data.portal = null;
+		c.canUndo = false;
+		c.server.update().then(function(){
+			c.data.doUndo = false;
+			c.setPagePreview(c.activePreviewPage, true);
+		});
+	};
+
+	c.activePreviewPage = null;
+	c.setPagePreview = function (pageId, forceReload) {
+		_.defer(setPagePreview, pageId, forceReload);
+	};
+	
+	function setPagePreview(pageId, forceReload) {
+		if (c.activePreviewPage == pageId &amp;&amp; !forceReload)
+			return;
+
+		var url = null;
+		c.activePreviewPage = pageId;
+		if (angular.isDefined(pageId) &amp;&amp; pageId != null &amp;&amp; _.hasIn(c, "data.portal.url_suffix"))
+			url = '/' + c.data.portal.url_suffix + '?id=' + pageId;
+		$scope.$broadcast('this.renderPreviewPage', url);
+	}
+
+	// defer invoking until current call stack has clear, avoid blocking UI rendering
+	
+	
+	c.refreshPreview = function(){
+		var el = angular.element("iframe[data-portal-id='" + c.data.portal_id+ "']");
+		var iframe = el.get(0);
+		if (iframe)
+			iframe.contentWindow.location.reload(true);
+	}
+	
+	c.onLogoChange = function(g_form, field, oldValue, newValue) {
+		c.canUndo = true;
+		field.displayValue = newValue;
+		$rootScope.$broadcast('this.setLogo', newValue.split('?')[0]);
+	};
+
+	c.onHeroChange = function(g_form, field, oldValue, newValue) {
+		c.canUndo = true;
+		$rootScope.$broadcast('this.setHero', c.data.fieldModel.hero.container, newValue.split('?')[0]);
+	};
+
+	c.onUploadComplete = function(event, sys_id, response) {
+		if (!c.isValidSysId(sys_id)) return;
+		c.refreshPreview();
+	}
+	
+	c.onUploadDelete = function(event, sys_id) {
+		if (!c.isValidSysId(sys_id)) return;
+		c.refreshPreview();
+	}
+	
+	var titleChangeBounce;
+	c.onTitleChange = function(g_form, field, oldValue, newValue) {
+		if (titleChangeBounce) $timeout.cancel(titleChangeBounce);
+		titleChangeBounce = $timeout(function() {
+			c.canUndo = true;
+			$scope.$broadcast('sp.spEditableField.save', field);
+			$rootScope.$broadcast('this.setTitle', newValue);
+		}, 200);
+	}
+
+	var tagLineBounce;
+	c.onTagLineChange = function(g_form, field, oldValue, newValue) {
+		if (tagLineBounce) $timeout.cancel(tagLineBounce);
+		tagLineBounce = $timeout(function() {
+			$scope.$broadcast('sp.spEditableField.save', field);
+			c.canUndo = true;
+			$rootScope.$broadcast('this.refreshTagline', c.data.fieldModel.tagline.sys_id);
+		}, 250);
+	}
+
+	var theme = $scope.theme = {};
+	var delaySaveThemeCss = _.debounce(saveThemeCss, 500);
+	
+	theme.logoPaddingX = function(val) {
+		val = _.isNil(val) ? c.data.cssVariables['$sp-logo-margin-x'] : val;
+		val = parseNumber(val, 0);
+		return val;
+	}
+
+	theme.logoPaddingY = function(val) {
+		val = _.isNil(val) ? c.data.cssVariables['$sp-logo-margin-y'] : val;
+		val = parseNumber(val, 0);
+		return val;
+	}
+	
+	$scope.setLogoPaddingX = function(event, value) {		
+		c.data.cssVariables['$sp-logo-margin-x'] = value + 'px';
+		delaySaveThemeCss();
+	}
+	
+	$scope.setLogoPaddingY = function(event, value) {		
+		c.data.cssVariables['$sp-logo-margin-y'] = value + 'px';
+		delaySaveThemeCss();
+	}	
+	
+	$scope.setThemeProp = function(g_form, field, oldValue, newValue) {
+		var v = c.data.cssVariables[field.name];
+		if (v == newValue)
+			return;
+		c.data.cssVariables[field.name] = newValue;
+		delaySaveThemeCss();
+	}
+
+	function hasTagLineProperties() {
+		return _.hasIn(c, "data.fieldModel.tagline.field") || 
+			_.hasIn(c, "data.fieldModel.taglineColor") || 
+			_.hasIn(c, "data.fieldModel.homepageBackgroundColor") || 
+			_.hasIn(c, "data.fieldModel.hero.field");
+	}
+	
+	var saving = false;
+	var saveTimeout;
+	
+	function saveThemeCss() {
+		if (saving) return;
+		if (_.isNil(c.data.portal_id)) {
+			console.warn("Save: portal_id is undefined");
+			return;
+		}
+						
+		$timeout.cancel(saveTimeout);
+		saveTimeout = $timeout(function(){
+			c.canUndo = true;
+			saving = true;
+			var data = {css_variables: getFlatCssVariables()};
+			$http.put('/api/now/ui/table_edit/sp_portal?sysparm_records='+ c.data.portal_id +'&amp;sysparm_view=default&amp;sysparm_fields=css_variables', data).success(function(){
+				$rootScope.$broadcast('this.resetPageCss');
+				saving = false;
+			});
+		}, 0);
+	}
+
+	function getFlatCssVariables() {
+		var out = "";
+		for (var key in c.data.cssVariables){
+			var val = c.data.cssVariables[key];
+				out += key + ': ' + val + ';\n';
+		}
+		return out;
+	}
+	
+	function getDescendantProp(obj, key) {
+			var arr = key.split(".");
+      while(arr.length &amp;&amp; (obj = obj[arr.shift()]))
+			return obj;
+	}
+
+	function parseNumber(val, defaultValue) {
+		if (_.isNil(val) || _.isEmpty(val))
+			return defaultValue;		
+		
+		val = _.isString(val) ? parseInt(val, 10) : val;
+		val = _.isNaN(val) ? defaultValue : val;	
+		return val;
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;$be_height: calc(100vh - 60px);
+$be_width: calc(100vw - 300px);
+
+.no-scroll {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+[role="branding-editor"] {
+}
+
+[role="portal-config"] {
+  min-width: 300px;
+  max-width: 300px;
+  padding: 0.25rem 0 0 0;
+  height: $be_height;
+  overflow: hidden;
+
+  .tab-content {
+    height: calc(100vh - 150px);
+    overflow: hidden;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .slider-group {
+    .sl-x {
+      margin-bottom: 10px;
+    }
+    .sl-label,
+    .sl-element {
+      display: inline-block;
+    }
+    .sl-label {
+      width: 50px;
+    }
+    .sl-element {
+      width: calc(90% - 50px);
+    }
+  }
+}
+
+[role="portal-config"] span[table] {
+  form:after {
+    content: "";
+    display: block;
+    border-bottom: 1px #DDDDDD solid;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+  
+  &amp;amp;:last-of-type form:after {
+  	border: none;
+  }
+}
+
+[role="portal-picker"] {
+  margin: 0.5rem;
+}
+
+[role="portal-undo"] {
+	margin-top: 0.5rem;
+    fa { margin-right: 2px; }
+}
+
+[role="page-preview"] iframe {
+  height: $be_height;
+  width: $be_width;
+  border: 5px #DDDDDD solid;
+  overflow: overlay;
+}
+
+.btn .glyphicon {
+  top: 2px;
+}
+
+.input-group .sp-replacer {
+	min-width: 0;
+  	margin-right: 0;
+    
+  	.sp-dd {
+      display: none;
+      width: 0;
+    }
+}
+
+.logo img,
+.hero img {
+  border: 1px solid #BDC0C4;
+  border-radius: 2px;
+  padding: 20px 30px;
+  background: #F0F3F4;
+  display: block;
+  height: auto;
+  width: 100%;
+  min-width: 100% !important;
+  max-width: 100% !important;
+}
+
+.sp-out-of-scope {
+  padding: 4px;
+  margin: 4px;
+  color: tomato;
+}
+&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "table": "incident",
+    "count": 25
+  },
+  "options": {
+		"color": "success",
+		"glyph": "cogs",
+    "title": "Incidents"
+  }
+}&lt;/demo_data&gt;
+        &lt;description&gt;A widget used by the Branding Editor page to preview global changes to a portal and its theme.&lt;/description&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;widget-portal-config&lt;/id&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link&gt;&lt;![CDATA[function(scope, element, attrs, c, transclude){
+
+	var iframeContext;
+	var $el;
+	var iframeScope;
+	var saveCount = 0;
+	var $timeout = $injector.get('$timeout');
+
+	//$(window).on('resize', function(){
+	//	setFrameHeight();
+	//});
+
+	element.find('iframe').load(init);
+
+	scope.$on('this.renderPreviewPage', function(e, url){
+		c.isPreviewLoading = false;
+		c.previewPageUrl = null;
+
+		if (url) {
+			c.isPreviewLoading = true;
+			// This is crazy but necessary to properly attach the onload
+			// handler after the pageUrl changes.
+			$timeout(function(){
+				c.previewPageUrl = url;
+				$timeout(function(){
+					element.find('iframe').load(init);
+				});
+			})
+		}
+	});
+
+	function init(){
+		try {
+			iframeContext = element.find('iframe').get(0).contentWindow;
+			$el = iframeContext.$('body');
+		}catch(e){
+			return;
+		}
+
+		var iframeBody = iframeContext.$('body');
+		
+		if (typeof(iframeBody) === "undefined" || iframeBody === null)
+			return;
+		
+		iframeScope = iframeBody.scope();
+		//setFrameHeight();
+		scope.$apply(function(){
+			c.isPreviewLoading = false;
+		});
+	}
+
+	function setFrameHeight(){
+		var navbarHeight = $('nav').height();
+		var windowHeight = $(window).height();
+		var extra = 20;
+		element.find('iframe').height(windowHeight - navbarHeight - extra);
+	}
+
+	scope.$on('this.setLogo', function(e, logo){
+		iframeScope.$apply(function() {
+			iframeScope.portal.logo = logo;
+		});
+	});
+
+	scope.$on('this.setTitle', function(e, title){
+		iframeScope.$apply(function() {
+			iframeScope.portal.title = title;
+		});
+	});
+
+	scope.$on('this.refreshTagline', function(e, rectSysId){
+		var rectScope = $el.find('#x' + rectSysId).scope();
+		rectScope.server.refresh();
+	});
+
+	scope.$on('this.setHero', function(e, container, image) {
+		var containerSelector = '.c' + container.sys_id;
+
+		var bg = {};
+		bg["background-color"] = container.background_color;
+		bg["background-image"] = "url('"+ image +"')";
+
+		switch (container.background_style){
+			case "default":
+				bg["background-size"] = "initial";
+				bg["background-position"] = "center center";
+				break;
+			case "cover":
+				bg["background-size"] = "cover";
+				bg["background-position"] = "center center";
+				break;
+			case "contain":
+				bg["background-size"] = "contain";
+				bg["background-repeat"] = "no-repeat";
+				bg["background-position"] = "center center";
+				break;
+			case "repeat":
+				bg["background-repeat"] = "repeat";
+				break;
+		}
+
+		iframeScope.$apply(function(){
+			$el.find(containerSelector).scope().container.background = JSON.stringify(bg);
+		});
+
+	});
+
+	scope.$on('this.resetPageCss', function(e){
+		$el[0].innerHTML = "";
+		var iframe = element.find('iframe');
+		iframe.attr("src",iframe.attr("src"));
+		return;
+
+		var href;
+		iframeContext.$('link[type="text/css"]').each(function(){
+			href = $(this).attr('href')
+			if (href.indexOf('.scss') &gt; -1) {
+				$(this).attr('href', href += '&amp;' + (saveCount++));
+			}
+		})
+	});
+
+
+}]]&gt;&lt;/link&gt;
+        &lt;name&gt;Portal config&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"typeahead_search","default_value":"{title: 'How can we help?', size: 'lg', color: 'default'}","section":"Presentation","label":"Typeahead Search","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function(){
+	data.tagLineMsg = gs.getMessage("Tag Line");
+	data.tagLineColorMsg = gs.getMessage("Tag Line color");
+	data.homepageBkgdColorMsg = gs.getMessage("Homepage background color");
+	data.bkgdImageMsg = gs.getMessage("Background Image");
+	data.quickSetupMsg = gs.getMessage("Quick Setup");
+	data.themeColorsMsg = gs.getMessage("Theme Colors");
+	data.portalTitleMsg = gs.getMessage("Portal title");
+	var portalId, portalGr, qsConfig;
+	var backupImageSuffix = "_sp_bak";
+	data.portalTable = "sp_portal";
+	data.fieldModel = {};
+	data.undoModel = {};
+	
+	if (input) {
+		portalId = input.portal_id;
+		portalGr = $sp.getRecord(data.portalTable, portalId);
+		gs.getUser().setPreference('sp.portal', portalGr.getValue("url_suffix"));
+		qsConfig = portalGr.getValue('quick_start_config');
+
+		if (input.doUndo === true)
+			processUndo(portalGr, input, qsConfig);
+
+	} else {
+		// Query for the portal using preference
+		portalGr = new GlideRecord(data.portalTable);
+		portalGr.addQuery('url_suffix', gs.getUser().getPreference('sp.portal'));
+		portalGr.query();
+		
+		if (!portalGr.hasNext()) {
+			portalGr.initialize();
+			portalGr.query();
+		}
+			
+		if (portalGr.next()) {
+			portalId = portalGr.getUniqueValue();
+			qsConfig = portalGr.getValue('quick_start_config');
+		} else {
+			gs.error("Portal config - Could not find any Service Portals");
+		}				
+	}
+	
+	data.outOfScope = !portalGr.isInSelectedScope();
+	data.recordScopeLabel = gs.getScopeLabelByRecordId(portalGr.getUniqueValue());
+	data.currentScopeLabel = gs.getCurrentApplicationName();
+	
+	main(data, portalGr, qsConfig);
+
+	function main(data, portalGr, qsConfig) {
+		
+		var portalForm = $sp.getForm(data.portalTable, portalId);
+		data.hasQsConfig = (qsConfig) ? true : false;
+		data.portal_id = portalGr.getUniqueValue();
+		data.portal = {
+			theme: portalGr.getValue('theme'),
+			homepage: portalGr.getDisplayValue("homepage"),
+			url_suffix: portalGr.getValue("url_suffix"),
+			displayValue: portalGr.getDisplayValue(),
+			value: portalGr.getUniqueValue()
+		};
+
+		data.colorModel = getQuickStartColorModel();
+		data.cssVariables = getVariableValues(data.colorModel, data.portal_id);
+		data.fieldModel.title = getFieldModel(portalForm._fields.title, data.portalTable, portalId);
+		data.fieldModel.logo = getImageModel(portalForm._fields.logo, data.portalTable, portalId);
+		if (qsConfig) {
+		    qsConfig = JSON.parse(qsConfig)[0];
+			var homepageSearchRect = $sp.getForm(qsConfig.tagline.table, qsConfig.tagline.sys_id);
+			data.fieldModel.tagline = getFieldModel(homepageSearchRect._fields[qsConfig.tagline.field], qsConfig.tagline.table, qsConfig.tagline.sys_id);
+			data.undoModel.tagline = homepageSearchRect._fields[qsConfig.tagline.field].value;
+			data.fieldModel.hero = getHeroModel(qsConfig.hero_background);
+			data.fieldModel.homepageBackgroundColor = data.colorModel[0].variables[1];
+			data.fieldModel.taglineColor = data.colorModel[0].variables[0];
+			prepUserImageForUndo(qsConfig.hero_background.table, qsConfig.hero_background.sys_id, qsConfig.hero_background.field);
+		}
+
+		// Prep the undo model
+		prepUserImageForUndo(data.portalTable, portalId, 'logo');
+		data.undoModel.title = portalForm._fields.title.value;
+		data.undoModel.cssVariables = portalGr.getValue('css_variables');
+	}
+
+	function processUndo(portalGr, input, qsConfig) {
+		// Undo title
+		portalGr.setValue('title', input.undoModel.title);
+		// Undo css_variables
+		portalGr.setValue('css_variables', input.undoModel.cssVariables);
+		portalGr.setForceUpdate(true);
+		portalGr.update();
+				
+		if (typeof(qsConfig) === "string") {
+			qsConfig = JSON.parse(qsConfig)[0];		
+		}
+				
+		if (qsConfig) {
+			// Undo tagline
+			var taglineGr = new GlideRecord(qsConfig.tagline.table);
+			taglineGr.get(qsConfig.tagline.sys_id);
+			taglineGr.setValue(qsConfig.tagline.field, input.undoModel.tagline);
+			taglineGr.update();			
+			
+			// Undo logo
+			restoreUserImageFromBackup(portalGr.getTableName(), portalGr.getUniqueValue(), 'logo');
+
+			// Undo hero background
+			restoreUserImageFromBackup(qsConfig.hero_background.table, qsConfig.hero_background.sys_id, qsConfig.hero_background.field);		
+		}
+	}
+
+	function getFieldModel(fieldModel, table, sys_id) {
+		// Don't show mandatory markers because they are ugly
+		fieldModel = fieldModel || {};
+		fieldModel.sys_mandatory = false;
+		fieldModel.mandatory = false;
+		return {field: fieldModel, table: table, sys_id: sys_id };
+	}
+
+	function getImageModel(fieldModel, table, sys_id) {
+		var m = getFieldModel(fieldModel, table, sys_id);
+		m.field.table = table;
+		m.field.sys_id = sys_id;
+		return m;
+	}
+
+	function getHeroModel(heroConfig) {
+		var homepageMainContainer = $sp.getForm(heroConfig.table, heroConfig.sys_id);
+		var heroGr = $sp.getRecord(heroConfig.table, heroConfig.sys_id);
+		var m = getImageModel(homepageMainContainer._fields[heroConfig.field], heroConfig.table, heroConfig.sys_id);
+		m.container = {
+			background_color: heroGr.getValue('background_color'),
+			background_style: heroGr.getValue('background_style'),
+			sys_id: heroGr.getUniqueValue()
+		};
+		return m;
+	}
+
+	function deleteBackupImages(tableSysId) {
+		var attachment = new GlideSysAttachment();
+		var gr = new GlideRecord('sys_attachment');
+		var grThumb;
+		gr.addQuery('table_name', 'CONTAINS', backupImageSuffix);
+		gr.addQuery('table_sys_id', tableSysId);
+		gr.query();
+		deleteAttachmentsAndThumbnails(gr);
+	}
+
+	function deleteAttachmentsAndThumbnails(attachmentGR) {
+		while (attachmentGR.next()) {
+			gs.print('Service Portal Branding Editor deleting temporary sys_attachment and thumbnails: ' + attachmentGR.getUniqueValue());
+			attachmentGR.deleteRecord();
+		}
+	}
+	
+	function prepUserImageForUndo(tableName, tableSysId, fieldName) {
+		deleteBackupImages(tableSysId);
+		var attachment = new GlideSysAttachment();
+		attachment.copy(tableName, tableSysId, tableName + backupImageSuffix, tableSysId);
+
+		// rename so it doesn't get deleted when a new image is uploaded
+		var gr = new GlideRecord('sys_attachment');
+		gr.addQuery('table_sys_id', tableSysId);
+		gr.addQuery('table_name', 'CONTAINS', backupImageSuffix);
+		gr.addQuery('file_name', 'CONTAINS', fieldName);
+		gr.query();
+		while(gr.next()){
+			var f = gr.getValue('file_name') + backupImageSuffix;
+			gr.setValue('file_name', f);
+			gr.update();
+		}
+	}
+
+	function restoreUserImageFromBackup(tableName, tableSysId, fieldName) {
+		// Delete file_name and its thumbnails
+		var attachment = new GlideSysAttachment();
+		var gr = new GlideRecord('sys_attachment');
+		var grThumb, f, t;
+		gr.addQuery('file_name', fieldName);
+		gr.addQuery('table_sys_id', tableSysId);
+		gr.query();
+		deleteAttachmentsAndThumbnails(gr);
+		
+		// this renames the attachments:
+		//   file_name_sp_bak -&gt; file_name
+		// and
+		//   table_name_sp_bak -&gt; table_name
+		gr = new GlideRecord('sys_attachment');
+		gr.addQuery('table_sys_id', tableSysId);
+		gr.addQuery('table_name', 'CONTAINS', backupImageSuffix);
+		gr.addQuery('file_name', 'CONTAINS', fieldName);
+		gr.query();
+		while(gr.next()){
+			f = gr.getValue('file_name').replace(backupImageSuffix, '');
+			t = gr.getValue('table_name').replace(backupImageSuffix, '');
+			gr.setValue('file_name', f);
+			gr.setValue('table_name', t);
+			gr.update();
+		}
+	}
+
+	function getQuickStartColorModel(){
+		var varModel = [
+			{title: "", variables: [
+				{label: "${Tagline color}", name: "$sp-tagline-color", type: "color"},
+				{label: "${Homepage background color}", name: "$sp-homepage-bg", type: "color"}
+			]},
+			{title: "${Navbar}", variables: [
+				{label: "${Navbar background}", name: "$navbar-inverse-bg", type: "color"},
+				{label: "${Navbar divider}", name: "$sp-navbar-divider-color", type: "color"},
+				{label: "${Navbar link color}", name: "$navbar-inverse-link-color", type: "color"},
+				{label: "${Navbar link hover}", name: "$navbar-inverse-link-hover-color", type: "color"}
+			]},
+			{title: "${Brand}", variables: [
+				{label: "${Page background}", name: "$body-bg", type: "color"},
+				{label: "${Panel background}", name: "$panel-bg", type: "color"},
+				{label: "${Button default background}", name: "$btn-default-bg", type: "color"},
+				{label: "${Primary}", name: "$brand-primary", type: "color"},
+				{label: "${Success}", name: "$brand-success", type: "color"},
+				{label: "${Info}", name: "$brand-info", type: "color"},
+				{label: "${Warning}", name: "$brand-warning", type: "color"},
+				{label: "${Danger}", name: "$brand-danger", type: "color"}
+			]},
+			{title: "${Text}", variables: [
+				{label: "${Text color}", name: "$text-color", type: "color"},
+				{label: "${Text success}", name: "$state-success-text", type: "color"},
+				{label: "${Text muted}", name: "$text-muted", type: "color"},
+				{label: "${Link color}", name: "$link-color", type: "color"}
+			]}
+		];
+		return varModel;
+	}
+
+	function getVariableValues(colorModel, portalId){
+		var keys = ["$sp-logo-margin-y","$sp-logo-margin-x"];
+		var g, v, group, variable;
+		for(g in colorModel) {
+			group = colorModel[g];
+			for (v in group.variables){
+				variable = group.variables[v];
+				keys.push(variable.name);
+			}
+		}
+		var variableValues = $sp.buildThemeVariableModel(portalId, keys.join(","));
+
+		// Put the values into the colorModel
+		for(g in colorModel) {
+			group = colorModel[g];
+			for(v in group.variables) {
+				variable = group.variables[v];
+				variable.value = variableValues[variable.name];
+			}
+		}
+
+		return variableValues;
+	}
+
+	function restoreTheme(themeSysId, variables) {
+		var gr = new GlideRecord("sp_theme");
+		if (gr.get(themeSysId)) {
+			gr.setValue("css_variables", variables);
+			gr.update();
+		}
+	}
+
+})()
+
+]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-01-27 17:09:06&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;27eb09900b111200b0b02c6317673aff&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;1054&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Portal config&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal Configuration Pages" source="com.glide.service-portal.config"&gt;bc68b8b9118033006517bd11ae6a4cbd&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_27eb09900b111200b0b02c6317673aff&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-25 17:26:23&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="flex-row items-stretch" role="branding-editor"&gt;
+
+    &lt;aside class="flex-shrink" role="portal-config"&gt;
+        &lt;div role="portal-picker"&gt;
+            &lt;sn-record-picker field="c.data.portal" display-field="'title'" 
+                              on-change="c.changePortal(val)" table="c.data.portalTable" 
+                              options="{allowClear: false}"&gt;&lt;/sn-record-picker&gt;
+            &lt;button class="btn btn-warning btn-block" role="portal-undo"
+                    ng-if="c.canUndo" ng-click="c.undo()"&gt;&lt;fa name="undo" /&gt; ${Reset Changes}&lt;/button&gt;   
+      &lt;/div&gt;
+      
+        &lt;div role="portal-config-content" ng-if="c.data.portal"&gt;
+          &lt;p ng-if="c.data.outOfScope" class="sp-out-of-scope"&gt;${This portal is in the &lt;strong&gt;{{data.recordScopeLabel}}&lt;/strong&gt; application, but &lt;strong&gt;{{data.currentScopeLabel}}&lt;/strong&gt; is your current application}&lt;/p&gt;
+          &lt;uib-tabset justified="true"&gt;
+                &lt;uib-tab select="c.setPagePreview(c.quickSetupPreviewPage)" heading="{{::data.quickSetupMsg}}"&gt;
+               
+                  
+&lt;!-- tab: quick setup --&gt;
+&lt;div class="panel panel-default"&gt;
+    &lt;div class="panel-heading"&gt;
+        &lt;h3 class="panel-title"&gt;${Title and Logo}&lt;/h3&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body"&gt;
+
+        &lt;sp-editable-field2
+                editable-by-user="true"
+                table="{{c.data.fieldModel.title.table}}"
+                table-id="c.data.fieldModel.title.sys_id"
+                field-model="c.data.fieldModel.title.field"
+                on-change="c.onTitleChange"
+                label="{{::data.portalTitleMsg}}"&gt;&lt;/sp-editable-field2&gt;
+
+        &lt;sp-editable-field2
+                class="logo"            
+                editable-by-user="true"
+                table="{{c.data.fieldModel.logo.table}}"
+                table-id="c.data.fieldModel.logo.sys_id"
+                field-model="c.data.fieldModel.logo.field"
+                on-change="c.onLogoChange"
+                on-submit="logoSubmit"&gt;&lt;/sp-editable-field2&gt;
+
+        &lt;div class="slider-group form-group" ng-if="c.data.fieldModel.logo.field.displayValue != ''"&gt;
+            &lt;label&gt;${Logo Padding}&lt;/label&gt;
+            &lt;div class="sl-x"&gt;
+                &lt;div class="sl-label"&gt;${Left}:&lt;/div&gt;
+                &lt;div class="sl-element"&gt;
+                    &lt;slider ng-model="theme.logoPaddingX" ng-model-options="{getterSetter: true}" min="2" max="15"
+                            on-stop-slide="setLogoPaddingX($event, value)"
+                            updateevent='["slideStop"]'/&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;div class="sl-label"&gt;${Top}:&lt;/div&gt;
+                &lt;div class="sl-element"&gt;
+                    &lt;slider ng-model="theme.logoPaddingY" ng-model-options="{getterSetter: true}" min="2" max="15"
+                            slider-tooltip-position="bottom" 
+                            on-stop-slide="setLogoPaddingY($event, value)"
+                            updateevent='["slideStop"]'/&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+    &lt;/div&gt;
+    &lt;div class="panel-footer"&gt;
+        &lt;p&gt;${Use title and logo to represent your brand across all pages of a portal}&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="panel panel-default" ng-if="hasTagLineProperties"&gt;
+    &lt;div class="panel-heading"&gt;
+        &lt;h3 class="panel-title"&gt;${Tag Line and Background}&lt;/h3&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body"&gt;
+        
+        &lt;sp-editable-field2
+                editable-by-user="true"
+                table="{{c.data.fieldModel.tagline.table}}"
+                table-id="c.data.fieldModel.tagline.sys_id"
+                field-model="c.data.fieldModel.tagline.field"
+                ng-if="c.data.fieldModel.tagline.field"            
+                on-change="c.onTagLineChange"
+                label="{{::data.tagLineMsg}}"&gt;&lt;/sp-editable-field2&gt;
+      
+        &lt;sp-editable-field2
+                editable-by-user="true"
+                table=""
+                table-id="''"
+                field-model="c.data.fieldModel.taglineColor"
+                ng-if="c.data.fieldModel.taglineColor" 
+                on-change="setThemeProp"
+                label="{{::data.tagLineColorMsg}}"&gt;&lt;/sp-editable-field2&gt;
+      
+        &lt;sp-editable-field2
+                editable-by-user="true"
+                table=""
+                table-id="''"
+                field-model="c.data.fieldModel.homepageBackgroundColor"
+                ng-if="c.data.fieldModel.homepageBackgroundColor"            
+                on-change="setThemeProp"
+                label="{{::data.homepageBkgdColorMsg}}"&gt;&lt;/sp-editable-field2&gt;
+
+        &lt;sp-editable-field2
+                class="hero"
+                editable-by-user="true"
+                table="{{c.data.fieldModel.hero.table}}"
+                table-id="c.data.fieldModel.hero.sys_id"
+                field-model="c.data.fieldModel.hero.field"
+                ng-if="c.data.fieldModel.hero.field"            
+                label="{{::data.bkgdImageMsg}}"
+                on-change="c.onHeroChange"&gt;&lt;/sp-editable-field2&gt;
+
+    &lt;/div&gt;
+    &lt;div class="panel-footer"&gt;
+        &lt;p&gt;${Reinforce your company theme with company graphics and colors}&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+                &lt;/uib-tab&gt;
+                &lt;uib-tab select="c.setPagePreview(c.themePreviewPage)" heading="{{::data.themeColorsMsg}}"&gt;              
+                  
+                    &lt;div class="panel panel-default" ng-repeat="group in c.data.colorModel" ng-hide="group.title == ''"&gt;
+                        &lt;div class="panel-heading"&gt;
+                            &lt;h3 class="panel-title"&gt;{{::group.title}}&lt;/h3&gt;
+                        &lt;/div&gt;
+                        &lt;div class="panel-body"&gt;
+                            &lt;span ng-repeat="vModel in group.variables"&gt;
+                                &lt;sp-editable-field2 
+                                    editable-by-user="true" table="" table-id="''" 
+                                    on-change="setThemeProp" 
+                                    field-model="vModel"&gt;&lt;/sp-editable-field2&gt;
+                            &lt;/span&gt;                           
+                        &lt;/div&gt;
+                    &lt;/div&gt;                      
+                  
+                &lt;/uib-tab&gt;
+            &lt;/uib-tabset&gt;
+        &lt;/div&gt;
+    &lt;/aside&gt;
+    
+    &lt;main clas="flex-grow" role="page-preview"&gt;
+        &lt;div ng-if="c.isPreviewLoading" class="loading"&gt;&lt;h2&gt;${Loading...}&lt;/h2&gt;&lt;/div&gt;
+        &lt;iframe data-portal-id="{{c.data.portal_id}}" 
+                ng-hide="c.isPreviewLoading" 
+                ng-if="c.previewPageUrl.length" 
+                ng-src="{{c.previewPageUrl}}"&gt;&lt;/iframe&gt;
+    &lt;/main&gt;
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>5b8717f84f313300496900fe9310c771</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Portal config</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_5b8717f84f313300496900fe9310c771</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

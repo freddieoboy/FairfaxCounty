@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>1ceb35505b3022000d7ec7ad31f91a81</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sc&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $document, $rootScope) {
+  /* widget controller */
+  var c = this;
+	var isSaved = false;
+	var parent_g_form = $scope.page.g_form;
+	var origActionName;
+
+	if (parent_g_form)
+		addSaveHandler();
+	else
+		c.showSave = true;
+	
+	var g_form;
+	$scope.$on('spModel.gForm.initialized', function(e, gFormInstance){
+		g_form = gFormInstance;
+	});
+
+	// Used when embedded as a formatter
+	function addSaveHandler() {
+		parent_g_form.$private.events.on("submit", function() {
+			origActionName = parent_g_form.getActionName();
+			if (isSaved) return true;
+			if (!g_form.submit('none')) return false;
+
+			c.server.update().then(function() {
+				isSaved = true;
+				parent_g_form.submit(origActionName);
+			});
+
+			return false;
+		});
+	}
+
+	c.save = function() {
+		var activeElement = $document.activeElement;
+		if (activeElement)
+			activeElement.blur();
+		if (!g_form.submit('none'))
+			return false;
+		c.server.update().then(function() {
+			if (c.data.table == "sc_cart_item")
+				$rootScope.$broadcast("$sp.service_catalog.cart.update");
+		});
+	};
+	
+	c.hasVariables = function(fields) {
+		if (!fields) 
+			return false;
+		
+		return Object.keys(fields).length &gt; 0;
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data/&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;sp-variable-editor&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;sp-variable-editor&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"show_add_cart_button","label":"Show Add Cart Button","type":"boolean"},{"hint":"Define a URL Format for successful order page","name":"url","label":"Custom URL Format","type":"string"},{"displayValue":"Page","name":"page","label":"Successful Order Page","type":"reference","value":"sp_page","ed":{"reference":"sp_page"}},{"displayValue":"Table","name":"table","label":"Successful Order Table","type":"reference","value":"sys_db_object","ed":{"reference":"sys_db_object"}},{"hint":"Enable auto-redirection after ordering an item","name":"auto_redirect","label":"Auto Redirect on Successful Order","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.table = options.table || $sp.getParameter("table");
+	data.sys_id = options.sys_id || $sp.getParameter("sys_id") || $sp.getParameter("sl_sys_id");
+
+	if (input) {
+		var vars = [];
+		var fields = input.sc_cat_item._fields;
+		data.sys_id = input.sys_id;
+		data.table = input.table;
+		var values = getValues(data.table, data.sys_id);
+		for (var v in fields) {
+			if (values[f].type == 12 || values[f].type == 19 || values[f].type == 20 || values[f].type == 24)
+					continue;
+			vars.push(fields[v]);
+		}
+
+		if (data.table == "sc_cart_item")
+			SPCart.updateItem(input.sys_id, vars);
+		else
+			$sp.saveVariables(input.table, input.sys_id, vars);
+	}
+
+	var gr = new GlideRecord(data.table);
+	if (gr.get(data.sys_id)) {
+		var targetTable = data.table;
+		if (targetTable == "sc_cart_item")
+			targetTable = "sc_cat_item";
+		data.sc_cat_item = $sp.getCatalogItem(gr.cat_item, !!options.isOrdering, targetTable);
+		if (options.showItemTitle)
+			data.itemTitle = data.sc_cat_item.short_description;
+		var values = getValues(data.table, data.sys_id);
+
+		for(var f in data.sc_cat_item._fields) {
+			// Put the values into the cat item fields
+			if (typeof values[f] != "undefined") {
+				if (values[f].type == 12 || values[f].type == 19 || values[f].type == 20 || values[f].type == 24)
+					continue;
+				if (typeof values[f].value != "undefined") {
+					if (values[f].type == 9 || values[f].type == 10)
+						data.sc_cat_item._fields[f].value = values[f].displayValue;
+					else
+						data.sc_cat_item._fields[f].value = values[f].value;
+					data.sc_cat_item._fields[f].displayValue = values[f].displayValue;
+					data.sc_cat_item._fields[f].display_value_list = values[f].display_value_list;
+				}
+			}
+		}
+	}
+	
+	function getValues(table, sys_id) {
+		var qs = new GlideappVariablePoolQuestionSet();
+		if (table == "sc_cart_item")
+			qs.setCartID(sys_id);
+		else
+			qs.setRequestID(sys_id);
+		
+		qs.load();
+		var values = {};
+		var questions = qs.getFlatQuestions().toArray();
+		for (var i = 0; i &lt; questions.length; i++) {
+			var q = questions[i];
+			var o = {value: q.getValue(), displayValue: q.getDisplayValue(), type: q.getType()};
+			if (o.type == 21)
+				o.display_value_list = q.getDisplayValues().toArray();
+			
+			values["IO:" + q.getId()] = o;
+		}
+		return values;
+	}
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-07-19 20:18:21&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;1ceb35505b3022000d7ec7ad31f91a81&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;101&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;sp-variable-editor&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Catalog (do not activate...see plugin description)" source="com.glide.service-portal.service-catalog"&gt;5e687cb9118033006517bd11ae6a4c4a&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_1ceb35505b3022000d7ec7ad31f91a81&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-15 21:32:05&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default" ng-if="::c.hasVariables(data.sc_cat_item._fields)"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h3 ng-if="data.itemTitle" class="panel-title"&gt;{{data.itemTitle}}&lt;/h3&gt;
+    &lt;h3 ng-if="!data.itemTitle" class="panel-title"&gt;${Variables}&lt;/h3&gt;
+  &lt;/div&gt;
+  &lt;div class="panel-body"&gt;
+    &lt;sp-model form-model="data.sc_cat_item" mandatory="[]"&gt;&lt;/sp-model&gt;
+  &lt;/div&gt;
+  &lt;div ng-if="c.showSave" class="panel-footer"&gt;
+    &lt;button class="btn btn-primary pull-right" name="save" ng-click="c.save()"&gt;${Save}&lt;/button&gt;
+	  &lt;div style="clear: both;"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>538717f84f313300496900fe9310c756</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>sp-variable-editor</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_538717f84f313300496900fe9310c756</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

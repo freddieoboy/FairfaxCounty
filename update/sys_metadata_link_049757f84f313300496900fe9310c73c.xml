@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>80b97b4247101200ba13a5554ee490a0</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, $rootScope, $location) {
+  /* "use strict"; -- linter issues */
+	
+  var display_id = $location.search().sys_id;
+	// for record picker
+  $scope.portal = {
+		displayValue: $scope.data.title,
+		value: $scope.data.sys_id,
+		name: 'portal'
+	};
+	
+	$scope.$on("sp.form.record.added", function(evt, parms) {
+		update(evt, parms);
+	});
+
+	$scope.$on("sp.form.record.updated", function(evt, parms) {
+		update(evt, parms);
+	});
+
+	// field changed event comes from glideFormFactory
+	$scope.$on("field.change", function(evt, parms) {		
+		if (parms.field.name == 'portal')
+			changePortal(parms.newValue);
+	});
+	
+	function update(evt, parms) {
+		$scope.server.update().then(function(res) {
+			$scope.data = res;
+			$scope.portal.displayValue = $scope.data.title;
+			
+			diagram.model = new go.TreeModel($scope.data.map);
+		});		
+	}	
+	
+	function changePortal(p) {
+		var path = $location.path();
+		var searchParms = $location.search();
+		$location.search({id: searchParms.id, p: p});
+	}
+	
+  var $go = go.GraphObject.make;  // for conciseness in defining templates
+  var node_id = "portal_map";
+  var diagram =
+      $go(go.Diagram, node_id, {
+        initialAutoScale: go.Diagram.UniformToFill,
+        // define the layout for the diagram
+        layout: $go(go.TreeLayout, { nodeSpacing: 5, layerSpacing: 30 })
+      });
+
+  diagram.model = new go.TreeModel($scope.data.map);
+  var font = "13px Helvetica, Arial, sans-serif";
+
+  // Define a simple node template consisting of text followed by an expand/collapse button
+  diagram.nodeTemplate = $go(go.Node, "Horizontal",
+      { selectionAdorned: false, selectionChanged: nodeSelectionChanged },  // this event handler is defined below
+      $go(go.Panel, "Auto",
+        $go(go.Shape, { strokeWidth: 3 }, 
+						new go.Binding("stroke", "isSelected", function(s){
+							if (s)
+								return "#FFD247";
+							else
+								return null;
+						}).ofObject(""),
+						new go.Binding("fill", "table", function(t){ 
+					switch(t){
+						case "sp_widget":
+							return "#0A5A9C";
+						case "sp_rectangle":
+							return "#2376BB";
+						default:
+							return "#428CCA";
+					}
+				})),
+        $go(go.TextBlock, { font: font, stroke: "white", margin: 3 },
+          new go.Binding("text", "name"))
+       )
+      //$go("TreeExpanderButton") // this was overkill for small diagrams
+     );
+	
+	diagram.select(diagram.findNodeForKey(display_id));
+
+  // Define a trivial link template with no arrowhead
+  diagram.linkTemplate = $go(go.Link, { selectable: false }, $go(go.Shape));  // the link shape
+	
+	// Resize the graph container height when the graph changes size
+	diagram.addDiagramListener('DocumentBoundsChanged', function(){
+		var diagramHeight = parseInt(diagram.documentBounds.height);
+		jQuery("#" + node_id).height(diagramHeight);
+	});
+  
+	
+  function nodeSelectionChanged(node) {
+    var evt = {};
+    var d = node.data;
+    evt.sys_id = d.sys_id;
+    if (evt.sys_id == display_id)  // get called twice by gojs
+      return; 
+    
+    evt.table = d.sys_class_name || d.table;
+    display_id = evt.sys_id;
+		$location.search('table', evt.table).search('sys_id', evt.sys_id).search('spa', 1);
+		
+    $rootScope.$broadcast('$sp.list.click', evt);
+  }
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"data": {
+		"sometext": "world"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;SP Portal Map&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"max_number","section":"Presentation","label":"Max number","type":"integer"},{"displayValue":"Knowledge Category","name":"kb_category","section":"Data","label":"KB category","type":"reference","value":"kb_category","ed":{"reference":"kb_category"}}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[// populate the 'data' object
+// e.g., data.table = $sp.getValue('table');
+(function() {
+	var map = data.map = [];
+	var gr = new GlideRecord('sp_portal');
+	var id = $sp.getParameter('p');
+	if (!id) {
+		var pref = gs.getPreference("sp.portal");
+		if (pref == null)
+			gr.addQuery('default', true);
+		else
+			gr.addQuery('url_suffix', pref);
+	} else
+		gr.addQuery('sys_id', id);
+	
+	gr.query();
+	if (!gr.next())
+		return;
+
+	if (id)
+		gs.getUser().setPreference("sp.portal", gr.getValue("url_suffix"));
+	data.title = gr.getValue('title');
+	data.sys_id = gr.getUniqueValue();
+	var m = getO(gr);
+	m.name = gr.getValue('title');
+	map.push(m);
+
+	var theme = gr.getValue('theme');
+	if (theme) {
+		var t = new GlideRecord('sp_theme');
+		t.get(gr.getValue('theme'));
+		m = getO(t, m.key);
+		m.name = t.getValue('name');
+		map.push(m);
+
+		getWidget(t.getValue('header'), t.getUniqueValue());		
+	}
+
+	getMenuRectangle(gr.getValue('sp_rectangle_menu'), gr.getUniqueValue());
+
+	function getRectangle(sys_id, parent) {
+		if (!sys_id)
+			return; 
+
+		var gr = new GlideRecord('sp_header_footer');
+		gr.get(sys_id);
+		var m = getO(gr, parent);
+		m.name = gr.getValue('name');
+		map.push(m);
+
+		getWidget(gr.getValue('sp_widget'), gr.getUniqueValue());
+	}
+
+	function getMenuRectangle(sys_id, parent) {
+		if (!sys_id)
+			return; 
+
+		var gr = new GlideRecord('sp_instance_menu');
+		gr.get(sys_id);
+		var m = getO(gr, parent);
+		m.name = gr.getValue('title');
+		map.push(m);
+		getMenuItems(gr.getUniqueValue(), gr.getUniqueValue());
+	}
+
+	function getMenuItems(sys_id, parent) {
+		var gr = new GlideRecord('sp_rectangle_menu_item');
+		gr.addQuery('sp_rectangle_menu', sys_id);
+		gr.orderBy('order');
+		gr.query();
+		while (gr.next()) {
+			var m = getO(gr, parent);
+			m.name = gr.getValue('label');
+			map.push(m);
+		}
+	}
+
+	function getWidget(sys_id, parent) {
+		if (!sys_id)
+			return; 
+
+		var gr = new GlideRecord('sp_widget');
+		gr.get(sys_id);
+		var m = getO(gr, parent);
+		m.name = gr.getValue('name');
+		map.push(m);
+	}
+
+	// object that goes in the array 
+	// common vars table, key, sys_id
+	function getO(gr, parent) {
+		var c = {};
+		c.table = gr.getTableName();
+		c.key = gr.getValue('sys_id');
+		c.sys_id = gr.getValue('sys_id');
+		if (parent)
+			c.parent = parent;
+
+		return c;
+	}
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-12-14 23:14:50&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;80b97b4247101200ba13a5554ee490a0&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;88&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;SP Portal Map&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_80b97b4247101200ba13a5554ee490a0&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:13:56&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="m-t-sm"&gt;  
+  &lt;sn-record-picker field="portal" table="'sp_portal'" display-field="'title'" display-value="{{portal.displayValue}}"
+                    search-fields="'title'" page-size="100" &gt;&lt;/sn-record-picker&gt;
+  &lt;div id="portal_map" class="m-t-sm m-b-sm bg-white b" style="height:120px"&gt;&lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>049757f84f313300496900fe9310c73c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>SP Portal Map</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_049757f84f313300496900fe9310c73c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

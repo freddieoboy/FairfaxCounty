@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>28b1fc649f131200b18a7feea57fcf48</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $log) {
+    'use strict';
+	var c = this;
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.panel-body {&amp;#13;
+  padding: 0;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.cab_event_class {&amp;#13;
+	border-radius: 4px;&amp;#13;
+	background-color: rgba(189, 220, 252, 0.6) !important;&amp;#13;
+	border: 1px solid #2e9dd6 !important;&amp;#13;
+  	color: #303a46;&amp;#13;
+    height: 18px;&amp;#13;
+}&amp;#13;
+div.cab_a11y[id^=cab_event_dialog]:focus,&amp;#13;
+div[event_id]:focus {&amp;#13;
+	outline: thin dotted;&amp;#13;
+	outline: 5px auto -webkit-focus-ring-color;&amp;#13;
+	outline-offset: -2px;&amp;#13;
+}&amp;#13;
+div.cab_a11y[id^=cab_event_dialog]:hover,&amp;#13;
+div[event_id]:hover {&amp;#13;
+  outline: 0 !important;&amp;#13;
+}&amp;#13;
+&amp;#13;
+&amp;#13;
+.dhx_cal_event {&amp;#13;
+    border-radius: 4px;&amp;#13;
+	background-color: rgba(189, 220, 252, 0.6) !important;&amp;#13;
+	border: 1px solid #2e9dd6 !important;&amp;#13;
+  	color: #303a46;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.dhx_header {&amp;#13;
+  background: none;&amp;#13;
+  color: #303a46;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.dhx_title {&amp;#13;
+  background: none;&amp;#13;
+  color: #303a46;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.dhx_body {&amp;#13;
+  background: none;&amp;#13;
+  color: #303a46;&amp;#13;
+}&amp;#13;
+&amp;#13;
+.dhx_footer {&amp;#13;
+  background: none;&amp;#13;
+  color: #303a46;&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "table": "incident",
+    "count": 25
+  },
+  "options": {
+		"color": "success",
+		"glyph": "cogs",
+    "title": "Incidents"
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-meetings-calendar&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;CAB Workbench - Meetings Calendar&lt;/name&gt;
+        &lt;option_schema&gt;[]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.timeFormat = new global.CalendarUtils().getUserTimeFormat().replace(/\W*%s/, "");
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-05-06 20:01:12&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;28b1fc649f131200b18a7feea57fcf48&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;84&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Meetings Calendar&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_28b1fc649f131200b18a7feea57fcf48&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2018-10-08 10:07:13&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default"&gt;
+  &lt;div class="panel-body"&gt;
+   &lt;sn-cab-meeting-calendar timeformat='data.timeFormat'&gt;&lt;/sn-cab-meeting-calendar&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>178717f84f313300496900fe9310c773</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Meetings Calendar</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_178717f84f313300496900fe9310c773</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>a9a0b0dec3623100c8b837659bba8f80</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sample&lt;/category&gt;
+        &lt;client_script/&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance_vlist&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list&gt;table,title,filter,maximum_entries,display_field,order_by,order_direction,color,glyph,sp_page&lt;/field_list&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;News Ticker&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"ID of referenced record","name":"record_id","section":"Data","label":"Record ID","type":"string"},{"hint":"Table name of referenced record","name":"record_table","section":"Data","label":"Record Table","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.list = [];
+	data.table = options.table || "kb_knowledge";
+	var gr = new GlideRecordSecure(data.table);
+	if (gr == null || !gr.isValid())
+		return;
+	
+	/* --Settings-- */
+	data.interval = 3000;
+	data.direction = 'up'; // 'up' or 'down'
+	data.line_height = 56;
+	data.num_lines = 6;
+
+	options.title = options.title || gs.getMessage("Ticker");
+	options.display_field = options.display_field || gr.getDisplayName();
+
+	data.height = (data.line_height - 1) * data.num_lines;
+	data.sp_page = options.sp_page_dv
+	
+	if (options.filter)
+		gr.addEncodedQuery(options.filter);
+	if (options.order_direction == "asc")
+		gr.orderBy(options.order_by);
+	else
+		gr.orderByDesc(options.order_by);
+	if (options.maximum_entries &lt; 1)
+		options.maximum_entries = 5;
+	// can't use maximum_entries to limit the query because GlideRecordSecure
+	// prunes records the user can't see. If the limit is 5, the user
+	// might not be able to see any of those 5, so need to loop 
+	// through until we find 5 the user can see. Nonetheless, we don't want
+	// anything silly happening here, so hardcode a query limit of 500 records.
+	// If that's not enough, improve the options.filter value to be more accurate
+	gr.setLimit(500);
+	gr.query();
+
+	while (gr.next() &amp;&amp; data.list.length &lt; options.maximum_entries) {
+		var record = {};
+		record.sys_id = gr.getUniqueValue();
+		if (options.image_field) {
+			record.image_field = gr.getDisplayValue(options.image_field);
+			if (!record.image_field)
+				record.image_field = "/noimage.pngx";
+		}
+
+		if (options.display_field)
+			record.display_field = gr.getDisplayValue(options.display_field);
+
+		options.secondary_fields = options.secondary_fields || "";
+		options.secondary_fields = options.secondary_fields.split(",");
+
+		record.secondary_fields = [];
+		if (options.secondary_fields) {
+			options.secondary_fields.forEach(function(f) {
+				record.secondary_fields.push(getField(gr, f));
+			});
+		}
+
+		record.url = "";
+		if (data.sp_page)
+			record.url = "?id=" + data.sp_page + "&amp;table=" + data.table + "&amp;sys_id=" + record.sys_id + "&amp;view=sp";
+
+		data.list.push(record);
+	}
+})();
+
+function getField(gr, name) {
+	var f = {};
+	f.display_value = gr.getDisplayValue(name);
+	f.value = gr.getValue(name);
+	var ge = gr.getElement(name);
+	f.type = ge.getED().getInternalType()
+	f.label = ge.getLabel();
+	return f;
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-03-04 07:13:56&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;a9a0b0dec3623100c8b837659bba8f80&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;222&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;News Ticker&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_a9a0b0dec3623100c8b837659bba8f80&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:07:50&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div ng-if="data.list.length &gt; 0"&gt;
+  &lt;div class="panel panel-{{options.color}}"&gt;
+    &lt;div class="panel-heading"&gt;
+      &lt;h4 class="panel-title"&gt;{{::options.title}}&lt;/h4&gt;
+    &lt;/div&gt;
+    &lt;div sp-ticker timing="{{data.interval}}" direction="{{data.direction}}" class="list-group"&gt;
+      &lt;a ng-href="{{item.url}}" ng-repeat="item in data.list" class="list-group-item"&gt;
+        &lt;span ng-if="options.image_field" class="pull-left thumb-sm avatar m-r"&gt;
+          &lt;img ng-src="{{item.image_field}}" alt="..." class="img-circle"&gt;
+        &lt;/span&gt;
+        {{::item.display_field}}&lt;br&gt;
+        &lt;small class="text-muted" ng-repeat="f in item.secondary_fields"&gt;
+          &lt;span ng-if="!$first"&gt; • &lt;/span&gt;
+          &lt;span ng-switch="f.type" title="{{::f.label}}"&gt;
+            &lt;span ng-switch-when="glide_date"&gt;&lt;sn-time-ago timestamp="::f.value" /&gt;&lt;/span&gt;
+            &lt;span ng-switch-when="glide_date_time"&gt;&lt;sn-time-ago timestamp="::f.value" /&gt;&lt;/span&gt;
+            &lt;span ng-switch-default=""&gt;{{f.display_value}}&lt;/span&gt;
+          &lt;/span&gt;
+        &lt;/small&gt;
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;style&gt;
+    [sp-ticker].active {
+      display: block;
+      height: {{data.height}}px;
+      overflow-y: hidden
+    }
+    [sp-ticker] a {
+      height: {{data.line_height}}px;
+      overflow: hidden;
+      transition: opacity 0.5s ease, margin 0.5s ease;
+      white-space: nowrap;
+    }
+    [sp-ticker] a.fade-out {
+      opacity: 0;
+    }
+    [sp-ticker] a.minus-margin-top {
+      margin-top: -{{data.line_height}}px;
+    }
+  &lt;/style&gt;
+
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:28</sys_created_on>
+        <sys_id>289757f84f313300496900fe9310c77b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>News Ticker</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_289757f84f313300496900fe9310c77b</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:28</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>e709a97287580300e0ef0cf888cb0bdd</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category/&gt;
+        &lt;client_script&gt;&lt;![CDATA[function() {  /* widget controller */  var c = this;}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.sp-tagline-color {
+	color: $sp-tagline-color;
+}
+
+.search-bar {
+   width: 600px;
+   margin: 0 auto;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "options": {
+    "color": "default",
+		"maximum_entries": 3
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list&gt;title,short_description&lt;/field_list&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cat-homepage-search&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Catalog Homepage Search&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"typeahead_search","default_value":"{title: 'How can we help?', size: 'lg', color: 'default'}","label":"Typeahead Search","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[data.typeAheadSearch = $sp.getWidget('typeahead-search', options.typeahead_search);]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2017-08-04 09:11:50&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;e709a97287580300e0ef0cf888cb0bdd&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;22&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Catalog Homepage Search&lt;/sys_name&gt;
+        &lt;sys_package display_value=""&gt;37c5cea187233200e0ef0cf888cb0bb8&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_e709a97287580300e0ef0cf888cb0bdd&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-04 22:43:28&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div id="homepage-search" class="hidden-xs wrapper-md"&gt;
+  &lt;div class="wrapper-md"&gt;
+  	&lt;h1 class="text-center font-thin text-4x m-b-lg sp-tagline-color" ng-bind="options.title"&gt;&lt;/h1&gt;
+  	&lt;h4 ng-if="options.short_description" class="text-center m-b-lg sp-tagline-color" ng-bind="options.short_description"&gt;&lt;/h4&gt;
+    &lt;div class="search-bar"&gt;
+      &lt;sp-widget widget="data.typeAheadSearch"&gt;&lt;/sp-widget&gt;
+    &lt;/div&gt;
+    &lt;div class="m-t text-a-c"&gt;
+      &lt;a class="sp-tagline-color text-lg text-u-l"
+        	ng-href="?id=sc_category"&gt;
+        ${Browse by Categories}
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:31</sys_created_on>
+        <sys_id>c19757f84f313300496900fe9310c7d6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Catalog Homepage Search</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_c19757f84f313300496900fe9310c7d6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:31</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

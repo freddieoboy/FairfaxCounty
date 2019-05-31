@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>6c512f206711220023c82e08f585ef27</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sc&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function(spAriaUtil) {
+  /* widget controller */
+  var c = this;
+
+	c.saveCart = function() {
+		c.data.error = null;
+		c.server.update().then(function() {
+			if (!c.data.error) {
+				$rootScope.$broadcast("$sp.service_catalog.cart.save_cart");
+				spAriaUtil.sendLiveMessage(c.data.bundleSaveSuccessMsg);
+			}
+		});
+	}
+
+	c.enableSave = function() {
+		return c.data.newCartName &amp;&amp;
+			c.data.newCartName.length &gt; 0 &amp;&amp;
+			c.data.cartItems.filter(function(item){
+				return item.selected;
+			}).length &gt; 0;
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"options": {
+		"sys_id": "33442352cb30020000f8d856634c9c3f"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;sc_save_bundle&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;SC Save Bundle&lt;/name&gt;
+        &lt;option_schema&gt;[{"hint":"Hide percentage of people who found this article helpful","name":"hide_percent_helpful","section":"Presentation","label":"Hide percent helpful","type":"boolean"},{"hint":"Response to show once viewer has clicked Yes or No","name":"response","section":"Behavior","label":"Response","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.bundleSaveSuccessMsg = gs.getMessage("Bundle has been successfully created");
+	
+	var userID = gs.getUser().getID();
+	var cart = new SPCart("DEFAULT", userID);
+
+	if (input) {
+		//Check to make sure no carts with this name already exist
+		var cartGR = new GlideRecord("sc_cart");
+		cartGR.addQuery("user", userID);
+		cartGR.addQuery("name", input.newCartName);
+		cartGR.query();
+		if (cartGR.next()) {
+			data.error = gs.getMessage("A bundle of that name already exists - please select another.");
+			data.cartItems = input.cartItems;
+			return;
+		}
+
+		var includedItemsArr = input.cartItems.filter(function(item) {
+			return item.selected;
+		}).map(function(item) {
+			return item.sys_id;
+		});
+
+		var newCart = new SPCart(input.newCartName, userID);
+		newCart.setHidden(false);
+		newCart.loadCart(cart.getCartID(), includedItemsArr);
+		return;
+	}
+
+	data.cartItems = cart.getItems();
+	data.cartItems.map(function(item) {
+		item.selected = true;
+	});
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-08-14 18:51:26&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;6c512f206711220023c82e08f585ef27&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;68&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;SC Save Bundle&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Service Catalog (do not activate...see plugin description)" source="com.glide.service-portal.service-catalog"&gt;5e687cb9118033006517bd11ae6a4c4a&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_6c512f206711220023c82e08f585ef27&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-04 14:27:27&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;form&gt;
+  &lt;div class="panel panel-default"&gt;
+    &lt;div class="panel-heading"&gt;
+      &lt;h4 class="panel-title"&gt;
+        ${Create New Bundle}
+      &lt;/h4&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-body"&gt;
+      &lt;div ng-if="c.data.error"class="alert alert-danger"&gt;
+        &lt;span&gt;{{c.data.error}}&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;p&gt;${Here, you can save the current contents of your cart as a bundle, which can be restored at any time.}&lt;/p&gt;
+      &lt;p&gt;${To create a new bundle, provide a name for your bundle, select the items you would like to include in the bundle, and press save.}&lt;/p&gt;
+      &lt;div class='form-group'&gt;
+        &lt;label for="bundlename"&gt;
+        	&lt;strong&gt;${Bundle Name}&lt;/strong&gt;
+        &lt;/label&gt;
+        &lt;input id="bundlename" placeholder="New Bundle Name" type='text' class='form-control' placeholder='' ng-model='c.data.newCartName' maxlength="40"&gt;
+      &lt;/div&gt;
+
+      &lt;table id="cart" class="table table-hover table-condensed"&gt;
+        &lt;tbody&gt;
+          &lt;tr class="sr-only"&gt;
+            &lt;th&gt;${Include Item}&lt;/th&gt;
+            &lt;th&gt;${Product}&lt;/th&gt;
+            &lt;th&gt;${Price}&lt;/th&gt;
+            &lt;th&gt;${Quantity}&lt;/th&gt;
+            &lt;th&gt;${Subtotal}&lt;/th&gt;
+          &lt;/tr&gt;
+          &lt;tr ng-repeat="item in c.data.cartItems track by item.sys_id | orderBy: 'order'"&gt;
+            &lt;td&gt;
+              &lt;input type="checkbox" ng-model="item.selected" aria-label="${Include} {{item.name}} ${in bundle}"&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+              &lt;div class="row"&gt;
+                &lt;div class="col-sm-2 hidden-xs"&gt;&lt;img ng-show="item.picture" ng-src="{{item.picture}}" alt="{{item.name}}" class="img-responsive item-image"/&gt;&lt;/div&gt;
+                &lt;div class="col-sm-10"&gt;
+                  &lt;h4 class="nomargin"&gt;{{item.name}}&lt;/h4&gt;
+                  &lt;p class="hidden-xs"&gt;{{item.short_description}}&lt;/p&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+              &lt;strong&gt;{{item.display_price}}&lt;/strong&gt;
+              &lt;div ng-show="item.recurring_price &gt; 0"&gt;+ {{item.display_recurring_price}} {{item.recurring_frequency_display}}&lt;/div&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+              &lt;span aria-label="${Quantity} {{item.quantity}}" ng-if="item.show_quantity"&gt;{{item.quantity}}&lt;/span&gt;
+              &lt;span aria-label="${Quantity not applicable}" ng-if="!item.show_quantity"&gt;-&lt;/span&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+              &lt;strong aria-label="${Subtotal price} {{item.subtotal_price}}"&gt;{{item.subtotal_price}}&lt;/strong&gt;
+              &lt;div aria-label="${Recurring subtotal price} {{item.recurring_subtotal_price}}" ng-show="item.recurring_subtotal &gt; 0"&gt;+ {{item.recurring_subtotal_price}} {{item.recurring_frequency_display}}&lt;/div&gt;
+            &lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;div class="panel-footer"&gt;
+      &lt;button type='submit'
+              class='btn btn-primary pull-right'
+              ng-click='c.saveCart()'
+              ng-disabled='!c.enableSave()'
+              tabindex="0"&gt;${Save}&lt;/button&gt;
+      &lt;i class="clearfix"&gt;&lt;/i&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/form&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:26</sys_created_on>
+        <sys_id>7b8757f84f313300496900fe9310c712</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>SC Save Bundle</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_7b8757f84f313300496900fe9310c712</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:26</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

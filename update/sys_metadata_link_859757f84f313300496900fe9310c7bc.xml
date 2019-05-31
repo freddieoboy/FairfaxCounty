@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>dc2b208ac75022005775fbd11d9763f8</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, SNAPI, TIME, runtimeState, $http, $interval, $timeout, $window, $log, $uibModal, modelUtil, spUtil, $element) {
+	var c = this;
+	var tinyMceEditor;
+	$scope.notificationMsg = c.data.i18n.msgMeetingNotesSaved;
+	$scope.isSharingNotesInProgress = false;
+	$scope.showNotification = false;
+	$scope.focusEditor = function () {
+		if (tinyMceEditor &amp;&amp; $scope.canEditMeetingNotes())
+			tinyMceEditor.execCommand('mceFocus', false, 'cab_meeting_notes_txt');
+	};
+	var lastKeyupTime = 0;
+	$scope.tinymceConfig = {
+		menubar:false,
+		theme:'modern',
+		skin:'lightgray', //Heisenberg appears to be broken.
+		plugins:[
+		    'advlist lists link charmap anchor',
+		    'searchreplace visualblocks code ',
+		    'insertdatetime'
+		],
+		height: 500,
+		toolbar:'styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | link',
+		toolbar_items_size:'small',
+		statusbar:false,
+		setup: function (editor) {
+			tinyMceEditor = editor;
+			editor.on("keyup", function(ed, l) {
+				lastKeyupTime = Date.now();
+			});
+		}
+	};
+
+	var unwatchWorkingCopy //unmount for the working copy watcher
+	var autosaveHttpPromise;
+	var autosaveTimer, notificationTimer;
+	var modalConfig = {
+		animation: true,
+		controller: "confirmSharing",
+		templateUrl: "cab-sharenotes-confirmation"
+	};
+
+
+	function canEditMeetingNotes() {
+		return runtimeState.isCABManager($window.NOW.user_id);
+	}
+
+	function debounceNotification() {
+		// if the animation is already in Queue, it means auto save triggered again
+		// so we need to show the notification some more time
+
+		if(notificationTimer)
+			$timeout.cancel(notificationTimer);
+
+		notificationTimer = $timeout(function() {
+			showAutoAgendaDecision = false;
+			$scope.showNotification = false;
+			notificationTimer = undefined;
+			}, 2000);
+	}
+
+	function onFinalizeSaveNotes(args,isErrorCall) {
+		autosaveHttpPromise = null;
+		if(autosaveTimer) {
+			$timeout.cancel(autosaveTimer);
+			autosaveTimer = null;
+		}
+
+		if(!isErrorCall) {
+			if(!notificationTimer) {
+				$scope.notificationMsg = showAutoAgendaDecision ? c.data.i18n.msgSync: c.data.i18n.msgMeetingNotesSaved;
+				$scope.showNotification = true;
+				debounceNotification();
+			}
+			else
+				debounceNotification();
+		}
+		/*
+		case #1. before http call returns , user has typed more data.
+		case #2. Due to network errors , we may not updated the notes content at backend.
+
+		So if we call the "saveMeetingNotes" again, the above 2 cases get solved.
+		we are giving some time . so that we don't hamper the browser.
+		*/
+
+		autosaveTimer = $timeout(function() {
+			saveMeetingNotes();
+		}, 1000, false);
+	}
+
+	function saveMeetingNotes() {
+
+		var currentTime = Date.now();
+		if( (currentTime - lastKeyupTime) &lt; AUTO_SAVE_TIME) {
+			$timeout.cancel(autosaveTimer);
+			autosaveTimer = $timeout(saveMeetingNotes, AUTO_SAVE_TIME);
+			return;
+		}
+		// Concurrent update.  Don't save.
+		if ($scope.editor.concurrentUpdate)
+			return;
+		// already saving is in-progress, go back.
+		if(autosaveHttpPromise)
+			return;
+
+		// No changes, don't save.
+		if ($scope.editor.savedCopy == $scope.editor.workingCopy)
+			return;
+
+		var prevSaved = $scope.editor.savedCopy;
+		$scope.editor.savedCopy = $scope.editor.workingCopy;
+		// Push the saved copy to the server.
+		var post = {'meeting_notes': $scope.editor.savedCopy};
+		autosaveHttpPromise = $http.patch(SNAPI.SERVICE.TABLE + "cab_meeting/" + $scope.data.meetingId, post).then(
+			onFinalizeSaveNotes,
+			function(data) {
+				$log.info("Failed save request, resetting savedCopy state");
+				$scope.editor.savedCopy = prevSaved;
+				onFinalizeSaveNotes(data, true);
+			}
+		);
+	}
+
+
+	function resetMeetingNotes() {
+		$scope.editor = {
+			'workingCopy': $scope.rs.cab_meeting.record.meeting_notes.display_value,
+			'savedCopy':  $scope.rs.cab_meeting.record.meeting_notes.display_value,
+			'concurrentUpdate': false,
+			'autosave': true
+		};
+	}
+
+	function clearAgendaDecisions() {
+
+		c.server.get({
+			"command": c.data.command.CLEAR_AGENDA_DECISIONS,
+			"sys_id": c.data.meetingId
+		}).then(function() {
+			$scope.agendaDecisions = '';
+		}, function(r) {
+			$scope.agendaDecisions = '';
+			modelUtil.failNicely(r);
+		});
+
+	}
+
+	var syncTimer;
+	$scope.agendaDecisions = '';
+	var AUTO_DECISIONS_UPDATE_TIME = 3000;
+	var AUTO_SAVE_TIME = 2000;
+	var showAutoAgendaDecision = false;
+	function syncAgendaDecisions() {
+		if($scope.agendaDecisions.length == 0)
+			return;
+		syncTimer = undefined;
+		if(!canEditMeetingNotes())
+			return;
+		var idleTime = Date.now() - lastKeyupTime;
+		if(idleTime &lt; AUTO_DECISIONS_UPDATE_TIME &amp;&amp; $element.is(":visible")) {
+			syncTimer = $timeout(syncAgendaDecisions, 1000);
+			return;
+		}
+		lastKeyupTime = 0;
+		showAutoAgendaDecision = true;
+		$scope.notificationMsg = c.data.i18n.msgSync;
+		try {
+			$scope.editor.workingCopy = ($scope.editor.workingCopy || "") + $scope.agendaDecisions;
+			tinyMceEditor.setContent($scope.editor.workingCopy);
+			// this sets the cursor to end of the text.
+			setTimeout(function() {
+				tinyMceEditor.selection.select(tinyMceEditor.getBody(), true);
+				tinyMceEditor.selection.collapse(false);
+			}, 10);
+		}catch(e) {
+			$log.info("Agenda items upate error");
+		}
+		clearAgendaDecisions();
+	}
+
+	function onAutoAgendaDecisionChanged(newVal, oldVal) {
+		if(newVal.value.length == 0) {
+			$scope.agendaDecisions = '';
+			return;
+		}
+		$scope.agendaDecisions = newVal.value;
+		syncAgendaDecisions();
+	}
+
+	function setupNotesMgmt() {
+		lastKeyupTime = 0;
+		// If it's changed to a state where we can now edit the notes.
+		if (canEditMeetingNotes()) {
+			$scope.editor.savedCopy = $scope.editor.workingCopy = $scope.rs.cab_meeting.record.meeting_notes.display_value;
+			syncAgendaDecisions();
+			if (!unwatchWorkingCopy)
+				unwatchWorkingCopy = $scope.$watch('editor.workingCopy',saveMeetingNotes);
+		} else {
+
+			if(autosaveTimer) {
+				$timeout.cancel(autosaveTimer);
+				autosaveTimer = null;
+			}
+
+			if (unwatchWorkingCopy) {
+				unwatchWorkingCopy();
+				unwatchWorkingCopy = null;
+			}
+		}
+	}
+
+	runtimeState.get(c.data.meetingId).then(function(rs) {
+		$scope.rs = rs;
+		resetMeetingNotes();
+		setupNotesMgmt();
+		if(runtimeState.isCABManagerDelegate($window.NOW.user_id) || canEditMeetingNotes()) {
+			if(c.data.autoGenerateAgendaDecisions)
+				$scope.$watch('rs.agenda_decisions_buffer', onAutoAgendaDecisionChanged);
+			$scope.$watch('rs.host', setupNotesMgmt);
+			$scope.$watch('rs.cab_meeting.record.cab_manager.value', setupNotesMgmt);
+		}
+	});
+
+	$scope.canEditMeetingNotes = canEditMeetingNotes;
+	$scope.saveMeetingNotes = saveMeetingNotes;
+
+	$scope.shareMeetingNotes = function() {
+		if (!canEditMeetingNotes())
+			return;
+
+		var modal = $uibModal.open(modalConfig);
+		modal.result.then(function(){
+
+			$scope.isSharingNotesInProgress = true;
+				c.server.get({
+					"command": c.data.command.SHARE,
+					"sys_id": c.data.meetingId
+				}).then(function() {
+					spUtil.addInfoMessage('${Successfully shared notes to Attendees}');
+					$scope.isSharingNotesInProgress = false;
+				}, function(r) {
+					$scope.isSharingNotesInProgress = false;
+					modelUtil.failNicely(r);
+				});
+
+		}, null);
+	};
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.mn-container {
+    margin:-15px;
+}
+
+.mn-save-btn {
+    margin:1px 0px 0px 10px;
+}
+
+.mn-static-notes {
+	padding: 8px;
+  height:500px;
+  overflow:auto;
+}
+
+.mn-footer {
+  margin:10px 10px 10px 0px !important;
+}
+
+.noSelect{
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#cab_meeting_notes_notification {
+	padding:5px 10px 0px 10px;
+}
+
+.fade-in-out {
+	-webkit-transition: opacity .3s linear;
+	-moz-transition: opacity .3s linear;
+	-o-transition: opacity .3s linear;
+	-ms-transition: opacity .3s linear;
+	transition: opacity .3s linear;
+	opacity: 1;
+	filter: alpha(opacity = 100);
+}
+
+.fade-in-out.ng-hide {
+	opacity: 0;
+	filter: alpha(opacity = 0);
+
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description&gt;Displays cab meeting notes&lt;/description&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;cab-meeting-notes&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;CAB Workbench - Meeting Notes&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"trackingid","section":"Data","label":"Tracking ID","type":"string"},{"name":"cookiedomain","section":"Data","label":"Cookie Domain","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+	data.meetingId = $sp.getParameter('sys_id');
+	data.command = {};
+	data.command.SHARE = 'share';
+	data.command.CLEAR_AGENDA_DECISIONS = 'clear_agenda_decisions';
+	function getMeetingGR() {
+		var gr = new GlideRecord(CAB.MEETING);
+		gr.get(data.meetingId);
+		return gr;
+	}
+
+  // Check if we have the share command.
+	if(typeof input !== 'undefined') {
+		if(input.command == data.command.SHARE)
+			(new CABMeeting(getMeetingGR())).shareMeetingNotes();
+		else if(input.command == data.command.CLEAR_AGENDA_DECISIONS) {
+			var rs = sn_change_cab.CABRuntimeState.get(data.meetingId);
+			rs.clearAgendaDecisions();
+		}
+		return;
+	}
+	var cabMeetingGr = getMeetingGR();
+	data.autoGenerateAgendaDecisions = cabMeetingGr.getValue("auto_add_agenda_decisions") == 1;
+	data.i18n = {};
+	data.i18n.msgSync = gs.getMessage("Meeting notes updated by CAB Automation");
+	data.i18n.msgMeetingNotesSaved = gs.getMessage("Meeting notes saved");
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-06-30 04:24:28&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;dc2b208ac75022005775fbd11d9763f8&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;642&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;CAB Workbench - Meeting Notes&lt;/sys_name&gt;
+        &lt;sys_package display_value="Change Management - CAB Workbench" source="sn_change_cab"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Change Management - CAB Workbench"&gt;18351d53eb32120034d1eeea1206fe79&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_dc2b208ac75022005775fbd11d9763f8&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-06-09 09:57:46&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class='mn-container' id='cab_meeting_notes' tabindex="0" ng-focus="focusEditor()"&gt;
+  &lt;div ng-if="canEditMeetingNotes()"&gt;
+    &lt;textarea id="cab_meeting_notes_txt" ui-tinymce="tinymceConfig" ng-model="editor.workingCopy"&gt;&lt;/textarea&gt;
+  &lt;/div&gt;
+  &lt;div class="mn-static-notes" ng-if="!canEditMeetingNotes()" ng-bind-html="rs.cab_meeting.record.meeting_notes.display_value"&gt;&lt;/div&gt;
+  &lt;div class="row mn-footer" ng-if="canEditMeetingNotes()"&gt;
+		&lt;span aria-live="polite" id='cab_meeting_notes_notification' class="noSelect fade-in-out pull-left" ng-show="showNotification"&gt;{{notificationMsg}}&lt;/span&gt;
+		&lt;input type='button' ng-click="shareMeetingNotes()" class="btn btn-sm btn-default pull-right" value="${Share}"
+             ng-disabled="isSharingNotesInProgress || editor.concurrentUpdate || !editor.workingCopy || editor.workingCopy.length == 0 || editor.workingCopy != editor.savedCopy || agendaDecisions.length &gt; 0" /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:30</sys_created_on>
+        <sys_id>859757f84f313300496900fe9310c7bc</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>CAB Workbench - Meeting Notes</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_859757f84f313300496900fe9310c7bc</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:30</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

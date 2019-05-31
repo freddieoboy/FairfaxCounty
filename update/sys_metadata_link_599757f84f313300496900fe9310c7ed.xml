@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>fb9f640347332100ba13a5554ee4908e</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;kb&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, spUtil, $timeout, spAriaUtil) {
+	$scope.$watch("data.rating", function() {
+		if ($scope.data.rating &amp;&amp; !$scope.data.allowFeedback)
+			$scope.server.update();
+	});
+	
+	$scope.$watch("data.response", function() {
+		if ($scope.data.response) {
+			$timeout(function() {
+				$scope.data.response = "";
+			}, 2000);
+		}
+	});
+	
+	$scope.submitFeedback = function() {
+		$scope.server.update().then(function() {
+			if ($scope.data.response)
+				spAriaUtil.sendLiveMessage($scope.data.response);
+		});
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "options": {
+    "color": "default",
+		"maximum_entries": 3
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;KB Article Comments&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"show_star_rating","default_value":"Use system properties","section":"Presentation","label":"Show star rating","type":"choice","choices":[{"label":"Yes","value":"Yes"},{"label":"No","value":"No"},{"label":"Use system properties","value":"Use system properties"}]},{"name":"show_user_feedback","default_value":"Use system properties","section":"Presentation","label":"Show user comments","type":"choice","choices":[{"label":"Yes","value":"Yes"},{"label":"No","value":"No"},{"label":"Use system properties","value":"Use system properties"}]}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[data.submitMsg = gs.getMessage("Submit");
+data.sys_id = $sp.getParameter('sys_id');
+var articleGR = GlideRecord("kb_knowledge");
+articleGR.get(data.sys_id);
+
+if (input) {
+  data.sys_id = input.sys_id;
+	articleGR = new GlideRecord("kb_knowledge");
+	articleGR.get(input.sys_id);
+  data.response = gs.getMessage('Thank you for your feedback');
+  data.comments = "";
+  data.disabled = true;
+
+  var gr = new GlideRecord('kb_feedback');
+  gr.user = gs.getUserID();
+  if (input.comments)
+		gr.comments = input.comments;
+  if (input.rating) 
+    gr.rating = input.rating;
+
+  gr.article = input.sys_id;
+  gr.insert();
+}
+
+data.isValid = articleGR.isValidRecord() &amp;&amp; articleGR.canRead() &amp;&amp; !articleGR.direct;
+// a kb_knowledge record can individually disable comments, otherwise
+// check widget option and possibly system properties
+data.allowFeedback = !articleGR.disable_commenting &amp;&amp; showComments();
+data.allowRating = showStarRating();
+data.rating = 0;
+
+data.feedback = [];
+if (data.isValid &amp;&amp; data.allowFeedback)
+	data.feedback = getFeedback(data.sys_id);
+
+// private functions
+function getFeedback(articleID) {
+  var feedback = [];
+  var gr = new GlideRecord("kb_feedback");
+  gr.addQuery("article", articleID);
+	gr.addNotNullQuery("comments");
+  gr.orderByDesc('sys_created_on');
+  gr.query();
+  while (gr.next()) {
+    var f = {};
+    add('comments');
+    add('rating');
+    add('user');
+    add('useful');
+    add('sys_created_on');
+    feedback.push(f);
+  }
+
+  return feedback;
+
+  function add(name) {
+    if (gr[name].getED().isDateType())
+      f[name] = gr.getValue(name);
+    else
+      f[name] = gr[name].getDisplayValue();
+  }
+}
+
+function showStarRating() {
+	if (options.show_star_rating == "Yes")
+		return true;
+
+	if (options.show_star_rating == "No")
+		return false;
+
+	if (gs.getProperty("glide.knowman.show_star_rating", "true") != "true")
+		return false;
+
+	return gs.hasRole(gs.getProperty("glide.knowman.show_star_rating.roles"));
+}
+
+function showComments() {
+	if (options.show_user_feedback == "Yes")
+		return true;
+
+	if (options.show_user_feedback == "No")
+		return false;
+
+	if (gs.getProperty("glide.knowman.show_user_feedback", "onload") == "never")
+		return false;
+
+	return gs.hasRole(gs.getProperty("glide.knowman.show_user_feedback.roles"));
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2014-10-20 22:12:29&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;fb9f640347332100ba13a5554ee4908e&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;136&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;KB Article Comments&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Knowledge Base (do not activate...see plugin description)" source="com.glide.service-portal.knowledge-base"&gt;d2687cb9118033006517bd11ae6a4ca8&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_fb9f640347332100ba13a5554ee4908e&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 20:32:05&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+  &lt;hr/&gt;
+  &lt;form ng-submit="submitFeedback()" ng-if="!data.disabled &amp;&amp; data.isValid &amp;&amp; (data.allowFeedback || data.allowRating)" &gt;
+    &lt;div class="form-group"&gt;
+      &lt;label ng-if="::data.allowFeedback" for="comment"&gt;&lt;h4&gt;${Add your comment}&lt;/h4&gt;&lt;/label&gt;
+      &lt;textarea ng-if="::data.allowFeedback" ng-model="data.comments" class="form-control" rows="2" id="comment"&gt;&lt;/textarea&gt;
+      &lt;span ng-if="::data.allowRating"&gt;${Rate this article}&lt;uib-rating ng-model="data.rating" max="5" aria-label="${Rate this article}"&gt;&lt;/uib-rating&gt;&lt;/span&gt;
+      &lt;input ng-if="::data.allowFeedback" type="submit" id="submit" value="{{data.submitMsg}}" class="btn btn-primary" style="margin-top: 5px;" ng-disabled="!data.comments &amp;&amp; !data.rating"/&gt;
+    &lt;/div&gt;  
+  &lt;/form&gt;
+  &lt;div ng-if="data.response" class="alert alert-success"&gt;{{::data.response}}&lt;/div&gt;
+  &lt;h4 ng-if="data.feedback.length &gt; 0"&gt;${Comments}&lt;/h4&gt;
+  &lt;div ng-if="data.feedback" ng-repeat="feedback in data.feedback" style="margin-bottom: 1em"&gt;
+    &lt;div style="font-weight: bold"&gt;
+      &lt;span ng-if="::feedback.user"&gt;{{::feedback.user}}&lt;/span&gt;
+      &lt;span&gt; - &lt;sn-time-ago timestamp="::feedback.sys_created_on" /&gt;&lt;/span&gt;
+      &lt;span ng-if="::feedback.useful"&gt;
+        &lt;glyph sn-char="thumbs-up" ng-if="::feedback.useful == 'yes'" /&gt;
+        &lt;glyph sn-char="thumbs-down" ng-if="::feedback.useful == 'no'" /&gt;
+      &lt;/span&gt;
+      &lt;span ng-if="feedback.rating"&gt; - &lt;/span&gt;
+      &lt;uib-rating ng-if="::feedback.rating" ng-model="::feedback.rating" max="5" readonly="true" aria-label="${Article rating} - ${Read Only}" /&gt;
+    &lt;/div&gt;
+    &lt;span class="break-word" style="white-space: pre-wrap"&gt;{{::feedback.comments}}&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:32</sys_created_on>
+        <sys_id>599757f84f313300496900fe9310c7ed</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KB Article Comments</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_599757f84f313300496900fe9310c7ed</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:32</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

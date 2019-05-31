@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>45190787ff323100ba13ffffffffff71</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope, $rootScope) {
+  
+  $rootScope.$on('sp.sessions', function(name, sessions) {
+    $scope.sessions = sessions;
+  });
+
+  $scope.sessionCount = function() {
+    var num = 0;
+    var keys = Object.keys($scope.sessions);
+    for (var i = 0; i &lt; keys.length; i++) {
+      if ($scope.sessions[keys[i]].status != "")
+        num++;
+    }
+    return num;
+  }
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css&gt;.no-border {
+  border-width: 0 !important;
+}
+
+.panel-body {
+  padding-bottom: 0;
+}
+
+.avatar-container {
+  cursor: default;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"data": {
+		"sometext": "world"
+	}
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Sessions&lt;/name&gt;
+        &lt;option_schema&gt;[{"name": "view","label":"View name"}, {"name":"disableUIActions","label":"Disable UI Actions on Form","type":"boolean"},{"name":"showFormView","label":"Display current form view","type":"boolean"},{"name":"omitHeaderOptions","label":"Omit header options icon","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script/&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-03-19 12:31:52&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;45190787ff323100ba13ffffffffff71&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;167&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Sessions&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_45190787ff323100ba13ffffffffff71&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-09-05 20:12:19&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;sp-panel ng-if="sessions &amp;&amp; sessionCount()" class="panel b"&gt;
+  &lt;div&gt;
+    &lt;ul class="list-group no-bg no-borders pull-in"&gt;
+      &lt;li ng-if="s.status" class="list-group-item no-border" ng-repeat="s in sessions"&gt;
+        &lt;span class="pull-left thumb-sm avatar m-r"&gt;
+          &lt;sn-avatar primary="s.user_id" show-presence="true" enable-context-menu="false"&gt;&lt;/sn-avatar&gt;
+        &lt;/span&gt;
+        &lt;div class="clear"&gt;
+          &lt;div&gt;&lt;span&gt;{{::s.user_display_name}}&lt;/span&gt;&lt;/div&gt;
+          &lt;small class="text-muted"&gt;{{s.status}}&lt;/small&gt;
+        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/sp-panel&gt;
+]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:24</sys_created_on>
+        <sys_id>6f8717f84f313300496900fe9310c798</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Sessions</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_6f8717f84f313300496900fe9310c798</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:24</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

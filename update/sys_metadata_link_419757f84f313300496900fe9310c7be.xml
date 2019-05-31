@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>dcf223fc4f913300496900fe9310c77a</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;custom&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($rootScope,$scope,$timeout) {
+
+  /* widget controller */
+
+  var c = this;
+
+  c.selectedPill = 'requests'; // When page loads, default pill selected
+
+  /*broadcast to other widgets after waiting for 500 milliseconds,
+
+      just to make sure other widgets are loaded and ready to listen when we broadcast.          
+
+  */
+
+  $timeout(function(){
+
+  $rootScope.$broadcast('showHideWidget', 'requests');
+
+  },500);
+
+  //broadcast the selection when ever cliked on each pill
+
+  $scope.selectPill = function(selection){
+
+  c.selectedPill = selection;
+
+  $rootScope.$broadcast('showHideWidget', selection);
+
+  };
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.pill-background {&amp;#13;
+&amp;#13;
+      background: url(sp-landing-back.jpg) no-repeat center center fixed;&amp;#13;
+&amp;#13;
+      -webkit-background-size: cover;&amp;#13;
+&amp;#13;
+      -moz-background-size: cover;&amp;#13;
+&amp;#13;
+      -o-background-size: cover;&amp;#13;
+&amp;#13;
+      background-size: cover;&amp;#13;
+&amp;#13;
+      height: 300px;&amp;#13;
+&amp;#13;
+      display: flex;&amp;#13;
+&amp;#13;
+      align-items: center;&amp;#13;
+&amp;#13;
+      justify-content: space-around;&amp;#13;
+&amp;#13;
+      .each-pill {&amp;#13;
+&amp;#13;
+              &amp;amp;.active {&amp;#13;
+&amp;#13;
+                      color: #c70000;&amp;#13;
+&amp;#13;
+              }&amp;#13;
+&amp;#13;
+              height:150px;&amp;#13;
+&amp;#13;
+              width:200px;&amp;#13;
+&amp;#13;
+              background:#ddd;&amp;#13;
+&amp;#13;
+              padding:50px;&amp;#13;
+&amp;#13;
+              text-align:center;&amp;#13;
+&amp;#13;
+              border-radius:4px;&amp;#13;
+&amp;#13;
+          cursor:pointer;&amp;#13;
+&amp;#13;
+         &amp;#13;
+&amp;#13;
+          p{&amp;#13;
+&amp;#13;
+            margin-top:5px;&amp;#13;
+&amp;#13;
+          }&amp;#13;
+&amp;#13;
+      }&amp;#13;
+&amp;#13;
+}&amp;#13;
+&amp;#13;
+.color-red {&amp;#13;
+&amp;#13;
+      color: #c70000;&amp;#13;
+&amp;#13;
+}&amp;#13;
+&amp;#13;
+.remove-margin {&amp;#13;
+&amp;#13;
+      margin-bottom: 0px;&amp;#13;
+&amp;#13;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+	"href": "www.google.com",
+	"button_text": "Go to google"
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;true&lt;/has_preview&gt;
+        &lt;id&gt;menu-pills&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Menu pills&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"trackingid","section":"Data","label":"Tracking ID","type":"string"},{"name":"cookiedomain","section":"Data","label":"Cookie Domain","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function() {
+  /* populate the 'data' object */
+  /* e.g., data.table = $sp.getValue('table'); */
+
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;false&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2019-05-06 18:34:03&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;dcf223fc4f913300496900fe9310c77a&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;3&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Menu pills&lt;/sys_name&gt;
+        &lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_dcf223fc4f913300496900fe9310c77a&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2019-05-16 15:36:19&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div&gt;
+
+&lt;!-- your widget template --&gt;
+
+  &lt;div class=" pill-background row"&gt;
+
+      &lt;div class="each-pill" ng-class="{'active':c.selectedPill == 'requests'}" ng-click="selectPill('requests')"&gt;
+
+            &lt;i class="fa fa-2x fa-list "   aria-hidden="true"&gt;&lt;/i&gt;
+
+              &lt;p class="remove-margin"&gt;All Requests&lt;/p&gt;
+
+      &lt;/div&gt;
+
+      &lt;div class="each-pill" ng-class="{'active':c.selectedPill == 'create'}" ng-click="selectPill('create')"&gt;
+
+         
+
+          &lt;i class="fa fa-2x fa-wrench " aria-hidden="true"&gt;&lt;/i&gt;
+
+          &lt;p class="remove-margin"&gt;Create Request&lt;/p&gt;
+
+      &lt;/div&gt;
+
+      &lt;div class="each-pill" ng-class="{'active':c.selectedPill == 'contact'}" ng-click="selectPill('contact')"&gt;
+
+         
+
+          &lt;i class="fa fa-2x fa-phone "   aria-hidden="true"&gt;&lt;/i&gt;
+
+          &lt;p class="remove-margin"&gt;Contact&lt;/p&gt;
+
+      &lt;/div&gt;
+    &lt;!--
+    &lt;div&gt;
+      &lt;widget id="reviewGolfCourses"&gt;&lt;/widget&gt;
+    &lt;/div&gt;
+	--&gt;
+  &lt;/div&gt;
+
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:30</sys_created_on>
+        <sys_id>419757f84f313300496900fe9310c7be</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Menu pills</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_419757f84f313300496900fe9310c7be</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:30</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

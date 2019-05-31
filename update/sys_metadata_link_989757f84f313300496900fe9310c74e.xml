@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>95d72d1047001200ba13a5554ee4900b</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;sp_platform&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function ($scope,$location) {
+
+	$scope.portal = {
+		displayValue: $scope.data.title,
+		value: $scope.data.sys_id,
+		name: 'portal'
+	};
+
+	var display_id = $location.search().sys_id;
+
+	$scope.$on("field.change", function(evt, parms) {		
+		if (parms.field.name == 'portal')
+			changePage(parms.newValue);
+	});
+
+	function changePage(p){
+		var path = $location.path();
+		var searchParms = $location.search();
+		$location.url(path + '?table=sp_portal&amp;sys_id=' + p);
+	}
+	
+	if ($scope.data.sys_id)
+		changePage($scope.data.sys_id);
+
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{"options": &amp;#13;
+	{&amp;#13;
+		"html": "&amp;lt;i&amp;gt;Hi&amp;lt;/i&amp;gt;",&amp;#13;
+		"title": "HTML"&amp;#13;
+	}&amp;#13;
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list/&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;true&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Portal Picker&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"title","section":"Presentation","default_value":"","label":"Title","type":"string"},{"name":"glyph","section":"Presentation","default_value":"bullhorn","label":"Glyph","type":"glyphicon"},{"displayValue":"Announcement Consumer Type","hint":"If no type is selected, all types will be used","name":"type","display_value_list":[],"section":"Data","default_value":"","label":"Type","type":"glide_list","value":"announcement_consumer_type","ed":{"reference":"announcement_consumer_type"}},{"name":"paginate","section":"Behavior","default_value":"true","label":"Paginate","type":"boolean"},{"name":"max_records","section":"Behavior","default_value":"","label":"Max Records","type":"integer"},{"displayValue":"Page","name":"view_all_page","section":"Behavior","default_value":"","label":"View All Page","type":"reference","value":"sp_page","ed":{"reference":"sp_page"}}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[(function () {
+	data.sys_id = $sp.getParameter('sys_id') || gs.getUser().getPreference("sp.portal");
+  var gr = new GlideRecord('sp_portal');
+  gr.get(data.sys_id);
+	data.title = data.name = gr.getDisplayValue('title');
+})();]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;fred.luddy&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-11-26 15:52:59&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;95d72d1047001200ba13a5554ee4900b&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;152&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Portal Picker&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;e858f0b9118033006517bd11ae6a4c0d&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_95d72d1047001200ba13a5554ee4900b&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:08:46&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-default"&gt;
+  &lt;div class="panel-body form-horizontal"&gt;
+    &lt;label class="col-sm-1 control-label"&gt;${Portal}&lt;/label&gt;
+    &lt;div class="col-sm-11"&gt;
+      &lt;sn-record-picker field="portal" table="'sp_portal'" display-field="'title'" value-field="'sys_id'" display-fields="'url_suffix'" search-fields="'title'" page-size="100" &gt;&lt;/sn-record-picker&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:27</sys_created_on>
+        <sys_id>989757f84f313300496900fe9310c74e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Portal Picker</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_989757f84f313300496900fe9310c74e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:27</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

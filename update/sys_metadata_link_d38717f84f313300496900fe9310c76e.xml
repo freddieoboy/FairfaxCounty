@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>2685ab42d730120023c84f80de6103a0</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;other&lt;/category&gt;
+        &lt;client_script&gt;&lt;![CDATA[function($scope, $location) {
+	var c = this;
+	
+	c.clickQuestion = function($event, question) {
+		$event.stopPropagation();
+		$event.preventDefault();
+		$location.search({id: "kb_social_qa_question", sys_id: question.sys_id});
+	}
+	
+	c.questionVoteDirection = function(votes) {
+		return {
+			'fa-chevron-up': votes &gt;= 0,
+			'fa-chevron-down': votes &lt; 0
+		}
+	}
+}]]&gt;&lt;/client_script&gt;
+        &lt;controller_as&gt;c&lt;/controller_as&gt;
+        &lt;css&gt;.list-group {
+	max-height: none; 
+  overflow-y: auto;
+}
+
+.question-votes, .question-answers {
+	padding-left: 4px;
+}
+
+.question-profile {
+	white-space: nowrap;
+}&lt;/css&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "data": {
+    "table": "incident",
+    "count": 25
+  },
+  "options": {
+		"color": "success",
+		"glyph": "cogs",
+    "title": "Incidents"
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list&gt;color&lt;/field_list&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id&gt;sqanda-subscribed-questions&lt;/id&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;Subscribed Questions&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"typeahead_search","default_value":"{title: 'How can we help?', size: 'lg', color: 'default'}","section":"Presentation","label":"Typeahead Search","type":"string"}]&lt;/option_schema&gt;
+        &lt;public&gt;false&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[data.questions = [];
+data.knowledgeBase = $sp.getPortalRecord().getValue("sqanda_knowledge_base") || gs.getProperty("glide.service_portal.sqanda.default_kb");
+var userID = gs.getUserID();
+var liveProfileGR = new GlideRecord("live_profile");
+liveProfileGR.addQuery("document", userID);
+liveProfileGR.query();
+
+if (liveProfileGR.next()) {
+	var liveProfileID = liveProfileGR.getValue("sys_id");
+	var subscriptionGR = new GlideRecord("kb_social_qa_subscribe");
+	subscriptionGR.addQuery("profile", liveProfileID);
+	subscriptionGR.addQuery("question.active", "true");
+	subscriptionGR.addQuery("question.kb_knowledge_base", data.knowledgeBase);
+	subscriptionGR.query();
+	
+	while(subscriptionGR.next()) {
+		data.questions.push(new Question(subscriptionGR.getElement("question").getRefRecord()));
+	}
+}
+
+function Question(gr) {
+	this.sys_created_on = gr.getValue("sys_created_on");
+	this.question = gr.getValue("question");
+	this.question_details = gr.getValue("question_details");
+	this.sys_id = gr.getValue("sys_id");
+	this.profile = gr.getElement("profile").getRefRecord().getValue("name");
+	
+	var answerGR = new GlideRecord("kb_social_qa_answer");
+	answerGR.addActiveQuery();
+	answerGR.addQuery("question", this.sys_id);
+	answerGR.query();
+	this.answers = answerGR.getRowCount();
+	
+	this.votes = 0;
+	var voteGR = new GlideRecord("kb_social_qa_vote");
+	voteGR.addQuery("reference_id", this.sys_id);
+	voteGR.query();
+	while(voteGR.next()) {
+		this.votes = (voteGR.getValue("up_vote") === '1') ? this.votes + 1 : this.votes - 1;
+	}
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2016-01-08 18:18:56&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;2685ab42d730120023c84f80de6103a0&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;98&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;Subscribed Questions&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal Social QA" source="com.glide.service-portal.sqanda"&gt;8168f8b9118033006517bd11ae6a4c48&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_2685ab42d730120023c84f80de6103a0&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 19:15:43&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;div class="panel panel-{{c.options.color}} b" ng-if="c.data.questions.length &gt; 0"&gt;
+  &lt;div class="panel-heading"&gt;
+    &lt;h1 class="h4 panel-title"&gt;${My Subscribed Questions}&lt;/h1&gt;
+  &lt;/div&gt;
+  &lt;div class="list-group"&gt;
+    &lt;div ng-repeat="question in c.data.questions" class="list-group-item"&gt;
+      &lt;a ng-click="c.clickQuestion($event, question)" href&gt;
+        &lt;div&gt;
+          &lt;div&gt;{{question.question}}&lt;/div&gt;
+          &lt;small class="text-muted m-r-sm"&gt;
+            &lt;i class="fa" ng-class="c.questionVoteDirection(question.votes)"&gt;&lt;/i&gt;
+            &lt;span class="question-votes"&gt;{{question.votes}}&lt;/span&gt;
+          &lt;/small&gt;
+          &lt;small class="text-muted m-r-sm"&gt;&lt;i class="fa fa-comments"&gt;&lt;/i&gt;&lt;span class="question-answers"&gt;{{question.answers}}&lt;/span&gt;&lt;/small&gt;
+          &lt;small class="question-profile text-muted"&gt;&lt;i class="fa fa-user"&gt;&lt;/i&gt;&lt;span class="question"&gt;{{question.profile}}&lt;/span&gt;&lt;/small&gt;
+        &lt;/div&gt;
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:23</sys_created_on>
+        <sys_id>d38717f84f313300496900fe9310c76e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Subscribed Questions</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_d38717f84f313300496900fe9310c76e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:23</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>

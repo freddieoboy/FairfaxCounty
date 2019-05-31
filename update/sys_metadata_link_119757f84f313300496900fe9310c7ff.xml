@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_metadata_link">
+    <sys_metadata_link action="INSERT_OR_UPDATE">
+        <directory>update</directory>
+        <documentkey>fe8ee752cb30020000f8d856634c9cb4</documentkey>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;record_update table="sp_widget"&gt;
+    &lt;sp_widget action="INSERT_OR_UPDATE"&gt;
+        &lt;category&gt;kb&lt;/category&gt;
+        &lt;client_script/&gt;
+        &lt;controller_as/&gt;
+        &lt;css/&gt;
+        &lt;data_table&gt;sp_instance&lt;/data_table&gt;
+        &lt;demo_data&gt;{
+  "options": {
+    "color": "default",
+		"maximum_entries": 3
+  }
+}&lt;/demo_data&gt;
+        &lt;description/&gt;
+        &lt;docs/&gt;
+        &lt;field_list&gt;color&lt;/field_list&gt;
+        &lt;has_preview&gt;false&lt;/has_preview&gt;
+        &lt;id/&gt;
+        &lt;internal&gt;false&lt;/internal&gt;
+        &lt;link/&gt;
+        &lt;name&gt;KB also in Category&lt;/name&gt;
+        &lt;option_schema&gt;[{"name":"disableUIActions","section":"Behavior","label":"Disable UI Actions on Form","type":"boolean"},{"name":"showFormView","section":"Behavior","label":"Display current form view","type":"boolean"},{"name":"omitHeaderOptions","section":"Behavior","label":"Omit header options icon","type":"boolean"}]&lt;/option_schema&gt;
+        &lt;public&gt;true&lt;/public&gt;
+        &lt;roles/&gt;
+        &lt;script&gt;&lt;![CDATA[var gr = GlideRecord("kb_knowledge");
+gr.get($sp.getParameter('sys_id'));
+var kbu = new KBKnowledgeSNC();
+data.isvalid = gr.isValidRecord() &amp;&amp; kbu.canRead(gr) &amp;&amp; !gr.kb_category.nil();
+data.category = gr.getDisplayValue('kb_category');
+data.category_id = gr.getValue('kb_category');
+data.alsoInMsg = gs.getMessage("Also in {0}", data.category);
+
+data.articles = [];
+if (data.isvalid) {
+	var z = new GlideRecord('kb_knowledge');
+	z.addQuery('kb_category', gr.getValue('kb_category'));
+	z.addQuery('workflow_state', 'published');
+	z.addQuery('valid_to', '&gt;=', (new GlideDate()).getLocalDate().getValue());
+	z.orderByDesc('sys_view_count');
+	z.query();
+	data.count = z.getRowCount();
+	var count = 0;
+	while (z.next() &amp;&amp; count &lt; 5) {
+	  if (z.sys_id == gr.sys_id)
+	    continue;
+      
+      if (!z.canRead())
+        continue;
+	  
+	  count++;
+	  var a = {};
+		$sp.getRecordValues(a, z, 'sys_id,short_description,sys_view_count')
+	  a.published = z.getDisplayValue('published');
+	  data.articles.push(a);
+	}
+}]]&gt;&lt;/script&gt;
+        &lt;servicenow&gt;true&lt;/servicenow&gt;
+        &lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;
+        &lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;
+        &lt;sys_created_on&gt;2015-06-24 17:27:30&lt;/sys_created_on&gt;
+        &lt;sys_id&gt;fe8ee752cb30020000f8d856634c9cb4&lt;/sys_id&gt;
+        &lt;sys_mod_count&gt;50&lt;/sys_mod_count&gt;
+        &lt;sys_name&gt;KB also in Category&lt;/sys_name&gt;
+        &lt;sys_package display_value="Service Portal - Knowledge Base (do not activate...see plugin description)" source="com.glide.service-portal.knowledge-base"&gt;d2687cb9118033006517bd11ae6a4ca8&lt;/sys_package&gt;
+        &lt;sys_policy/&gt;
+        &lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;
+        &lt;sys_update_name&gt;sp_widget_fe8ee752cb30020000f8d856634c9cb4&lt;/sys_update_name&gt;
+        &lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;
+        &lt;sys_updated_on&gt;2017-08-24 18:55:37&lt;/sys_updated_on&gt;
+        &lt;template&gt;&lt;![CDATA[&lt;sp-panel ng-if="::data.isvalid" title="{{data.alsoInMsg}}"&gt;
+	&lt;div ng-repeat="a in ::data.articles" class="m-b" &gt;
+      &lt;a href="?id=kb_article&amp;sys_id={{::a.sys_id}}"&gt;{{::a.short_description}}&lt;/a&gt;
+      &lt;div&gt;			
+        &lt;span ng-if="::a.sys_view_count == 1" class="views pad-right"&gt;
+          &lt;glyph sn-char="eye-open" class="pad-right" /&gt;
+          ${{{::a.sys_view_count}} View}
+        &lt;/span&gt;
+        &lt;span ng-if="::a.sys_view_count &gt; 1" class="views pad-right"&gt;
+          &lt;glyph sn-char="eye-open" class="pad-right" /&gt;
+          ${{{::a.sys_view_count}} Views}
+        &lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div ng-show="::(data.articles.length == 0)"&gt;
+      ${No other articles}
+    &lt;/div&gt;
+    
+    &lt;div ng-show="::(data.count &gt; 5)"&gt;
+      &lt;a href="?id=kb_category&amp;kb_category={{::data.category_id}}"&gt;${View all {{::data.count}} articles}&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/sp-panel&gt;]]&gt;&lt;/template&gt;
+    &lt;/sp_widget&gt;
+&lt;/record_update&gt;
+</payload>
+        <sys_class_name>sys_metadata_link</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-05-31 14:14:32</sys_created_on>
+        <sys_id>119757f84f313300496900fe9310c7ff</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KB also in Category</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_metadata_link_119757f84f313300496900fe9310c7ff</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-05-31 14:14:32</sys_updated_on>
+        <tablename>sp_widget</tablename>
+    </sys_metadata_link>
+</record_update>
