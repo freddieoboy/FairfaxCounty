@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="" label="Golf Course Reviews 2" language="en" table="x_339628_fairfaxco_golf_course_reviews_2">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element/>
+            <help/>
+            <hint/>
+            <label>Golf Course Reviews 2</label>
+            <language>en</language>
+            <name>x_339628_fairfaxco_golf_course_reviews_2</name>
+            <plural>Golf Course Reviews 2s</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2019-06-20 22:07:36</sys_created_on>
+            <sys_id>42a388e74fc23300496900fe9310c7d1</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Golf Course Reviews 2</sys_name>
+            <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+            <sys_update_name>sys_documentation_x_339628_fairfaxco_golf_course_reviews_2__en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2019-06-20 22:07:36</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

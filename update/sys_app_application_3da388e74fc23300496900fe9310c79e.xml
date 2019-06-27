@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_app_application">
+    <sys_app_application action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <category display_value="Custom Applications">e0355b31ef303000a61d5a3615c0fb78</category>
+        <description/>
+        <device_type>browser</device_type>
+        <hint/>
+        <name>Golf Course Reviews 2</name>
+        <order>100</order>
+        <roles>x_339628_fairfaxco.golf_course_reviews_2_user</roles>
+        <sys_class_name>sys_app_application</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-06-20 22:07:35</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>3da388e74fc23300496900fe9310c79e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Golf Course Reviews 2</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sys_app_application_3da388e74fc23300496900fe9310c79e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-06-20 22:07:35</sys_updated_on>
+        <title>Golf Course Reviews 2</title>
+        <view_name/>
+    </sys_app_application>
+</record_update>

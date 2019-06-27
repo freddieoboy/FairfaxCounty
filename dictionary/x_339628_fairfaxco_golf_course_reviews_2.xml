@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element label="Golf Course Reviews 2" max_length="40" name="x_339628_fairfaxco_golf_course_reviews_2" type="collection">
+        <element label="Course Name" max_length="100" name="course_name" type="string"/>
+        <element label="Course Rating" max_length="40" name="course_rating" type="integer"/>
+        <element label="Description" max_length="1000" name="description" type="string"/>
+    </element>
+</database>
