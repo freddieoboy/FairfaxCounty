@@ -9,7 +9,8 @@
   /* widget controller */
 
   var c = this;
-/* used for talking to widgets
+	
+	/* used for talking to widgets
   $scope.showWidget = "";
 
         //Listening for "showHideWidget" event
@@ -45,6 +46,14 @@
 			return;
 		}
 		
+		//size word wrap and picture accordingly.
+		// word wrap updates dynamically 
+		// picture updates on click
+		var widget = document.getElementById("widget-container");
+		c.data.widgetWidth = widget.clientWidth;
+		//alert(c.data.widgetWidth);
+		
+		
 		c.data.myCourseName = c.courseName.value;
 		c.server.update();
 	}
@@ -77,7 +86,7 @@
 /////////////////////////////////
 .wordwrap
 {   
-    width: 415px;
+    width: data.widgetWidth;
     word-wrap: break-word;
 }
 
@@ -96,12 +105,18 @@ textarea {
 }
 
 .select2-additional-display-field {
-  	padding-right: 5px;
+  padding-right: 5px;
+}
+.courseImage {
+  //src="{{data.coursePicture}}"
+  src: data.coursePicture;
+  width: data.widgetWidth; 
+  height: auto;
 }
 
 
-
 div.image {
+  //h 250, w 400
 height: 200px;
 width: 400px;
 top: 99px;
@@ -357,14 +372,14 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-06-21 15:16:25</sys_created_on>
         <sys_id>702f676f4f8a3300496900fe9310c79b</sys_id>
-        <sys_mod_count>235</sys_mod_count>
+        <sys_mod_count>262</sys_mod_count>
         <sys_name>See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_702f676f4f8a3300496900fe9310c79b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-06-28 15:44:36</sys_updated_on>
+        <sys_updated_on>2019-06-28 17:16:56</sys_updated_on>
         <template><![CDATA[<!-- -------------------------------------------------- -->
 <!-- ---------------- Tab Information ----------------- -->
 <!-- -------------------------------------------------- ---
@@ -395,7 +410,7 @@ id= see-reviews-widget
 -->
 
 
-<div class="panel panel-default" min-height="900px">
+<div id="widget-container" class="panel panel-default" min-height="900px">
 	<h1 class="padder-md h3">${View Golf Courses Reviews}
     <span class="text-base">
   	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
@@ -492,7 +507,7 @@ id= see-reviews-widget
 		
 		<!-- this loads as background so you can paste content onto it
 				<div class="image padder" style="background: url('{{data.coursePicture}}') center center;background-size: cover;"></div> -->
-  <img src="{{data.coursePicture}}" width="400" height="250"/>
+  <img src="{{data.coursePicture}}" width="{{data.widgetWidth}}" height="auto" />
 		
     </div>
   
@@ -570,7 +585,7 @@ id= see-reviews-widget
       <!--
 			<p class="padder">{{review.course_rating}}</p>
 			-->
-      <p class="padder wordwrap">{{review.description}}</p>
+      <p id="widgetDesc"  class="padder wordwrap">{{review.description}}</p>
      
    
      <!--	{{review.default_stars}} -->
