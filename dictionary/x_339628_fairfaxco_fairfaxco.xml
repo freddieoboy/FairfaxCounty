@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database>
-    <element extends="task" label="FairfaxCo" max_length="40" name="x_339628_fairfaxco_fairfaxco" type="collection"/>
+    <element extends="task" label="FairfaxCo" max_length="40" name="x_339628_fairfaxco_fairfaxco" sizeclass="1" type="collection"/>
 </database>

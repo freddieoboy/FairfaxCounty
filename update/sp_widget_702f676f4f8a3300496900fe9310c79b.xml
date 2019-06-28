@@ -2,9 +2,29 @@
 <record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[function($scope, $http, $window, spScUtil, nowAttachmentHandler, spUtil, $log, spAriaUtil) {
+        <client_script><![CDATA[function($scope, $http, $window, spScUtil, nowAttachmentHandler, spUtil, $log, spAriaUtil, $rootScope,$timeout) {
   
-	var c = this;
+	
+
+  /* widget controller */
+
+  var c = this;
+/* used for talking to widgets
+  $scope.showWidget = "";
+
+        //Listening for "showHideWidget" event
+
+  $rootScope.$on('showHideWidget', function(event,data) {
+
+  $timeout(function(){
+
+            $scope.showWidget = data;
+
+  });
+
+  });
+	
+	*/
 	
 	/******************************************************************
 	 ********************** BEGIN c.readReviews ***********************
@@ -43,7 +63,25 @@
 	
 }]]></client_script>
         <controller_as>c</controller_as>
-        <css>.attachment-list {
+        <css>/////menu pills vvvvvvvvvvvv
+
+.center-div{
+
+      margin-left: auto;
+
+      margin-right: auto;
+
+  float:none;
+
+}
+/////////////////////////////////
+.wordwrap
+{   
+    width: 415px;
+    word-wrap: break-word;
+}
+
+.attachment-list {
   	max-height: 180px;
   	overflow-y: scroll;
   	margin-bottom: 10px;
@@ -83,7 +121,8 @@ background-size: cover;
 }
 /* hard coded to match write a review widget original size */
 .panel {
- min-height: 405px; 
+ min-height: 405px;
+ //max-width: 600px;
 }
 -- ICON LINK CSS BEGIN:--------------------------------------------------------
 
@@ -263,6 +302,7 @@ if(input && input.action == 'readreviews') {
 	// This table holds all the reviews for golf courses
 	var target = new GlideRecord('x_339628_fairfaxco_golf_course_reviews_2') ; 
 	target.addQuery('course_name','=',input.myCourseName);
+	target.orderByDesc('sys_created_on');
 	target.query(); // Issue the query to the database to get relevant records 
 	while (target.next()) { 
   
@@ -271,6 +311,7 @@ if(input && input.action == 'readreviews') {
 		temp.course_name = target.course_name.toString();
 		temp.description = target.description.toString();
 		temp.course_rating = target.course_rating.toString();
+		temp.date = target.sys_created_on.toString();
 
 		data.requestList.push(temp);
 	
@@ -316,21 +357,21 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-06-21 15:16:25</sys_created_on>
         <sys_id>702f676f4f8a3300496900fe9310c79b</sys_id>
-        <sys_mod_count>199</sys_mod_count>
+        <sys_mod_count>235</sys_mod_count>
         <sys_name>See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_702f676f4f8a3300496900fe9310c79b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-06-26 17:29:06</sys_updated_on>
+        <sys_updated_on>2019-06-28 15:44:36</sys_updated_on>
         <template><![CDATA[<!-- -------------------------------------------------- -->
 <!-- ---------------- Tab Information ----------------- -->
 <!-- -------------------------------------------------- ---
 
 		A lot of tab stuff not used. Notice there is only 2 tabs.
 		"write a review and see all reviews"
--- ---------------------------------------------------- -->
+-- ---------------------------------------------------- --
 	<uib-tabset active="active">
     <uib-tab index="0" heading="Write a Review"></uib-tab>
     <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" disable="tab.disabled">
@@ -340,10 +381,18 @@ if(input && input.action == 'readreviews') {
       <uib-tab-heading>
         <i class="glyphicon glyphicon-bell"></i> See all Reviews
       </uib-tab-heading>
-      <!--I've got an HTML heading, and a select callback. Pretty cool -->
+      !--I've got an HTML heading, and a select callback. Pretty cool --
     </uib-tab>
   </uib-tabset>
-<!-- --------------------------------------------------------------------------------- -->
+
+id= see-reviews-widget
+!-- --------------------------------------------------------------------------------- --
+
+
+<div ng-if="showWidget == 'see-reviews-widget'">
+<div class="container">
+
+-->
 
 
 <div class="panel panel-default" min-height="900px">
@@ -467,7 +516,7 @@ if(input && input.action == 'readreviews') {
   <!-- -------------------------------------------------- -->
   <!-- ----------- BEGIN repeat all reviews ------------- -->
   <!-- -------------------------------------------------- -->
-   <div ng-repeat="review in data.requestList | limitTo:20" class="each-incident">    
+   <div ng-repeat="review in data.requestList | limitTo:50" class="each-incident">    
       
       <hr /> 
       <h1 class="padder">{{review.course_name}}</h1>
@@ -517,17 +566,17 @@ if(input && input.action == 'readreviews') {
         	 <div id="5Star" class="m-b fa fa-star fa-3x  text-warning"></div>
          
         </div>
-     
+     <br /><br /><br />
       <!--
 			<p class="padder">{{review.course_rating}}</p>
 			-->
-      <p class="padder">{{review.description}}</p>
+      <p class="padder wordwrap">{{review.description}}</p>
      
    
      <!--	{{review.default_stars}} -->
     	<br />
 			
-      <p style="margin-bottom:0px;"></p>
+      <p style="color:#BBBBBB; margin-bottom:0px;" class="padder pull-right">{{review.date}}</p>
 
   </div> 
   
@@ -536,7 +585,9 @@ if(input && input.action == 'readreviews') {
   <!-- -------------------------------------------------- -->
   
 	</div>
-
-]]></template>
+<!--
+</div>
+</div>
+-->]]></template>
     </sp_widget>
 </record_update>

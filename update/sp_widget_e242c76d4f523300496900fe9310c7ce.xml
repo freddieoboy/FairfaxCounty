@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($rootScope,$scope,$timeout) {
+
+  /* widget controller */
+
+  var c = this;
+/*
+  c.selectedPill = 'review-widget-by-fred'; // When page loads, default pill selected
+
+  broadcast to other widgets after waiting for 500 milliseconds,
+
+      just to make sure other widgets are loaded and ready to listen when we broadcast.          
+
+  
+
+  $timeout(function(){
+
+  $rootScope.$broadcast('showHideWidget', 'review-widget-by-fred');
+
+  },500);
+
+  //broadcast the selection when ever cliked on each pill
+
+  $scope.selectPill = function(selection){
+
+  c.selectedPill = selection;
+
+  $rootScope.$broadcast('showHideWidget', selection);
+
+  };
+*/
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.pill-background {
+
+      background: url(sp-landing-back.jpg) no-repeat center center fixed;
+
+      -webkit-background-size: cover;
+
+      -moz-background-size: cover;
+
+      -o-background-size: cover;
+
+      background-size: cover;
+
+      height: 300px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-around;
+
+      .each-pill {
+
+              &amp;.active {
+
+                      color: #c70000;
+
+              }
+
+              height:150px;
+
+              width:200px;
+
+             // background:#ddd;
+
+              padding:50px;
+
+              text-align:center;
+
+              border-radius:4px;
+
+          cursor:pointer;
+
+         
+
+          p{
+
+            margin-top:5px;
+
+          }
+
+      }
+
+}
+
+.color-red {
+
+      color: #c70000;
+
+}
+
+.remove-margin {
+
+      margin-bottom: 0px;
+
+} 
+
+/* border at bottom of tabs */
+.nav-tabs {
+ 	border:none; 
+}
+
+/* tab selected background color */
+.nav-tabs &gt; li.active &gt; a, .nav-tabs &gt; li.active &gt; a:hover, .nav-tabs &gt; li.active &gt; a:focus {
+    color: #555555;
+    background-color: #ffffff;
+}
+
+.myCustomSize {
+ //max-width: 600px;
+}
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id/>
+        <internal>false</internal>
+        <link/>
+        <name>Golf Course Review Tabs</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+	data.test  = $sp.getWidget("widget-cool-clock");
+	data.writeReviewWidget = $sp.getWidget("review-widget-by-fred");
+	data.seeReviewWidget = $sp.getWidget("see-reviews-widget");
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-06-27 17:08:19</sys_created_on>
+        <sys_id>e242c76d4f523300496900fe9310c7ce</sys_id>
+        <sys_mod_count>67</sys_mod_count>
+        <sys_name>Golf Course Review Tabs</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sp_widget_e242c76d4f523300496900fe9310c7ce</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-06-28 13:53:00</sys_updated_on>
+        <template><![CDATA[<div class="myCustomSize">
+
+<!-- your widget template --
+
+  <div class=" pill-background row">
+
+      <div class="each-pill" ng-class="{'active':c.selectedPill == 'review-widget-by-fred'}" ng-click="selectPill('review-widget-by-fred')">
+
+            <i class="fa fa-2x fa-list "   aria-hidden="true"></i>
+
+              <p class="remove-margin">requests<br />-- Write Review --</p>
+
+      </div>
+
+      <div class="each-pill" ng-class="{'active':c.selectedPill == 'see-reviews-widget'}" ng-click="selectPill('see-reviews-widget')">
+
+         
+
+          <i class="fa fa-2x fa-wrench " aria-hidden="true"></i>
+
+          <p class="remove-margin">create<br />-- See Reviews --</p>
+
+      </div>
+  </div>
+  <div>
+
+    
+<!--
+      <div class="each-pill" ng-class="{'active':c.selectedPill == 'contact'}" ng-click="selectPill('contact')">
+
+         
+
+          <i class="fa fa-2x fa-phone "   aria-hidden="true"></i>
+
+          <p class="remove-margin">Contact</p>
+
+      </div>
+-->
+    <!--
+    <div>
+      <widget id="reviewGolfCourses"></widget>
+    </div>
+	--
+  </div>
+
+  <!-- -------------------------------------------------- -->
+<!-- ---------------- Tab Information ----------------- -->
+<!-- -------------------------------------------------- ---
+
+		A lot of tab stuff not used. Notice there is only 2 tabs.
+		"write a review and see all reviews"
+-- ---------------------------------------------------- --
+	<uib-tabset active="active" class="padder">
+    <div class="row">
+      
+
+    <div  class="col-xs-3 each-pill" ng-class="{'active':c.selectedPill == 'review-widget-by-fred'}" ng-click="selectPill('review-widget-by-fred')">  
+    	<uib-tab index="0" heading="Write a Review" ></uib-tab>
+    </div>
+    
+    <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" disable="tab.disabled">
+      {{tab.content}}
+    </uib-tab>
+     
+     <div class="col-xs-3 each-pill" ng-class="{'active':c.selectedPill == 'see-reviews-widget'}" ng-click="selectPill('see-reviews-widget')">
+    	<uib-tab  index="3">
+     	 <uib-tab-heading>
+        	<i class="glyphicon glyphicon-bell"></i> See all Reviews
+     	 </uib-tab-heading>
+     
+      <!--I've got an HTML heading, and a select callback. Pretty cool --
+    	</uib-tab>
+      </div>
+    </div>
+  </uib-tabset>
+
+
+<!-- --------------------------------------------------------------------------------- -->
+  
+  <uib-tabset active="active" class="padder">
+    <uib-tab index="0" heading="Write a Review">
+      <sp-widget widget="data.writeReviewWidget"></sp-widget>
+    </uib-tab>
+       <uib-tab index="1" heading="See all Reviews">
+      <sp-widget widget="data.seeReviewWidget"></sp-widget>
+    </uib-tab>
+  <!--  <uib-tab class="each-pill" ng-class="{'active':c.selectedPill == 'review-widget-by-fred'}" ng-click="selectPill('review-widget-by-fred')" index="0" heading="Write a Review"></uib-tab>
+--
+    <uib-tab index="2" heading="CoolClock">
+      <sp-widget widget="data.test">
+      </sp-widget>
+    </uib-tab>
+    <uib-tab index="3" heading="bob">
+     	<div>
+        
+        test
+      </div>
+      <br>
+      <p>
+        dsfsdffd
+      </p>
+    </uib-tab> 
+   <!-- 
+    <uib-tab class="each-pill" ng-class="{'active':c.selectedPill == 'see-reviews-widget'}" ng-click="selectPill('see-reviews-widget')" index="3" select="alertMe()" >
+      <uib-tab-heading>
+        <i class="glyphicon glyphicon-bell"></i> See all Reviews
+      </uib-tab-heading>
+      <!--I've got an HTML heading, and a select callback. Pretty cool --
+    </uib-tab>
+-->
+  </uib-tabset>
+
+</div>]]></template>
+    </sp_widget>
+</record_update>
