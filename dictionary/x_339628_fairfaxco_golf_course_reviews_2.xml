@@ -4,5 +4,12 @@
         <element label="Course Name" max_length="100" name="course_name" type="string"/>
         <element label="Course Rating" max_length="40" name="course_rating" type="integer"/>
         <element label="Description" max_length="1000" name="description" type="string"/>
+        <element choice="1" label="Show to Public" max_length="40" name="show_to_public" type="choice">
+            <choice>
+                <element label="Approved" value="Approved"/>
+                <element label="Rejected" value="Rejected"/>
+                <element label="Waiting For Approval" sequence="0" value="Waiting For Approval"/>
+            </choice>
+        </element>
     </element>
 </database>

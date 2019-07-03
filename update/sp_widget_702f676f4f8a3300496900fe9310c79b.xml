@@ -317,6 +317,7 @@ if(input && input.action == 'readreviews') {
 	// This table holds all the reviews for golf courses
 	var target = new GlideRecord('x_339628_fairfaxco_golf_course_reviews_2') ; 
 	target.addQuery('course_name','=',input.myCourseName);
+	target.addQuery('show_to_public', '!=', 'Rejected');
 	target.orderByDesc('sys_created_on');
 	target.query(); // Issue the query to the database to get relevant records 
 	while (target.next()) { 
@@ -372,14 +373,14 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-06-21 15:16:25</sys_created_on>
         <sys_id>702f676f4f8a3300496900fe9310c79b</sys_id>
-        <sys_mod_count>262</sys_mod_count>
+        <sys_mod_count>265</sys_mod_count>
         <sys_name>See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_702f676f4f8a3300496900fe9310c79b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-06-28 17:16:56</sys_updated_on>
+        <sys_updated_on>2019-07-02 16:24:23</sys_updated_on>
         <template><![CDATA[<!-- -------------------------------------------------- -->
 <!-- ---------------- Tab Information ----------------- -->
 <!-- -------------------------------------------------- ---
@@ -457,7 +458,7 @@ id= see-reviews-widget
   
   <div ng-if="data.overallCourseRating > 0">
      <h1 class="padder">{{data.myCourseName}}</h1>
-     <h5 class="padder" >Overall Review</h5>
+     <h5 class="padder">Overall Review</h5>
  
      <div ng-if="data.overallCourseRating == 1" class="col-sm-12" id="StarRatingView">
           
@@ -507,8 +508,9 @@ id= see-reviews-widget
 		
 		<!-- this loads as background so you can paste content onto it
 				<div class="image padder" style="background: url('{{data.coursePicture}}') center center;background-size: cover;"></div> -->
-  <img src="{{data.coursePicture}}" width="{{data.widgetWidth}}" height="auto" />
-		
+ <!-- <img src="{{data.coursePicture}}" width="{{data.widgetWidth}}" height="auto" />
+		-->
+     <img src="{{data.coursePicture}}" width="100%" height="auto" />
     </div>
   
         
@@ -523,6 +525,7 @@ id= see-reviews-widget
 		<div class="col-xs-10" >{{data.coursePhoneNumber}}</div>
  
 </div>
+   <hr /> 
   
   <!-- -------------------------------------------------- -->
   <!-- ----------- END overall course review ------------ -->
@@ -533,7 +536,7 @@ id= see-reviews-widget
   <!-- -------------------------------------------------- -->
    <div ng-repeat="review in data.requestList | limitTo:50" class="each-incident">    
       
-      <hr /> 
+     
       <h1 class="padder">{{review.course_name}}</h1>
      
         <div ng-if="review.course_rating == 1" class="col-sm-12" id="StarRatingView">
@@ -592,6 +595,7 @@ id= see-reviews-widget
     	<br />
 			
       <p style="color:#BBBBBB; margin-bottom:0px;" class="padder pull-right">{{review.date}}</p>
+      <hr /> 
 
   </div> 
   
