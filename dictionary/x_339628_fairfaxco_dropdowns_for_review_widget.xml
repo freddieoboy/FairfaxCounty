@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element extends="task" label="Dropdowns for Review Widget" max_length="40" name="x_339628_fairfaxco_dropdowns_for_review_widget" sizeclass="5" type="collection">
+        <element label="Address" max_length="400" name="address" type="string"/>
+        <element choice="3" default="Golf Courses" label="Associated Review Widget" max_length="40" name="associated_review_widget" type="choice">
+            <choice>
+                <element label="Golf Courses" sequence="10" value="Golf Courses"/>
+                <element label="Parks" sequence="20" value="Parks"/>
+            </choice>
+        </element>
+        <element label="Display Photo" max_length="40" name="display_photo" type="user_image"/>
+        <element label="Dropdown Description" max_length="40" name="dropdown_description" type="string"/>
+        <element label="Dropdown Value" max_length="40" name="dropdown_value" type="string"/>
+        <element default="0" label="Number of Reviews Submitted" max_length="40" name="number_of_reviews_submitted" type="integer"/>
+        <element default="0" label="Overall Star Rating" max_length="40" name="overall_star_rating" type="float"/>
+        <element label="Phone Number" max_length="20" name="phone_number" type="string"/>
+    </element>
+</database>

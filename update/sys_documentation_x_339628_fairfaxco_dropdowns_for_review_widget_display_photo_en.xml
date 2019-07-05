@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="display_photo" label="Display Photo" language="en" table="x_339628_fairfaxco_dropdowns_for_review_widget">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element>display_photo</element>
+            <help/>
+            <hint/>
+            <label>Display Photo</label>
+            <language>en</language>
+            <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
+            <plural>Display Photos</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2019-07-03 14:48:05</sys_created_on>
+            <sys_id>f2bb15ef4f167300496900fe9310c7f5</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Display Photo</sys_name>
+            <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+            <sys_update_name>sys_documentation_x_339628_fairfaxco_dropdowns_for_review_widget_display_photo_en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2019-07-03 14:48:05</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

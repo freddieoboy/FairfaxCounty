@@ -4,28 +4,9 @@
         <category>custom</category>
         <client_script><![CDATA[function($scope, $http, $window, spScUtil, nowAttachmentHandler, spUtil, $log, spAriaUtil, $rootScope,$timeout) {
   
-	
-
-  /* widget controller */
 
   var c = this;
-	
-	/* used for talking to widgets
-  $scope.showWidget = "";
 
-        //Listening for "showHideWidget" event
-
-  $rootScope.$on('showHideWidget', function(event,data) {
-
-  $timeout(function(){
-
-            $scope.showWidget = data;
-
-  });
-
-  });
-	
-	*/
 	
 	/******************************************************************
 	 ********************** BEGIN c.readReviews ***********************
@@ -39,10 +20,13 @@
 										 (input.myCourseName inside Server Script)
 		Then update server: re-run entire server script
 	********************************************************************/
+	/*
+	 * Cloning Change: change error message
+	 */
 	c.readReviews = function() {
 		
-		if(c.courseName.value == undefined) {
-			spUtil.addErrorMessage('You must select a course to see its reviews.');
+		if(c.dropdownValue.value == undefined) {
+			spUtil.addErrorMessage('You must select a park to see its reviews.');
 			return;
 		}
 		
@@ -54,7 +38,7 @@
 		//alert(c.data.widgetWidth);
 		
 		
-		c.data.myCourseName = c.courseName.value;
+		c.data.myDropdownValue = c.dropdownValue.value;
 		c.server.update();
 	}
 	
@@ -72,213 +56,203 @@
 	
 }]]></client_script>
         <controller_as>c</controller_as>
-        <css>/////menu pills vvvvvvvvvvvv
-
-.center-div{
-
-      margin-left: auto;
-
-      margin-right: auto;
-
-  float:none;
-
-}
-/////////////////////////////////
-.wordwrap
-{   
-    width: data.widgetWidth;
-    word-wrap: break-word;
-}
-
-.attachment-list {
-  	max-height: 180px;
-  	overflow-y: scroll;
-  	margin-bottom: 10px;
-}
-
-.accordion-toggle {
-  	line-height: 13px;
-}
-
-textarea {
-	resize: vertical;
-}
-
-.select2-additional-display-field {
-  padding-right: 5px;
-}
-.courseImage {
-  //src="{{data.coursePicture}}"
-  src: data.coursePicture;
-  width: data.widgetWidth; 
-  height: auto;
-}
-
-
-div.image {
-  //h 250, w 400
-height: 200px;
-width: 400px;
-top: 99px;
-left: 50px;
-background-size: cover;
-}
-
-/* border at bottom of tabs */
-.nav-tabs {
- 	border:none; 
-}
-
-/* tab selected background color */
-.nav-tabs &gt; li.active &gt; a, .nav-tabs &gt; li.active &gt; a:hover, .nav-tabs &gt; li.active &gt; a:focus {
-    color: #555555;
-    background-color: #ffffff;
-}
-/* hard coded to match write a review widget original size */
-.panel {
- min-height: 405px;
- //max-width: 600px;
-}
--- ICON LINK CSS BEGIN:--------------------------------------------------------
-
-.iconlink a label,h2 {
-  display: block;
-  font-size: 2.5rem;
-  font-weight: 300;
-  line-height: 1.1;
-  padding: 0;
-  margin: 0 0 10px 0;
-}
-
-/* TOP ICON ---------- */
-
-a.top_icon {
-  display: block;
-  padding: 20px;
-  text-align: center;
-}
-
-a.top_icon .fa {
-  display: block;
-  text-align: center;
-}
-
-/* CIRCLE ICON ---------- */
-
-a.circle_icon {
-  display: block;
-  padding: 20px 0px 20px 70px;
-  position: relative;
-}
-
-a.circle_icon .fa {
-  position:absolute;
-  left: 0px;
-  top: 10px;
-}
-
-/* COLOR BOX ---------- */
-
-a.color_box {
-  display: block;
-  position: relative;
-  padding: 20px 20px 20px 82px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-a.color_box .fa {
-  position:absolute;
-  left: 20px;
-  top: 20px;
-  width:42px;
-  text-align: center;
-}
-
-.icon-link-background-primary {
-  background-color: $brand-primary;
-}
-
-.icon-link-background-info {
-  background-color: $brand-info;
-}
-
-.icon-link-background-success {
-  background-color: $brand-success;
-}
-
-.icon-link-background-warning {
-  background-color: $brand-warning;
-}
-
-.icon-link-background-danger {
-  background-color: $brand-danger;
-}
-
-.icon-link-background-default {
-  background-color: $brand-primary;
-}
-
-.text-primary {
-  color: $brand-primary;
-  
-  &amp;:hover {
-    color: darken($brand-primary, 20%);
-  }
-}
-
-.text-info {
-  color: $brand-info;
-  
-  &amp;:hover {
-    color: darken($brand-info, 20%);
-  }
-}
-
-.text-success {
-  color: $brand-success;
-  
-  &amp;:hover {
-    color: darken($brand-success, 20%);
-  }
-}
-
-.text-warning {
-  color: $brand-warning;
-  
-  /*
-  &amp;:hover {
-    color: darken($brand-warning, 20%);
-  }
-  */
-}
-
-.text-danger {
-  color: $brand-danger;
-  
-  &amp;:hover {
-    color: darken($brand-danger, 20%);
-  }
-}
-
-.text-default {
-  color: $brand-primary;
-  
-  &amp;:hover {
-    color: darken($brand-primary, 20%);
-  }
-}
--- ICON LINK CSS END:--------------------------------------------------------</css>
+        <css>&#13;
+&#13;
+.center-div{&#13;
+&#13;
+      margin-left: auto;&#13;
+&#13;
+      margin-right: auto;&#13;
+&#13;
+  float:none;&#13;
+&#13;
+}&#13;
+/*******************************************/&#13;
+.wordwrap&#13;
+{   &#13;
+    width: data.widgetWidth;&#13;
+    word-wrap: break-word;&#13;
+}&#13;
+&#13;
+.attachment-list {&#13;
+  	max-height: 180px;&#13;
+  	overflow-y: scroll;&#13;
+  	margin-bottom: 10px;&#13;
+}&#13;
+&#13;
+.accordion-toggle {&#13;
+  	line-height: 13px;&#13;
+}&#13;
+&#13;
+textarea {&#13;
+	resize: vertical;&#13;
+}&#13;
+&#13;
+.select2-additional-display-field {&#13;
+  padding-right: 5px;&#13;
+}&#13;
+&#13;
+/*&#13;
+.myImage {&#13;
+  src: data.picture;&#13;
+  width: data.widgetWidth; &#13;
+  height: auto;&#13;
+} */&#13;
+&#13;
+&#13;
+div.image {&#13;
+height: 200px;&#13;
+width: 400px;&#13;
+top: 99px;&#13;
+left: 50px;&#13;
+background-size: cover;&#13;
+}&#13;
+&#13;
+/* hard coded to match write a review widget original size */&#13;
+.panel {&#13;
+ min-height: 405px;&#13;
+ //max-width: 600px;&#13;
+}&#13;
+/* ICON LINK CSS BEGIN:--------------------------------------------------------*/&#13;
+&#13;
+.iconlink a label,h2 {&#13;
+  display: block;&#13;
+  font-size: 2.5rem;&#13;
+  font-weight: 300;&#13;
+  line-height: 1.1;&#13;
+  padding: 0;&#13;
+  margin: 0 0 10px 0;&#13;
+}&#13;
+&#13;
+/* TOP ICON ---------- */&#13;
+&#13;
+a.top_icon {&#13;
+  display: block;&#13;
+  padding: 20px;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+a.top_icon .fa {&#13;
+  display: block;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+/* CIRCLE ICON ---------- */&#13;
+&#13;
+a.circle_icon {&#13;
+  display: block;&#13;
+  padding: 20px 0px 20px 70px;&#13;
+  position: relative;&#13;
+}&#13;
+&#13;
+a.circle_icon .fa {&#13;
+  position:absolute;&#13;
+  left: 0px;&#13;
+  top: 10px;&#13;
+}&#13;
+&#13;
+/* COLOR BOX ---------- */&#13;
+&#13;
+a.color_box {&#13;
+  display: block;&#13;
+  position: relative;&#13;
+  padding: 20px 20px 20px 82px;&#13;
+  border-radius: 4px;&#13;
+  margin-bottom: 20px;&#13;
+}&#13;
+&#13;
+a.color_box .fa {&#13;
+  position:absolute;&#13;
+  left: 20px;&#13;
+  top: 20px;&#13;
+  width:42px;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+.icon-link-background-primary {&#13;
+  background-color: $brand-primary;&#13;
+}&#13;
+&#13;
+.icon-link-background-info {&#13;
+  background-color: $brand-info;&#13;
+}&#13;
+&#13;
+.icon-link-background-success {&#13;
+  background-color: $brand-success;&#13;
+}&#13;
+&#13;
+.icon-link-background-warning {&#13;
+  background-color: $brand-warning;&#13;
+}&#13;
+&#13;
+.icon-link-background-danger {&#13;
+  background-color: $brand-danger;&#13;
+}&#13;
+&#13;
+.icon-link-background-default {&#13;
+  background-color: $brand-primary;&#13;
+}&#13;
+&#13;
+.text-primary {&#13;
+  color: $brand-primary;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-primary, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-info {&#13;
+  color: $brand-info;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-info, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-success {&#13;
+  color: $brand-success;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-success, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-warning {&#13;
+  color: $brand-warning;&#13;
+  &#13;
+  /*&#13;
+  &amp;:hover {&#13;
+    color: darken($brand-warning, 20%);&#13;
+  }&#13;
+  */&#13;
+}&#13;
+&#13;
+.text-danger {&#13;
+  color: $brand-danger;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-danger, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-default {&#13;
+  color: $brand-primary;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-primary, 20%);&#13;
+  }&#13;
+}&#13;
+/*-- ICON LINK CSS END:--------------------------------------------------------*/</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
-        <description/>
+        <description>clone this and change a few things to get your review widget ready. Shows a list of your reviews</description>
         <docs/>
         <field_list/>
         <has_preview>true</has_preview>
-        <id>see-reviews-widget</id>
+        <id>dynamic-see-reviews-widget</id>
         <internal>false</internal>
         <link/>
-        <name>See Reviews Widget</name>
+        <name>Dynamic See Reviews Widget</name>
         <option_schema/>
         <public>true</public>
         <roles/>
@@ -287,16 +261,18 @@ a.color_box .fa {
 	// data is an object accessible within whole widget 
 	// requestList holds all of the queried review information for each review used in html file with ng-repeat
 	data.requestList = [];
-	data.countAllStarsSubmittedForCourse = 0;
-	data.countAllReviewsSubmittedForCourse = 0;
-	data.overallCourseRating = 0;
-	data.courseAddress = "";
-	data.coursePhoneNumber = "";
+	data.countAllStarsSubmitted = 0;
+	data.countAllReviewsSubmitted = 0;
+	data.overallStarRating = 0;
 	
-	//gs.addInfoMessage(data.starValue);
-	//gs.addInfoMessage(data.action);
-	//gs.addInfoMessage(options.action);
-	//gs.addInfoMessage(input + "input");
+	data.dynamicAllStarsTotal = 0;
+	data.dynamicNumReviewsSubmitted = 0;
+	data.dynamicOverallStarRating = 0;
+	
+	data.address = "";
+	data.phoneNumber = "";
+	
+
 
 	/******************************************************************
 	 ************************ BEGIN readReviews ***********************
@@ -315,8 +291,11 @@ a.color_box .fa {
 if(input && input.action == 'readreviews') {
 	
 	// This table holds all the reviews for golf courses
-	var target = new GlideRecord('x_339628_fairfaxco_golf_course_reviews_2') ; 
-	target.addQuery('course_name','=',input.myCourseName);
+	/*
+	 * Cloning Change: change table
+	 */
+	var target = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget') ; 
+	target.addQuery('dropdown_value','=',input.myDropdownValue);
 	target.addQuery('show_to_public', '!=', 'Rejected');
 	target.orderByDesc('sys_created_on');
 	target.query(); // Issue the query to the database to get relevant records 
@@ -324,31 +303,40 @@ if(input && input.action == 'readreviews') {
   
 		var temp = {};
 
-		temp.course_name = target.course_name.toString();
+		temp.name = target.dropdown_value.toString();
 		temp.description = target.description.toString();
-		temp.course_rating = target.course_rating.toString();
+		temp.star_rating = target.star_rating.toString();
 		temp.date = target.sys_created_on.toString();
 
 		data.requestList.push(temp);
 	
-		data.countAllStarsSubmittedForCourse += Number(temp.course_rating);
-		data.countAllReviewsSubmittedForCourse++;
+		data.countAllStarsSubmitted += Number(temp.star_rating);
+		data.countAllReviewsSubmitted++;
 		
-		//gs.addInfoMessage("All Stars: " + data.countAllStarsSubmittedForCourse + " # of Reviews: " + data.countAllReviewsSubmittedForCourse);
+		
 	}
-	
-	data.overallCourseRating = Math.round(data.countAllStarsSubmittedForCourse / data.countAllReviewsSubmittedForCourse);
+	gs.addInfoMessage("Original: All Stars: " + data.countAllStarsSubmitted + " # of Reviews: " + data.countAllReviewsSubmitted + "overall: " + data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
+	data.overallStarRating = Math.round(data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
 	//gs.addInfoMessage("Overall: " + data.overallCourseRating);
 	
 	// This table holds all of the golf courses and their basic info. (One of each course)
 	// This is table used when selecting a course
-	var newtarget = new GlideRecord('u_golf_courses'); 
-	newtarget.addQuery('u_course_name','=',input.myCourseName);
+	/*
+	 * Cloning Change: change table
+	 */
+	var newtarget = new GlideRecord('x_339628_fairfaxco_dropdowns_for_review_widget'); 
+	newtarget.addQuery('dropdown_value','=',input.myDropdownValue);
 	newtarget.query(); // Issue the query to the database to get relevant records 
 	while (newtarget.next()) {
-		data.coursePicture = newtarget.u_picture.getDisplayValue().toString();
-		data.courseAddress = newtarget.u_address.toString();
-		data.coursePhoneNumber = newtarget.u_phone_number.toString();
+		data.picture = newtarget.display_photo.getDisplayValue().toString();
+		data.address = newtarget.address.toString();
+		data.phoneNumber = newtarget.phone_number.toString();
+
+		data.dynamicNumReviewsSubmitted = newtarget.number_of_reviews_submitted;
+		data.dynamicOverallStarRating = newtarget.overall_star_rating;
+		data.dynamicAllStarsTotal = newtarget.overall_star_rating * newtarget.number_of_reviews_submitted;
+		
+		gs.addInfoMessage("new: All Stars: " + data.dynamicAllStarsTotal + " # of Reviews: " + data.dynamicNumReviewsSubmitted + "overall: " + data.dynamicOverallStarRating);
 	}
 	//gs.addInfoMessage(data.coursePicture);
 }
@@ -371,48 +359,21 @@ if(input && input.action == 'readreviews') {
         <servicenow>false</servicenow>
         <sys_class_name>sp_widget</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2019-06-21 15:16:25</sys_created_on>
-        <sys_id>702f676f4f8a3300496900fe9310c79b</sys_id>
-        <sys_mod_count>266</sys_mod_count>
-        <sys_name>See Reviews Widget</sys_name>
+        <sys_created_on>2019-07-03 15:06:52</sys_created_on>
+        <sys_id>b900e9234f567300496900fe9310c77f</sys_id>
+        <sys_mod_count>12</sys_mod_count>
+        <sys_name>Dynamic See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
-        <sys_update_name>sp_widget_702f676f4f8a3300496900fe9310c79b</sys_update_name>
+        <sys_update_name>sp_widget_b900e9234f567300496900fe9310c77f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-03 17:56:23</sys_updated_on>
-        <template><![CDATA[<!-- -------------------------------------------------- -->
-<!-- ---------------- Tab Information ----------------- -->
-<!-- -------------------------------------------------- ---
-
-		A lot of tab stuff not used. Notice there is only 2 tabs.
-		"write a review and see all reviews"
--- ---------------------------------------------------- --
-	<uib-tabset active="active">
-    <uib-tab index="0" heading="Write a Review"></uib-tab>
-    <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" disable="tab.disabled">
-      {{tab.content}}
-    </uib-tab>
-    <uib-tab index="3" select="alertMe()" >
-      <uib-tab-heading>
-        <i class="glyphicon glyphicon-bell"></i> See all Reviews
-      </uib-tab-heading>
-      !--I've got an HTML heading, and a select callback. Pretty cool --
-    </uib-tab>
-  </uib-tabset>
-
-id= see-reviews-widget
-!-- --------------------------------------------------------------------------------- --
-
-
-<div ng-if="showWidget == 'see-reviews-widget'">
-<div class="container">
-
--->
-
-
-<div id="widget-container" class="panel panel-default" min-height="900px">
-	<h1 class="padder-md h3">${View Golf Courses Reviews}
+        <sys_updated_on>2019-07-05 16:29:08</sys_updated_on>
+        <template><![CDATA[<div id="widget-container" class="panel panel-default" min-height="900px">
+  	<!--
+	  -- Cloning Change: Change header information
+	  -->
+	<h1 class="padder-md h3">${View Park Reviews}
     <span class="text-base">
   	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
      </span>
@@ -421,25 +382,23 @@ id= see-reviews-widget
 		<div class="form-group">
 			<div class="row">
 				<div class="col-sm-8">
-					<label for="u_course_name">${Select a Course} <i class="fa fa-info-circle" uib-tooltip="${Please select a course to see reviews.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
+                  <!--
+	 			 	-- Cloning Change: Change label information and sn-record-picker
+	  				-->
+					<label for="dropdown_value">${Select a Park} <i class="fa fa-info-circle" uib-tooltip="${Please select a park to see reviews.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
 					<!-- -------------------------------------------------- -->
-  				<!-- ----------- Reference Search Bar ----------------- -->
- 				  <!-- -------------------------------------------------- -->
-          <sn-record-picker id="u_course_name" 
-                            field="c.courseName" 
-                            table="'u_golf_courses'" 
-                            display-field="'u_course_name'" 
-                            value-field="'u_course_name'"
+  					<!-- ----------- Reference Search Bar ----------------- -->
+ 				    <!-- -------------------------------------------------- -->
+          <sn-record-picker id="dropdown_value" 
+                            field="c.dropdownValue" 
+                            table="'x_339628_fairfaxco_dropdowns_for_review_widget'"
+                          	display-field="'dropdown_value'"
+                            value-field="'dropdown_value'"
+                            default-query="'associated_review_widget=Parks'"
                             page-size="100" 
                            >
           </sn-record-picker>
-          									<!-- These attributes were pulled out of sn-record-picker -->
-
-          									<!-- value-field="'sys_id'" -->
-          									<!-- sn-disabled="!c.data.disable_req_for" -->
-											 			<!-- search-fields="c.data.reqForDispCols"
-                            		 default-query="c.data.reqForQuery"
-          											 display-fields="c.data.reqForDispCols" -->
+          									
 				</div>
     
       
@@ -455,12 +414,14 @@ id= see-reviews-widget
   <!-- -------------------------------------------------- -->
   <!-- ----------- BEGIN overall course review ---------- -->
   <!-- -------------------------------------------------- -->
-  
-  <div ng-if="data.overallCourseRating > 0">
-     <h1 class="padder">{{data.myCourseName}}</h1>
+  <!--
+	-- Cloning Change: Change header
+	-->
+  <div ng-if="data.overallStarRating > 0">
+     <h1 class="padder">{{data.myDropdownValue}}</h1>
      <h5 class="padder">Overall Review</h5>
  
-     <div ng-if="data.overallCourseRating == 1" class="col-sm-12" id="StarRatingView">
+     <div ng-if="data.overallStarRating == 1" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
@@ -469,7 +430,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
-      <div ng-if="data.overallCourseRating == 2" class="col-sm-12" id="StarRatingView">
+      <div ng-if="data.overallStarRating == 2" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
@@ -478,7 +439,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
-      <div ng-if="data.overallCourseRating == 3" class="col-sm-12" id="StarRatingView">
+      <div ng-if="data.overallStarRating == 3" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
@@ -487,7 +448,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
-      <div ng-if="data.overallCourseRating == 4" class="col-sm-12" id="StarRatingView">
+      <div ng-if="data.overallStarRating == 4" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
@@ -496,7 +457,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
-      <div ng-if="data.overallCourseRating == 5" class="col-sm-12" id="StarRatingView">
+      <div ng-if="data.overallStarRating == 5" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
@@ -506,11 +467,8 @@ id= see-reviews-widget
          
         </div>
 		
-		<!-- this loads as background so you can paste content onto it
-				<div class="image padder" style="background: url('{{data.coursePicture}}') center center;background-size: cover;"></div> -->
- <!-- <img src="{{data.coursePicture}}" width="{{data.widgetWidth}}" height="auto" />
-		-->
-     <img src="{{data.coursePicture}}" width="100%" height="auto" />
+		
+     <img src="{{data.picture}}" width="100%" height="auto" />
     </div>
   
         
@@ -518,14 +476,14 @@ id= see-reviews-widget
 
   <br />
    
-  <div class="row padder" ng-if="data.overallCourseRating > 0">
+  <div class="row padder" ng-if="data.overallStarRating > 0">
 		<div class="col-xs-2" >Address:</div>
-		<div class="col-xs-10" >{{data.courseAddress}}</div>  
+		<div class="col-xs-10" >{{data.address}}</div>  
 		<div class="col-xs-2" >Phone:</div>
-		<div class="col-xs-10" >{{data.coursePhoneNumber}}</div>
- 
+		<div class="col-xs-10" >{{data.phoneNumber}}</div>
+ 	
 </div>
-   <hr ng-if="data.overallCourseRating > 0" /> 
+   <hr ng-if="data.overallStarRating > 0" /> 
   
   <!-- -------------------------------------------------- -->
   <!-- ----------- END overall course review ------------ -->
@@ -537,9 +495,9 @@ id= see-reviews-widget
    <div ng-repeat="review in data.requestList | limitTo:50" class="each-incident">    
       
      
-      <h1 class="padder">{{review.course_name}}</h1>
+      <h1 class="padder">{{review.name}}</h1>
      
-        <div ng-if="review.course_rating == 1" class="col-sm-12" id="StarRatingView">
+        <div ng-if="review.star_rating == 1" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-3x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star-o fa-3x  text-warning"></div>
@@ -548,7 +506,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-3x  text-warning"></div>
          
         </div>
-      <div ng-if="review.course_rating == 2" class="col-sm-12" id="StarRatingView">
+      <div ng-if="review.star_rating == 2" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-3x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-3x  text-warning"></div>
@@ -557,7 +515,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-3x  text-warning"></div>
          
         </div>
-      <div ng-if="review.course_rating == 3" class="col-sm-12" id="StarRatingView">
+      <div ng-if="review.star_rating == 3" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-3x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-3x  text-warning"></div>
@@ -566,7 +524,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-3x  text-warning"></div>
          
         </div>
-      <div ng-if="review.course_rating == 4" class="col-sm-12" id="StarRatingView">
+      <div ng-if="review.star_rating == 4" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-3x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-3x  text-warning"></div>
@@ -575,7 +533,7 @@ id= see-reviews-widget
         	 <div id="5Star" class="m-b fa fa-star-o fa-3x  text-warning"></div>
          
         </div>
-      <div ng-if="review.course_rating == 5" class="col-sm-12" id="StarRatingView">
+      <div ng-if="review.star_rating == 5" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-3x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-3x  text-warning"></div>
@@ -585,9 +543,7 @@ id= see-reviews-widget
          
         </div>
      <br /><br /><br />
-      <!--
-			<p class="padder">{{review.course_rating}}</p>
-			-->
+      
       <p id="widgetDesc"  class="padder wordwrap">{{review.description}}</p>
      
    
@@ -604,9 +560,6 @@ id= see-reviews-widget
   <!-- -------------------------------------------------- -->
   
 	</div>
-<!--
-</div>
-</div>
--->]]></template>
+]]></template>
     </sp_widget>
 </record_update>

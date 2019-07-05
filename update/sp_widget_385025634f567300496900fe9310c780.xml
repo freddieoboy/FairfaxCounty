@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope, $http, $window, spScUtil, nowAttachmentHandler, spUtil, $log, spAriaUtil, $rootScope, $timeout) {
+  
+
+
+  var c = this;
+
+	// holds value to show/hide description textbox
+	c.showDescription = true;
+	
+	var starValue;
+	
+	/******************************************************************
+	 ************************ BEGIN GLOBAL clickStar ******************
+	 ******************************************************************
+	 // need ng click to do c.function
+	// since not angular this is a global function be careful
+	// not good practice. also doesnt need to pass "this" could just 
+	   pass the number star it is
+	 *****************************************************************/
+	clickStar = function(starClicked) {
+		
+		
+		//alert(starClicked.id);
+		starValue = starClicked.id[0];
+		
+		if(starClicked.className == "m-b fa fa-star-o fa-4x  text-warning") {
+			starClicked.className = "m-b fa fa-star fa-4x  text-warning";
+		}
+		else {
+			starClicked.className = "m-b fa fa-star-o fa-4x  text-warning";
+		}
+		
+		var parentDivOfStars = document.getElementById("StarRatingView");
+		var starNum;
+		
+		// reference to id based of parent node (parent.childnode[x])
+		var x = (starValue * 2) - 1;
+
+		
+		// fill stars with colors <= star value
+		while (x > 0) {
+			// x denotes star (1 = 1star, 3 = 2star, 5 = 3star, 7 = 4star, 9 = 5star)
+			starNum = parentDivOfStars.childNodes[x];
+			//alert(starNum.id);
+			starNum.className = "m-b fa fa-star fa-4x  text-warning";
+			x -= 2;
+		}
+		
+		x = (starValue * 2) + 1;
+			// unfill stars > star value
+		while (x < 10) {
+			starNum = parentDivOfStars.childNodes[x];
+			starNum.className = "m-b fa fa-star-o fa-4x  text-warning";
+			x += 2;
+		}
+		c.data.starValue = starValue;
+	}
+	
+	/******************************************************************
+	 ************************ END GLOBAL clickStar ********************
+	 *****************************************************************/
+	
+	/******************************************************************
+	 ************************ BEGIN submitme *************************
+	 *****************************************************************
+	 gets called on submit but from HTML
+	 All fields are mandatory so return error msg and exit if not all filled
+	 Otherwise update course name and call server
+	 *****************************************************************/
+	
+	
+	  /*
+	   * When Cloning: Change 4 variables here
+	   */
+	c.submitme = function() {
+		if(c.dropdownValue.value == undefined || c.data.starValue == undefined || c.data.desc == undefined) {
+			spUtil.addErrorMessage('Parks, Star Review and description must be filled out to submit.');
+			return;
+		}
+		
+		c.data.myDropdownValue = c.dropdownValue.value;
+		c.server.update();	
+	}
+	/******************************************************************
+	 ************************ END submitme ****************************
+	 *****************************************************************/
+	
+	/******************************************************************
+	 ************************ BEGIN changeDescription *****************
+	 *****************************************************************
+	 gets called from textarea in HTML after typing inside textbox and  
+	 then leaving the box (update on blur)
+	 *****************************************************************/
+	c.changeDescription = function() {
+			c.data.desc = c.my_description;
+	}
+	
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.panel {&#13;
+ max-width: 600px;&#13;
+}&#13;
+&#13;
+/*********************************************************/&#13;
+&#13;
+.attachment-list {&#13;
+  	max-height: 180px;&#13;
+  	overflow-y: scroll;&#13;
+  	margin-bottom: 10px;&#13;
+}&#13;
+&#13;
+.accordion-toggle {&#13;
+  	line-height: 13px;&#13;
+}&#13;
+&#13;
+textarea {&#13;
+	resize: vertical;&#13;
+}&#13;
+&#13;
+.select2-additional-display-field {&#13;
+  	padding-right: 5px;&#13;
+}&#13;
+&#13;
+&#13;
+&#13;
+div.image {&#13;
+height: 200px;&#13;
+width: 400px;&#13;
+top: 99px;&#13;
+left: 50px;&#13;
+background-size: cover;&#13;
+}&#13;
+&#13;
+&#13;
+/* STAR ICON CSS BEGIN:--------------------------------------------------------*/&#13;
+&#13;
+.iconlink a label,h2 {&#13;
+  display: block;&#13;
+  font-size: 2.5rem;&#13;
+  font-weight: 300;&#13;
+  line-height: 1.1;&#13;
+  padding: 0;&#13;
+  margin: 0 0 10px 0;&#13;
+}&#13;
+&#13;
+/* TOP ICON ---------- */&#13;
+&#13;
+a.top_icon {&#13;
+  display: block;&#13;
+  padding: 20px;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+a.top_icon .fa {&#13;
+  display: block;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+/* CIRCLE ICON ---------- */&#13;
+&#13;
+a.circle_icon {&#13;
+  display: block;&#13;
+  padding: 20px 0px 20px 70px;&#13;
+  position: relative;&#13;
+}&#13;
+&#13;
+a.circle_icon .fa {&#13;
+  position:absolute;&#13;
+  left: 0px;&#13;
+  top: 10px;&#13;
+}&#13;
+&#13;
+/* COLOR BOX ---------- */&#13;
+&#13;
+a.color_box {&#13;
+  display: block;&#13;
+  position: relative;&#13;
+  padding: 20px 20px 20px 82px;&#13;
+  border-radius: 4px;&#13;
+  margin-bottom: 20px;&#13;
+}&#13;
+&#13;
+a.color_box .fa {&#13;
+  position:absolute;&#13;
+  left: 20px;&#13;
+  top: 20px;&#13;
+  width:42px;&#13;
+  text-align: center;&#13;
+}&#13;
+&#13;
+.icon-link-background-primary {&#13;
+  background-color: $brand-primary;&#13;
+}&#13;
+&#13;
+.icon-link-background-info {&#13;
+  background-color: $brand-info;&#13;
+}&#13;
+&#13;
+.icon-link-background-success {&#13;
+  background-color: $brand-success;&#13;
+}&#13;
+&#13;
+.icon-link-background-warning {&#13;
+  background-color: $brand-warning;&#13;
+}&#13;
+&#13;
+.icon-link-background-danger {&#13;
+  background-color: $brand-danger;&#13;
+}&#13;
+&#13;
+.icon-link-background-default {&#13;
+  background-color: $brand-primary;&#13;
+}&#13;
+&#13;
+.text-primary {&#13;
+  color: $brand-primary;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-primary, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-info {&#13;
+  color: $brand-info;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-info, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-success {&#13;
+  color: $brand-success;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-success, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-warning {&#13;
+  color: $brand-warning;&#13;
+  &#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-warning, 20%);&#13;
+  }&#13;
+  &#13;
+}&#13;
+&#13;
+.text-danger {&#13;
+  color: $brand-danger;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-danger, 20%);&#13;
+  }&#13;
+}&#13;
+&#13;
+.text-default {&#13;
+  color: $brand-primary;&#13;
+  &#13;
+  &amp;:hover {&#13;
+    color: darken($brand-primary, 20%);&#13;
+  }&#13;
+}&#13;
+/* ICON LINK CSS END:--------------------------------------------------------*/</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description>clone this and change a few things to write reviews for anything. write a review</description>
+        <docs/>
+        <field_list/>
+        <has_preview>true</has_preview>
+        <id>dynamic-write-reviews-widget</id>
+        <internal>false</internal>
+        <link/>
+        <name>Dynamic Write Reviews Widget</name>
+        <option_schema/>
+        <public>true</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	
+  /******************************************************************
+	 ************************ BEGIN submitme **************************
+	 ******************************************************************
+		This function gets called by server update 
+			 in client script function c.readReviews
+		------------------------------------------------------
+		Queries golf course review table and searches by course name.
+		Grabs course name, description, course rating for each review and
+		pushes it to requestList which is visible within entire widget.
+		Keeps track of average star rating for each review to show an 
+		overall course rating.
+		
+		Queries golf course select for general information to provide with overall review.
+	********************************************************************/
+
+if(input && input.action == 'submitme') {
+	
+	  /*
+	   * When Cloning: Change 3 variables here
+	   */
+	var gr = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget');
+    gr.initialize(); 
+		gr.associated_review_widget = "Parks"
+		gr.dropdown_value = input.myDropdownValue; 
+		gr.description = input.desc; 
+		gr.star_rating = input.starValue;
+		gr.insert();
+		gs.addInfoMessage("Review Submitted.");
+	return;
+	}
+	/******************************************************************
+	 ************************** END submitme **************************
+	 *****************************************************************/
+	
+	// exerpt from out of box widget
+	// curious if we even need this.
+	// we can probably just set in client script
+	data.action = options.action;
+	if (data.action)
+		data.item = options.item;
+	else
+		//data.action = 'checkout';
+		data.action = 'submitme';
+
+	
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-07-03 15:08:09</sys_created_on>
+        <sys_id>385025634f567300496900fe9310c780</sys_id>
+        <sys_mod_count>11</sys_mod_count>
+        <sys_name>Dynamic Write Reviews Widget</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_update_name>sp_widget_385025634f567300496900fe9310c780</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-07-04 00:56:16</sys_updated_on>
+        <template><![CDATA[<div class="panel panel-default">
+  
+  	 <!--
+	   -- When Cloning: Change Header Information Change 1 value here
+	   -->
+	<h1 class="padder-md h3">${Review Parks}
+    <span class="text-base">
+  	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
+     </span>
+  </h1>
+	<div class="wrapper-md clearfix b-t">
+		<div class="form-group">
+			<div class="row">
+				<div class="col-sm-8">
+                  	
+                  	<!--
+	   				  -- When Cloning: Change for, id, table, display-field and value-field to match table information.
+					  --			 : field is a variable to hold the value of your reference search bar
+					  --			 : Change two text values in label to let user understand what your review widget is for.
+					  --             : Change 9 values here 
+	  				  -->
+					<label for="dropdown_value">${Select a Park} <i class="fa fa-info-circle" uib-tooltip="${Please select a park, rate your experience and leave a review. Thank you.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
+					<!-- -------------------------------------------------- -->
+  					<!-- ----------- Reference Search Bar ----------------- -->
+ 				 	<!-- -------------------------------------------------- -->
+          <sn-record-picker id="dropdown_value" 
+                            field="c.dropdownValue" 
+                            table="'x_339628_fairfaxco_dropdowns_for_review_widget'"
+                          	display-field="'dropdown_value'"
+                            value-field="'dropdown_value'"
+                            default-query="'associated_review_widget=Parks'"
+                            page-size="100" >
+                            
+          </sn-record-picker>
+           									
+				</div>
+       
+       
+        	<!-- -------------------------------------------------- -->
+  			<!-- ----------- Clickable Star Rating ---------------- -->
+ 			<!-- -------------------------------------------------- -->
+         	<!-- use ng if to show star selection keep track of variable 
+				using data."mycustomobject" build object in server script?
+				or use c. custom boolean variable along with ng click-->
+        
+      	<div class="padder-v col-sm-12" id="StarRatingView">
+          
+         	 <div id="1Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+        	 <div id="2Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+        	 <div id="3Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+             <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+         
+        </div>
+           
+				<!-- -------------------------------------------------- -->
+  				<!-- ----------- Description Text Box ----------------- -->
+ 				<!-- -------------------------------------------------- -->
+         <div class="col-sm-12">
+					<label for="my-description" ng-click="c.showDescription = !c.showDescription" tabindex="0">${Description} <span class="text-muted"></span>
+						<i ng-class="c.showDescription ? 'fa fa-minus-square-o' : 'fa fa-plus-square-o'" aria-expanded="{{c.showDescription}}" class="m-t-xs pull-left accordion-toggle"></i>
+					</label>
+					<textarea class="form-control" ng-model="c.my_description" id="my-description" ng-model-options="{ updateOn: 'blur' }" ng-if="c.showDescription" ng-change="c.changeDescription()" rows="3"></textarea>
+				</div>
+        
+  </div>       
+        
+		</div>
+     <button name="submit" ng-click="c.submitme()" class="btn sc-btn btn-primary pull-right m-l-xs">
+  ${Submit}
+  </button>
+    </div>
+	</div>]]></template>
+    </sp_widget>
+</record_update>

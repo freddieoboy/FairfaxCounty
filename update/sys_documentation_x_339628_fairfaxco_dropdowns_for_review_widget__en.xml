@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="" label="Dropdowns for Review Widget" language="en" table="x_339628_fairfaxco_dropdowns_for_review_widget">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element/>
+            <help/>
+            <hint/>
+            <label>Dropdowns for Review Widget</label>
+            <language>en</language>
+            <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
+            <plural>Dropdowns for Review Widgets</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2019-07-03 14:01:01</sys_created_on>
+            <sys_id>c9f0952b4f167300496900fe9310c7d0</sys_id>
+            <sys_mod_count>2</sys_mod_count>
+            <sys_name>Dropdowns for Review Widget</sys_name>
+            <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+            <sys_update_name>sys_documentation_x_339628_fairfaxco_dropdowns_for_review_widget__en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2019-07-03 14:05:42</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>
