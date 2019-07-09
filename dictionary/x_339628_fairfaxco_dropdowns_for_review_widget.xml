@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database>
-    <element extends="task" label="Dropdowns for Review Widget" max_length="40" name="x_339628_fairfaxco_dropdowns_for_review_widget" sizeclass="5" type="collection">
+    <element extends="task" label="Dropdowns for Review Widget" max_length="40" name="x_339628_fairfaxco_dropdowns_for_review_widget" sizeclass="6" type="collection">
         <element label="Address" max_length="400" name="address" type="string"/>
         <element choice="3" default="Golf Courses" label="Associated Review Widget" max_length="40" name="associated_review_widget" type="choice">
             <choice>
+                <element label="Mini Golf Courses" value="Mini Golf Courses"/>
                 <element label="Golf Courses" sequence="10" value="Golf Courses"/>
                 <element label="Parks" sequence="20" value="Parks"/>
             </choice>

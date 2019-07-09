@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="INSERT_OR_UPDATE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-07-08 20:22:35</sys_created_on>
+        <sys_id>c6a79c9d4f62b300496900fe9310c712</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>.x_339628_fairfaxco.read dropdown names</sys_name>
+        <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
+        <sys_security_acl display_value="x_339628_fairfaxco_dropdowns_for_review_widget">d9a7d0114fa2b300496900fe9310c7a8</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_c6a79c9d4f62b300496900fe9310c712</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-07-08 20:22:35</sys_updated_on>
+        <sys_user_role display_value="x_339628_fairfaxco.read dropdown names" name="x_339628_fairfaxco.read dropdown names">37e754114fa2b300496900fe9310c7ef</sys_user_role>
+        <transaction_id/>
+    </sys_security_acl_role>
+</record_update>

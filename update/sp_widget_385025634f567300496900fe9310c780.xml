@@ -8,6 +8,31 @@
 
   var c = this;
 
+
+    /*    //Listening for "showHideWidget" event
+
+  $rootScope.$on('share_option_schema', function(event,data) {
+	alert("write widget data: " + data);
+  $timeout(function(){
+					
+		//alert("write widget data: " + data);
+           // $scope.showWidget = data;
+
+  });
+
+  });
+	////////////////////////////// 
+	
+	
+	$timeout(function(){
+		$rootScope.$broadcast('share_option_schema', 'dynamic-write-reviews-widget');
+
+	},500);
+
+	$rootScope.$broadcast('share_option_schema', c.data.shareOptionSchema);
+	
+	*////////////////////////////
+	
 	// holds value to show/hide description textbox
 	c.showDescription = true;
 	
@@ -21,20 +46,24 @@
 	// not good practice. also doesnt need to pass "this" could just 
 	   pass the number star it is
 	 *****************************************************************/
-	clickStar = function(starClicked) {
+	
+	c.clickStar = function($event) {
 		
 		
 		//alert(starClicked.id);
-		starValue = starClicked.id[0];
-		
+		//starValue = starClicked.id[0];
+		starValue = event.target.id[0];
+		/*
 		if(starClicked.className == "m-b fa fa-star-o fa-4x  text-warning") {
 			starClicked.className = "m-b fa fa-star fa-4x  text-warning";
 		}
 		else {
 			starClicked.className = "m-b fa fa-star-o fa-4x  text-warning";
 		}
-		
-		var parentDivOfStars = document.getElementById("StarRatingView");
+		*/
+	//	alert(event.target.parentNode.id);
+		//var parentDivOfStars = document.getElementById("StarRatingView");
+		var parentDivOfStars = event.target.parentNode;
 		var starNum;
 		
 		// reference to id based of parent node (parent.childnode[x])
@@ -42,7 +71,7 @@
 
 		
 		// fill stars with colors <= star value
-		while (x > 0) {
+		while (x >= 0) {
 			// x denotes star (1 = 1star, 3 = 2star, 5 = 3star, 7 = 4star, 9 = 5star)
 			starNum = parentDivOfStars.childNodes[x];
 			//alert(starNum.id);
@@ -78,7 +107,14 @@
 	   */
 	c.submitme = function() {
 		if(c.dropdownValue.value == undefined || c.data.starValue == undefined || c.data.desc == undefined) {
-			spUtil.addErrorMessage('Parks, Star Review and description must be filled out to submit.');
+			/*
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 */
+			spUtil.addErrorMessage(c.data.associatedWidgetMinusLastCharacter + ', Star Review and Description must be filled out to submit.');
 			return;
 		}
 		
@@ -276,10 +312,19 @@ a.color_box .fa {&#13;
         <internal>false</internal>
         <link/>
         <name>Dynamic Write Reviews Widget</name>
-        <option_schema/>
+        <option_schema>[{"name":"test_widget_option_schema","section":"Data","default_value":"write","label":"Test","type":"choice","choices":[{"label":"Parks","value":"Parks"},{"label":"Golf Courses","value":"Golf Courses"},{"label":"Mini Golf Courses","value":"Mini Golf Courses"}]}]</option_schema>
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
+	//gs.addInfoMessage(options.test_widget_option_schema);
+	
+	if(options.test_widget_option_schema != 'write') {
+		data.associatedWidget = (JSON.stringify(options.test_widget_option_schema)).slice(1,-1);
+		data.defaultQueryString = 'associated_review_widget=' + data.associatedWidget;
+		data.associatedWidgetMinusLastCharacter = (JSON.stringify(options.test_widget_option_schema));
+		data.associatedWidgetMinusLastCharacter = ((data.associatedWidgetMinusLastCharacter).slice(1,-2));
+		data.associatedWidgetMinusLastCharacterLowercase = data.associatedWidgetMinusLastCharacter.toLowerCase();
+	}
 	
   /******************************************************************
 	 ************************ BEGIN submitme **************************
@@ -303,7 +348,16 @@ if(input && input.action == 'submitme') {
 	   */
 	var gr = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget');
     gr.initialize(); 
-		gr.associated_review_widget = "Parks"
+		/*
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 */
+		//gr.associated_review_widget = "Parks"
+	  //gs.addInfoMessage("submitting review: "+input.associatedWidget);
+	  gr.associated_review_widget = input.associatedWidget;
 		gr.dropdown_value = input.myDropdownValue; 
 		gr.description = input.desc; 
 		gr.star_rating = input.starValue;
@@ -332,20 +386,27 @@ if(input && input.action == 'submitme') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-07-03 15:08:09</sys_created_on>
         <sys_id>385025634f567300496900fe9310c780</sys_id>
-        <sys_mod_count>11</sys_mod_count>
+        <sys_mod_count>79</sys_mod_count>
         <sys_name>Dynamic Write Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_385025634f567300496900fe9310c780</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-04 00:56:16</sys_updated_on>
+        <sys_updated_on>2019-07-08 19:34:44</sys_updated_on>
         <template><![CDATA[<div class="panel panel-default">
   
   	 <!--
 	   -- When Cloning: Change Header Information Change 1 value here
 	   -->
-	<h1 class="padder-md h3">${Review Parks}
+  <!--
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 -->
+	<h1 class="padder-md h3">${Review }{{data.associatedWidget}}
     <span class="text-base">
   	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
      </span>
@@ -361,7 +422,14 @@ if(input && input.action == 'submitme') {
 					  --			 : Change two text values in label to let user understand what your review widget is for.
 					  --             : Change 9 values here 
 	  				  -->
-					<label for="dropdown_value">${Select a Park} <i class="fa fa-info-circle" uib-tooltip="${Please select a park, rate your experience and leave a review. Thank you.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
+          <!--
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 -->
+					<label for="dropdown_value">${Select a }{{data.associatedWidgetMinusLastCharacter}} <i class="fa fa-info-circle" uib-tooltip="${Please select a }{{data.associatedWidgetMinusLastCharacterLowercase}}${, rate your experience and leave a review. Thank you.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
 					<!-- -------------------------------------------------- -->
   					<!-- ----------- Reference Search Bar ----------------- -->
  				 	<!-- -------------------------------------------------- -->
@@ -370,7 +438,7 @@ if(input && input.action == 'submitme') {
                             table="'x_339628_fairfaxco_dropdowns_for_review_widget'"
                           	display-field="'dropdown_value'"
                             value-field="'dropdown_value'"
-                            default-query="'associated_review_widget=Parks'"
+                            default-query=${data.defaultQueryString}
                             page-size="100" >
                             
           </sn-record-picker>
@@ -387,11 +455,11 @@ if(input && input.action == 'submitme') {
         
       	<div class="padder-v col-sm-12" id="StarRatingView">
           
-         	 <div id="1Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
-        	 <div id="2Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
-        	 <div id="3Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
-             <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
-        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning" onclick="clickStar(this)"></div>
+         	 <div id="1Star" class="m-b fa fa-star-o fa-4x  text-warning" ng-click="c.clickStar($event)"></div>
+        	 <div id="2Star" class="m-b fa fa-star-o fa-4x  text-warning" ng-click="c.clickStar($event)"></div>
+        	 <div id="3Star" class="m-b fa fa-star-o fa-4x  text-warning" ng-click="c.clickStar($event)"></div>
+           <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning" ng-click="c.clickStar($event)"></div>
+        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning" ng-click="c.clickStar($event)"></div>
          
         </div>
            

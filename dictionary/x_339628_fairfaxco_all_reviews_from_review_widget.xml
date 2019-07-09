@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <database>
-    <element extends="task" label="All Reviews from Review Widget" max_length="40" name="x_339628_fairfaxco_all_reviews_from_review_widget" sizeclass="31" type="collection">
+    <element extends="task" label="All Reviews from Review Widget" max_length="40" name="x_339628_fairfaxco_all_reviews_from_review_widget" sizeclass="45" type="collection">
         <element choice="3" default="Golf Courses" label="Associated Review Widget" mandatory="true" max_length="40" name="associated_review_widget" read_only="true" type="choice">
             <choice>
                 <element label="Golf Courses" value="Golf Courses"/>
                 <element label="Parks" value="Parks"/>
             </choice>
         </element>
-        <element label="Dropdown Description" max_length="40" name="dropdown_description" type="string"/>
         <element label="Dropdown Value" mandatory="true" max_length="40" name="dropdown_value" read_only="true" type="string"/>
         <element choice="3" default="Waiting For Approval" label="Show to Public" max_length="40" name="show_to_public" type="choice">
             <choice>

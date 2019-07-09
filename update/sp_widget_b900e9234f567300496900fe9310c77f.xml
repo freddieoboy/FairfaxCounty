@@ -6,7 +6,17 @@
   
 
   var c = this;
+	/*
+	$rootScope.$on('share_option_schema', function(event,data) {
+	alert("see widget data: " + data);
+  $timeout(function(){
+					
+		//alert("write widget data: " + data);
+           // $scope.showWidget = data;
 
+  });
+
+  });*/
 	
 	/******************************************************************
 	 ********************** BEGIN c.readReviews ***********************
@@ -26,7 +36,14 @@
 	c.readReviews = function() {
 		
 		if(c.dropdownValue.value == undefined) {
-			spUtil.addErrorMessage('You must select a park to see its reviews.');
+			/*
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 */
+			spUtil.addErrorMessage('You must select a '+ data.associatedWidgetMinusLastCharacter +' to see the reviews.');
 			return;
 		}
 		
@@ -56,192 +73,194 @@
 	
 }]]></client_script>
         <controller_as>c</controller_as>
-        <css>&#13;
-&#13;
-.center-div{&#13;
-&#13;
-      margin-left: auto;&#13;
-&#13;
-      margin-right: auto;&#13;
-&#13;
-  float:none;&#13;
-&#13;
-}&#13;
-/*******************************************/&#13;
-.wordwrap&#13;
-{   &#13;
-    width: data.widgetWidth;&#13;
-    word-wrap: break-word;&#13;
-}&#13;
-&#13;
-.attachment-list {&#13;
-  	max-height: 180px;&#13;
-  	overflow-y: scroll;&#13;
-  	margin-bottom: 10px;&#13;
-}&#13;
-&#13;
-.accordion-toggle {&#13;
-  	line-height: 13px;&#13;
-}&#13;
-&#13;
-textarea {&#13;
-	resize: vertical;&#13;
-}&#13;
-&#13;
-.select2-additional-display-field {&#13;
-  padding-right: 5px;&#13;
-}&#13;
-&#13;
-/*&#13;
-.myImage {&#13;
-  src: data.picture;&#13;
-  width: data.widgetWidth; &#13;
-  height: auto;&#13;
-} */&#13;
-&#13;
-&#13;
-div.image {&#13;
-height: 200px;&#13;
-width: 400px;&#13;
-top: 99px;&#13;
-left: 50px;&#13;
-background-size: cover;&#13;
-}&#13;
-&#13;
-/* hard coded to match write a review widget original size */&#13;
-.panel {&#13;
- min-height: 405px;&#13;
- //max-width: 600px;&#13;
-}&#13;
-/* ICON LINK CSS BEGIN:--------------------------------------------------------*/&#13;
-&#13;
-.iconlink a label,h2 {&#13;
-  display: block;&#13;
-  font-size: 2.5rem;&#13;
-  font-weight: 300;&#13;
-  line-height: 1.1;&#13;
-  padding: 0;&#13;
-  margin: 0 0 10px 0;&#13;
-}&#13;
-&#13;
-/* TOP ICON ---------- */&#13;
-&#13;
-a.top_icon {&#13;
-  display: block;&#13;
-  padding: 20px;&#13;
-  text-align: center;&#13;
-}&#13;
-&#13;
-a.top_icon .fa {&#13;
-  display: block;&#13;
-  text-align: center;&#13;
-}&#13;
-&#13;
-/* CIRCLE ICON ---------- */&#13;
-&#13;
-a.circle_icon {&#13;
-  display: block;&#13;
-  padding: 20px 0px 20px 70px;&#13;
-  position: relative;&#13;
-}&#13;
-&#13;
-a.circle_icon .fa {&#13;
-  position:absolute;&#13;
-  left: 0px;&#13;
-  top: 10px;&#13;
-}&#13;
-&#13;
-/* COLOR BOX ---------- */&#13;
-&#13;
-a.color_box {&#13;
-  display: block;&#13;
-  position: relative;&#13;
-  padding: 20px 20px 20px 82px;&#13;
-  border-radius: 4px;&#13;
-  margin-bottom: 20px;&#13;
-}&#13;
-&#13;
-a.color_box .fa {&#13;
-  position:absolute;&#13;
-  left: 20px;&#13;
-  top: 20px;&#13;
-  width:42px;&#13;
-  text-align: center;&#13;
-}&#13;
-&#13;
-.icon-link-background-primary {&#13;
-  background-color: $brand-primary;&#13;
-}&#13;
-&#13;
-.icon-link-background-info {&#13;
-  background-color: $brand-info;&#13;
-}&#13;
-&#13;
-.icon-link-background-success {&#13;
-  background-color: $brand-success;&#13;
-}&#13;
-&#13;
-.icon-link-background-warning {&#13;
-  background-color: $brand-warning;&#13;
-}&#13;
-&#13;
-.icon-link-background-danger {&#13;
-  background-color: $brand-danger;&#13;
-}&#13;
-&#13;
-.icon-link-background-default {&#13;
-  background-color: $brand-primary;&#13;
-}&#13;
-&#13;
-.text-primary {&#13;
-  color: $brand-primary;&#13;
-  &#13;
-  &amp;:hover {&#13;
-    color: darken($brand-primary, 20%);&#13;
-  }&#13;
-}&#13;
-&#13;
-.text-info {&#13;
-  color: $brand-info;&#13;
-  &#13;
-  &amp;:hover {&#13;
-    color: darken($brand-info, 20%);&#13;
-  }&#13;
-}&#13;
-&#13;
-.text-success {&#13;
-  color: $brand-success;&#13;
-  &#13;
-  &amp;:hover {&#13;
-    color: darken($brand-success, 20%);&#13;
-  }&#13;
-}&#13;
-&#13;
-.text-warning {&#13;
-  color: $brand-warning;&#13;
-  &#13;
-  /*&#13;
-  &amp;:hover {&#13;
-    color: darken($brand-warning, 20%);&#13;
-  }&#13;
-  */&#13;
-}&#13;
-&#13;
-.text-danger {&#13;
-  color: $brand-danger;&#13;
-  &#13;
-  &amp;:hover {&#13;
-    color: darken($brand-danger, 20%);&#13;
-  }&#13;
-}&#13;
-&#13;
-.text-default {&#13;
-  color: $brand-primary;&#13;
-  &#13;
-  &amp;:hover {&#13;
-    color: darken($brand-primary, 20%);&#13;
-  }&#13;
-}&#13;
+        <css>.panel {
+ max-width: 600px;
+}
+
+.center-div{
+
+      margin-left: auto;
+
+      margin-right: auto;
+
+  float:none;
+
+}
+/*******************************************/
+.wordwrap
+{   
+    width: data.widgetWidth;
+    word-wrap: break-word;
+}
+
+.attachment-list {
+  	max-height: 180px;
+  	overflow-y: scroll;
+  	margin-bottom: 10px;
+}
+
+.accordion-toggle {
+  	line-height: 13px;
+}
+
+textarea {
+	resize: vertical;
+}
+
+.select2-additional-display-field {
+  padding-right: 5px;
+}
+
+/*
+.myImage {
+  src: data.picture;
+  width: data.widgetWidth; 
+  height: auto;
+} */
+
+
+div.image {
+height: 200px;
+width: 400px;
+top: 99px;
+left: 50px;
+background-size: cover;
+}
+
+/* hard coded to match write a review widget original size */
+.panel {
+ min-height: 405px;
+ //max-width: 600px;
+}
+/* ICON LINK CSS BEGIN:--------------------------------------------------------*/
+
+.iconlink a label,h2 {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1.1;
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+
+/* TOP ICON ---------- */
+
+a.top_icon {
+  display: block;
+  padding: 20px;
+  text-align: center;
+}
+
+a.top_icon .fa {
+  display: block;
+  text-align: center;
+}
+
+/* CIRCLE ICON ---------- */
+
+a.circle_icon {
+  display: block;
+  padding: 20px 0px 20px 70px;
+  position: relative;
+}
+
+a.circle_icon .fa {
+  position:absolute;
+  left: 0px;
+  top: 10px;
+}
+
+/* COLOR BOX ---------- */
+
+a.color_box {
+  display: block;
+  position: relative;
+  padding: 20px 20px 20px 82px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+a.color_box .fa {
+  position:absolute;
+  left: 20px;
+  top: 20px;
+  width:42px;
+  text-align: center;
+}
+
+.icon-link-background-primary {
+  background-color: $brand-primary;
+}
+
+.icon-link-background-info {
+  background-color: $brand-info;
+}
+
+.icon-link-background-success {
+  background-color: $brand-success;
+}
+
+.icon-link-background-warning {
+  background-color: $brand-warning;
+}
+
+.icon-link-background-danger {
+  background-color: $brand-danger;
+}
+
+.icon-link-background-default {
+  background-color: $brand-primary;
+}
+
+.text-primary {
+  color: $brand-primary;
+  
+  &amp;:hover {
+    color: darken($brand-primary, 20%);
+  }
+}
+
+.text-info {
+  color: $brand-info;
+  
+  &amp;:hover {
+    color: darken($brand-info, 20%);
+  }
+}
+
+.text-success {
+  color: $brand-success;
+  
+  &amp;:hover {
+    color: darken($brand-success, 20%);
+  }
+}
+
+.text-warning {
+  color: $brand-warning;
+  
+  /*
+  &amp;:hover {
+    color: darken($brand-warning, 20%);
+  }
+  */
+}
+
+.text-danger {
+  color: $brand-danger;
+  
+  &amp;:hover {
+    color: darken($brand-danger, 20%);
+  }
+}
+
+.text-default {
+  color: $brand-primary;
+  
+  &amp;:hover {
+    color: darken($brand-primary, 20%);
+  }
+}
 /*-- ICON LINK CSS END:--------------------------------------------------------*/</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -253,10 +272,19 @@ a.color_box .fa {&#13;
         <internal>false</internal>
         <link/>
         <name>Dynamic See Reviews Widget</name>
-        <option_schema/>
+        <option_schema>[{"name":"test_widget_option_schema","section":"Data","default_value":"see","label":"Test","type":"choice","choices":[{"label":"Parks","value":"Parks"},{"label":"Golf Courses","value":"Golf Courses"}]}]</option_schema>
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
+	//gs.addInfoMessage(options.test_widget_option_schema);
+	
+	if(options.test_widget_option_schema != 'see') {
+		data.associatedWidget = (JSON.stringify(options.test_widget_option_schema)).slice(1,-1);
+		data.defaultQueryString = 'associated_review_widget=' + data.associatedWidget;
+		data.associatedWidgetMinusLastCharacter = (JSON.stringify(options.test_widget_option_schema));
+		data.associatedWidgetMinusLastCharacter = ((data.associatedWidgetMinusLastCharacter).slice(1,-2));
+		data.associatedWidgetMinusLastCharacterLowercase = data.associatedWidgetMinusLastCharacter.toLowerCase();
+	}
 	
 	// data is an object accessible within whole widget 
 	// requestList holds all of the queried review information for each review used in html file with ng-repeat
@@ -290,11 +318,13 @@ a.color_box .fa {&#13;
 	********************************************************************/
 if(input && input.action == 'readreviews') {
 	
+	//gs.addInfoMessage("assoc review widget: " + input.associatedWidget);
 	// This table holds all the reviews for golf courses
 	/*
 	 * Cloning Change: change table
 	 */
-	var target = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget') ; 
+	var target = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget'); 
+	target.addQuery('associated_review_widget', '=', input.associatedWidget);
 	target.addQuery('dropdown_value','=',input.myDropdownValue);
 	target.addQuery('show_to_public', '!=', 'Rejected');
 	target.orderByDesc('sys_created_on');
@@ -315,7 +345,7 @@ if(input && input.action == 'readreviews') {
 		
 		
 	}
-	gs.addInfoMessage("Original: All Stars: " + data.countAllStarsSubmitted + " # of Reviews: " + data.countAllReviewsSubmitted + "overall: " + data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
+	//gs.addInfoMessage("Original: All Stars: " + data.countAllStarsSubmitted + " # of Reviews: " + data.countAllReviewsSubmitted + "overall: " + data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
 	data.overallStarRating = Math.round(data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
 	//gs.addInfoMessage("Overall: " + data.overallCourseRating);
 	
@@ -325,6 +355,7 @@ if(input && input.action == 'readreviews') {
 	 * Cloning Change: change table
 	 */
 	var newtarget = new GlideRecord('x_339628_fairfaxco_dropdowns_for_review_widget'); 
+	newtarget.addQuery('associated_review_widget', '=', input.associatedWidget);
 	newtarget.addQuery('dropdown_value','=',input.myDropdownValue);
 	newtarget.query(); // Issue the query to the database to get relevant records 
 	while (newtarget.next()) {
@@ -336,7 +367,7 @@ if(input && input.action == 'readreviews') {
 		data.dynamicOverallStarRating = newtarget.overall_star_rating;
 		data.dynamicAllStarsTotal = newtarget.overall_star_rating * newtarget.number_of_reviews_submitted;
 		
-		gs.addInfoMessage("new: All Stars: " + data.dynamicAllStarsTotal + " # of Reviews: " + data.dynamicNumReviewsSubmitted + "overall: " + data.dynamicOverallStarRating);
+		//gs.addInfoMessage("new: All Stars: " + data.dynamicAllStarsTotal + " # of Reviews: " + data.dynamicNumReviewsSubmitted + "overall: " + data.dynamicOverallStarRating);
 	}
 	//gs.addInfoMessage(data.coursePicture);
 }
@@ -361,19 +392,26 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-07-03 15:06:52</sys_created_on>
         <sys_id>b900e9234f567300496900fe9310c77f</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>46</sys_mod_count>
         <sys_name>Dynamic See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_b900e9234f567300496900fe9310c77f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-05 16:29:08</sys_updated_on>
+        <sys_updated_on>2019-07-08 19:47:16</sys_updated_on>
         <template><![CDATA[<div id="widget-container" class="panel panel-default" min-height="900px">
   	<!--
 	  -- Cloning Change: Change header information
 	  -->
-	<h1 class="padder-md h3">${View Park Reviews}
+  <!--
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 -->
+	<h1 class="padder-md h3">${View }{{data.associatedWidget}}
     <span class="text-base">
   	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
      </span>
@@ -385,7 +423,14 @@ if(input && input.action == 'readreviews') {
                   <!--
 	 			 	-- Cloning Change: Change label information and sn-record-picker
 	  				-->
-					<label for="dropdown_value">${Select a Park} <i class="fa fa-info-circle" uib-tooltip="${Please select a park to see reviews.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
+          <!--
+		 *         *  *  *
+		 *          * * *
+		 *        * * * * *
+		 *          * * *
+		 *         *  *  *
+		 -->
+					<label for="dropdown_value">${Select a }{{data.associatedWidgetMinusLastCharacter}} <i class="fa fa-info-circle" uib-tooltip="${Please select a }{{data.associatedWidgetMinusLastCharacterLowercase}}${ to see the reviews.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
 					<!-- -------------------------------------------------- -->
   					<!-- ----------- Reference Search Bar ----------------- -->
  				    <!-- -------------------------------------------------- -->
@@ -394,7 +439,7 @@ if(input && input.action == 'readreviews') {
                             table="'x_339628_fairfaxco_dropdowns_for_review_widget'"
                           	display-field="'dropdown_value'"
                             value-field="'dropdown_value'"
-                            default-query="'associated_review_widget=Parks'"
+                            default-query=${data.defaultQueryString}
                             page-size="100" 
                            >
           </sn-record-picker>

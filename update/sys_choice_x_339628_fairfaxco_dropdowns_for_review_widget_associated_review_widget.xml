@@ -6,6 +6,25 @@
             <element>associated_review_widget</element>
             <hint/>
             <inactive>false</inactive>
+            <label>Mini Golf Courses</label>
+            <language>en</language>
+            <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
+            <sequence/>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2019-07-07 19:40:05</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>2fd487f04fe67300496900fe9310c792</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2019-07-07 19:40:05</sys_updated_on>
+            <value>Mini Golf Courses</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>associated_review_widget</element>
+            <hint/>
+            <inactive>false</inactive>
             <label>Golf Courses</label>
             <language>en</language>
             <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
