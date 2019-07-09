@@ -23,7 +23,7 @@
 
 	c.readReviews = function() {
 		//alert(c.dropdownValue.value);
-		if(c.dropdownValue.value == undefined) {
+		if(c.dropdownValue.value == undefined || c.dropdownValue.value == "") {
 			spUtil.addErrorMessage('You must select a '+ c.data.associatedWidgetMinusLastCharacter +' to see the reviews.');
 			return;
 		}
@@ -380,14 +380,14 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-07-03 15:06:52</sys_created_on>
         <sys_id>b900e9234f567300496900fe9310c77f</sys_id>
-        <sys_mod_count>64</sys_mod_count>
+        <sys_mod_count>67</sys_mod_count>
         <sys_name>Dynamic See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_b900e9234f567300496900fe9310c77f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-09 18:38:49</sys_updated_on>
+        <sys_updated_on>2019-07-09 19:00:36</sys_updated_on>
         <template><![CDATA[<div id="widget-container" class="panel panel-default" min-height="900px">
 	<h1 class="padder-md h3">${View }{{data.associatedWidget}}
     <span class="text-base">
