@@ -6,17 +6,7 @@
   
 
   var c = this;
-	/*
-	$rootScope.$on('share_option_schema', function(event,data) {
-	alert("see widget data: " + data);
-  $timeout(function(){
-					
-		//alert("write widget data: " + data);
-           // $scope.showWidget = data;
-
-  });
-
-  });*/
+	
 	
 	/******************************************************************
 	 ********************** BEGIN c.readReviews ***********************
@@ -30,20 +20,11 @@
 										 (input.myCourseName inside Server Script)
 		Then update server: re-run entire server script
 	********************************************************************/
-	/*
-	 * Cloning Change: change error message
-	 */
+
 	c.readReviews = function() {
-		
+		//alert(c.dropdownValue.value);
 		if(c.dropdownValue.value == undefined) {
-			/*
-		 *         *  *  *
-		 *          * * *
-		 *        * * * * *
-		 *          * * *
-		 *         *  *  *
-		 */
-			spUtil.addErrorMessage('You must select a '+ data.associatedWidgetMinusLastCharacter +' to see the reviews.');
+			spUtil.addErrorMessage('You must select a '+ c.data.associatedWidgetMinusLastCharacter +' to see the reviews.');
 			return;
 		}
 		
@@ -289,8 +270,8 @@ a.color_box .fa {
 	// data is an object accessible within whole widget 
 	// requestList holds all of the queried review information for each review used in html file with ng-repeat
 	data.requestList = [];
-	data.countAllStarsSubmitted = 0;
-	data.countAllReviewsSubmitted = 0;
+	//data.countAllStarsSubmitted = 0;
+	//data.countAllReviewsSubmitted = 0;
 	data.overallStarRating = 0;
 	
 	data.dynamicAllStarsTotal = 0;
@@ -320,9 +301,7 @@ if(input && input.action == 'readreviews') {
 	
 	//gs.addInfoMessage("assoc review widget: " + input.associatedWidget);
 	// This table holds all the reviews for golf courses
-	/*
-	 * Cloning Change: change table
-	 */
+	
 	var target = new GlideRecord('x_339628_fairfaxco_all_reviews_from_review_widget'); 
 	target.addQuery('associated_review_widget', '=', input.associatedWidget);
 	target.addQuery('dropdown_value','=',input.myDropdownValue);
@@ -340,20 +319,18 @@ if(input && input.action == 'readreviews') {
 
 		data.requestList.push(temp);
 	
-		data.countAllStarsSubmitted += Number(temp.star_rating);
-		data.countAllReviewsSubmitted++;
+		//data.countAllStarsSubmitted += Number(temp.star_rating);
+		//data.countAllReviewsSubmitted++;
 		
 		
 	}
 	//gs.addInfoMessage("Original: All Stars: " + data.countAllStarsSubmitted + " # of Reviews: " + data.countAllReviewsSubmitted + "overall: " + data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
-	data.overallStarRating = Math.round(data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
+	//data.overallStarRating = Math.round(data.countAllStarsSubmitted / data.countAllReviewsSubmitted);
 	//gs.addInfoMessage("Overall: " + data.overallCourseRating);
 	
 	// This table holds all of the golf courses and their basic info. (One of each course)
 	// This is table used when selecting a course
-	/*
-	 * Cloning Change: change table
-	 */
+	
 	var newtarget = new GlideRecord('x_339628_fairfaxco_dropdowns_for_review_widget'); 
 	newtarget.addQuery('associated_review_widget', '=', input.associatedWidget);
 	newtarget.addQuery('dropdown_value','=',input.myDropdownValue);
@@ -367,7 +344,18 @@ if(input && input.action == 'readreviews') {
 		data.dynamicOverallStarRating = newtarget.overall_star_rating;
 		data.dynamicAllStarsTotal = newtarget.overall_star_rating * newtarget.number_of_reviews_submitted;
 		
+		// Calculate to show half stars
+		var x = Math.floor(data.dynamicOverallStarRating);
+		var y = data.dynamicOverallStarRating - x;
+		if (y >= 0.3 && y <= 0.7) {
+			data.overallStarRating = x + 0.5;
+		}
+		else {
+			data.overallStarRating = Math.round(data.dynamicOverallStarRating);
+		}
+		//gs.addInfoMessage(data.overallStarRating);
 		//gs.addInfoMessage("new: All Stars: " + data.dynamicAllStarsTotal + " # of Reviews: " + data.dynamicNumReviewsSubmitted + "overall: " + data.dynamicOverallStarRating);
+		//gs.addInfoMessage(data.overallStarRating);
 	}
 	//gs.addInfoMessage(data.coursePicture);
 }
@@ -392,25 +380,15 @@ if(input && input.action == 'readreviews') {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-07-03 15:06:52</sys_created_on>
         <sys_id>b900e9234f567300496900fe9310c77f</sys_id>
-        <sys_mod_count>46</sys_mod_count>
+        <sys_mod_count>64</sys_mod_count>
         <sys_name>Dynamic See Reviews Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_b900e9234f567300496900fe9310c77f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-08 19:47:16</sys_updated_on>
+        <sys_updated_on>2019-07-09 18:38:49</sys_updated_on>
         <template><![CDATA[<div id="widget-container" class="panel panel-default" min-height="900px">
-  	<!--
-	  -- Cloning Change: Change header information
-	  -->
-  <!--
-		 *         *  *  *
-		 *          * * *
-		 *        * * * * *
-		 *          * * *
-		 *         *  *  *
-		 -->
 	<h1 class="padder-md h3">${View }{{data.associatedWidget}}
     <span class="text-base">
   	  <i class="fa fa-close pull-right text-base" ng-click="c.cancel()"></i>
@@ -420,16 +398,6 @@ if(input && input.action == 'readreviews') {
 		<div class="form-group">
 			<div class="row">
 				<div class="col-sm-8">
-                  <!--
-	 			 	-- Cloning Change: Change label information and sn-record-picker
-	  				-->
-          <!--
-		 *         *  *  *
-		 *          * * *
-		 *        * * * * *
-		 *          * * *
-		 *         *  *  *
-		 -->
 					<label for="dropdown_value">${Select a }{{data.associatedWidgetMinusLastCharacter}} <i class="fa fa-info-circle" uib-tooltip="${Please select a }{{data.associatedWidgetMinusLastCharacterLowercase}}${ to see the reviews.}" tooltip-placement="right" tooltip-append-to-body="true"></i></label>
 					<!-- -------------------------------------------------- -->
   					<!-- ----------- Reference Search Bar ----------------- -->
@@ -475,11 +443,29 @@ if(input && input.action == 'readreviews') {
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
+    <div ng-if="data.overallStarRating == 1.5" class="col-sm-12" id="StarRatingView">
+          
+         	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="2Star" class="m-b fa fa-star-half-o fa-4x  text-warning"></div>
+        	 <div id="3Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+             <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+         
+        </div>
       <div ng-if="data.overallStarRating == 2" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="3Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+             <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+         
+        </div>
+    <div ng-if="data.overallStarRating == 2.5" class="col-sm-12" id="StarRatingView">
+          
+         	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="3Star" class="m-b fa fa-star-half-o fa-4x  text-warning"></div>
              <div id="4Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
@@ -493,6 +479,15 @@ if(input && input.action == 'readreviews') {
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
          
         </div>
+     <div ng-if="data.overallStarRating == 3.5" class="col-sm-12" id="StarRatingView">
+          
+         	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="3Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+             <div id="4Star" class="m-b fa fa-star-half-o fa-4x  text-warning"></div>
+        	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+         
+        </div>
       <div ng-if="data.overallStarRating == 4" class="col-sm-12" id="StarRatingView">
           
          	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
@@ -500,6 +495,15 @@ if(input && input.action == 'readreviews') {
         	 <div id="3Star" class="m-b fa fa-star fa-4x  text-warning"></div>
              <div id="4Star" class="m-b fa fa-star fa-4x  text-warning"></div>
         	 <div id="5Star" class="m-b fa fa-star-o fa-4x  text-warning"></div>
+         
+        </div>
+     <div ng-if="data.overallStarRating == 4.5" class="col-sm-12" id="StarRatingView">
+          
+         	 <div id="1Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="2Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="3Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+             <div id="4Star" class="m-b fa fa-star fa-4x  text-warning"></div>
+        	 <div id="5Star" class="m-b fa fa-star-half-o fa-4x  text-warning"></div>
          
         </div>
       <div ng-if="data.overallStarRating == 5" class="col-sm-12" id="StarRatingView">

@@ -7,37 +7,23 @@
   /* widget controller */
 
   var c = this;
-	
-	//alert(c.data.shareOptionSchema);
 
-	// When page loads, default pill selected
-
-	// broadcast to other widgets after waiting for 500 milliseconds,
-
-	//  just to make sure other widgets are loaded and ready to listen when we broadcast.    
-	/*
-	$timeout(function(){
-		$rootScope.$broadcast('share_option_schema', 'dynamic-write-reviews-widget');
-
-	},500);
-
-	$rootScope.$broadcast('share_option_schema', c.data.shareOptionSchema);*/
 }]]></client_script>
         <controller_as>c</controller_as>
-        <css>/* border at bottom of tabs */
-.nav-tabs {
- 	border:none; 
-}
-
-/* tab selected background color */
-.nav-tabs &gt; li.active &gt; a, .nav-tabs &gt; li.active &gt; a:hover, .nav-tabs &gt; li.active &gt; a:focus {
-    color: #555555;
-    background-color: #ffffff;
-}
-
-.myCustomSize {
- //max-width: 600px;
-}
+        <css>/* border at bottom of tabs */&#13;
+.nav-tabs {&#13;
+ 	border:none; &#13;
+}&#13;
+&#13;
+/* tab selected background color */&#13;
+.nav-tabs &gt; li.active &gt; a, .nav-tabs &gt; li.active &gt; a:hover, .nav-tabs &gt; li.active &gt; a:focus {&#13;
+    color: #555555;&#13;
+    background-color: #ffffff;&#13;
+}&#13;
+&#13;
+.myCustomSize {&#13;
+ max-width: 600px;&#13;
+}&#13;
 </css>
         <data_table>sp_instance</data_table>
         <demo_data/>
@@ -49,13 +35,12 @@
         <internal>false</internal>
         <link/>
         <name>Dynamic Review Widget</name>
-        <option_schema>[{"name":"test_widget_option_schema","section":"Data","default_value":"This is a test string for test_widget_option_schema","label":"Test","type":"choice","choices":[{"label":"Parks","value":"Parks"},{"label":"Golf Courses","value":"Golf Courses"},{"label":"Mini Golf Courses","value":"Mini Golf Courses"}]}]</option_schema>
+        <option_schema>[{"name":"test_widget_option_schema","section":"Data","default_value":"Default Values","label":"Test","type":"choice","choices":[{"label":"Parks","value":"Parks"},{"label":"Golf Courses","value":"Golf Courses"},{"label":"Mini Golf Courses","value":"Mini Golf Courses"},{"label":"Ice Skating Arenas","value":"Ice Skating Arenas"}]}]</option_schema>
         <public>true</public>
         <roles/>
         <script><![CDATA[(function() {
-	data.reviewForThisSpecificWidget = {"test_widget_option_schema": options.test_widget_option_schema}
-	//data.shareOptionSchema = options.test_widget_option_schema;
-	//gs.addInfoMessage(options.test_widget_option_schema);
+	// grab option schema and pass to all widgets
+	data.reviewForThisSpecificWidget = {"test_widget_option_schema": options.test_widget_option_schema};
 	
 	data.writeReviewWidget = $sp.getWidget("dynamic-write-reviews-widget", data.reviewForThisSpecificWidget);
 	data.seeReviewWidget = $sp.getWidget("dynamic-see-reviews-widget", data.reviewForThisSpecificWidget);
@@ -66,27 +51,19 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2019-07-03 15:04:12</sys_created_on>
         <sys_id>fa6f9d234f567300496900fe9310c77f</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>33</sys_mod_count>
         <sys_name>Dynamic Review Widget</sys_name>
         <sys_package display_value="FairfaxCounty" source="x_339628_fairfaxco">b1051ad14f413300496900fe9310c7cc</sys_package>
         <sys_policy/>
         <sys_scope display_value="FairfaxCounty">b1051ad14f413300496900fe9310c7cc</sys_scope>
         <sys_update_name>sp_widget_fa6f9d234f567300496900fe9310c77f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-07-08 18:18:35</sys_updated_on>
+        <sys_updated_on>2019-07-09 17:51:29</sys_updated_on>
         <template><![CDATA[<div class="myCustomSize">
-
-<!-- your widget template --
-
 
   <!-- -------------------------------------------------- -->
 <!-- ---------------- Tab Information ----------------- -->
-<!-- -------------------------------------------------- ---
-
-		A lot of tab stuff not used. Notice there is only 2 tabs.
-		"write a review and see all reviews"
--- ---------------------------------------------------- --
-	<!-- --------------------------------------------------------------------------------- -->
+<!-- -------------------------------------------------- -->
   
   <uib-tabset active="active" class="padder">
     <uib-tab index="0" heading="Write a Review">

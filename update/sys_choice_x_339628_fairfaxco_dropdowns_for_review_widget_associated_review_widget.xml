@@ -9,15 +9,15 @@
             <label>Mini Golf Courses</label>
             <language>en</language>
             <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
-            <sequence/>
+            <sequence>0</sequence>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2019-07-07 19:40:05</sys_created_on>
             <sys_domain>global</sys_domain>
             <sys_domain_path>/</sys_domain_path>
             <sys_id>2fd487f04fe67300496900fe9310c792</sys_id>
-            <sys_mod_count>0</sys_mod_count>
+            <sys_mod_count>1</sys_mod_count>
             <sys_updated_by>admin</sys_updated_by>
-            <sys_updated_on>2019-07-07 19:40:05</sys_updated_on>
+            <sys_updated_on>2019-07-09 17:39:02</sys_updated_on>
             <value>Mini Golf Courses</value>
         </sys_choice>
         <sys_choice action="INSERT_OR_UPDATE">
@@ -28,15 +28,15 @@
             <label>Golf Courses</label>
             <language>en</language>
             <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
-            <sequence>10</sequence>
+            <sequence>1</sequence>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2019-07-03 14:02:52</sys_created_on>
             <sys_domain>global</sys_domain>
             <sys_domain_path>/</sys_domain_path>
             <sys_id>9e51d92b4f167300496900fe9310c7ec</sys_id>
-            <sys_mod_count>0</sys_mod_count>
+            <sys_mod_count>1</sys_mod_count>
             <sys_updated_by>admin</sys_updated_by>
-            <sys_updated_on>2019-07-03 14:02:52</sys_updated_on>
+            <sys_updated_on>2019-07-09 17:39:02</sys_updated_on>
             <value>Golf Courses</value>
         </sys_choice>
         <sys_choice action="INSERT_OR_UPDATE">
@@ -47,16 +47,35 @@
             <label>Parks</label>
             <language>en</language>
             <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
-            <sequence>20</sequence>
+            <sequence>2</sequence>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2019-07-03 14:03:13</sys_created_on>
             <sys_domain>global</sys_domain>
             <sys_domain_path>/</sys_domain_path>
             <sys_id>6561d92b4f167300496900fe9310c718</sys_id>
+            <sys_mod_count>1</sys_mod_count>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2019-07-09 17:39:02</sys_updated_on>
+            <value>Parks</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>associated_review_widget</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>Ice Skating Arenas</label>
+            <language>en</language>
+            <name>x_339628_fairfaxco_dropdowns_for_review_widget</name>
+            <sequence>3</sequence>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2019-07-09 17:39:02</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>196c382d4f623300496900fe9310c725</sys_id>
             <sys_mod_count>0</sys_mod_count>
             <sys_updated_by>admin</sys_updated_by>
-            <sys_updated_on>2019-07-03 14:03:13</sys_updated_on>
-            <value>Parks</value>
+            <sys_updated_on>2019-07-09 17:39:02</sys_updated_on>
+            <value>Ice Skating Arenas</value>
         </sys_choice>
         <sys_choice_set action="INSERT_OR_UPDATE">
             <element>associated_review_widget</element>
